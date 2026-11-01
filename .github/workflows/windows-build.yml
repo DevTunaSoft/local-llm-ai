@@ -68,7 +68,7 @@ jobs:
           if ($errors.Count -eq 0) { $errors = @('No matching compiler/test diagnostics captured. Inspect the job logs.') }
           $link = "https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $body = @("Automated diagnostic report for Windows validation.", "", "Commit: " + $env:GITHUB_SHA, "Run: " + $link, "", "```text") + $errors + @("```", "", "This report is not proof that a release is complete.")
+          $body = @("Automated diagnostic report for Windows validation.", "", "Commit: " + $env:GITHUB_SHA, "Run: " + $link, "", '```text') + $errors + @('```', "", "This report is not proof that a release is complete.")
           $bodyFile = Join-Path $env:RUNNER_TEMP 'wi-failure-issue.md'
           $body | Set-Content -Path $bodyFile -Encoding utf8
           gh issue create --repo $env:GITHUB_REPOSITORY --title "Windows CI failure $short (run $env:GITHUB_RUN_ID)" --body-file $bodyFile
