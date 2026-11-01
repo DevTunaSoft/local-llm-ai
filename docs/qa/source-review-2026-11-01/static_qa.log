@@ -1,0 +1,73 @@
+PASS | Valid XAML XML: WorkIntelligence/App.xaml
+PASS | Valid XAML XML: WorkIntelligence/MainWindow.xaml
+PASS | Valid .csproj XML: WorkIntelligence/WorkIntelligence.csproj
+PASS | Valid .csproj XML: tests/Core/WorkIntelligence.Core.Tests.csproj
+PASS | Valid .csproj XML: tests/WorkIntelligence.Tests.csproj
+PASS | Valid .slnx XML
+PASS | XAML event has implementation: AddMemory_Click
+PASS | XAML event has implementation: AddTask_Click
+PASS | XAML event has implementation: AddWatchFolder_Click
+PASS | XAML event has implementation: AssignDocument_Click
+PASS | XAML event has implementation: Backup_Click
+PASS | XAML event has implementation: BenchmarkModel_Click
+PASS | XAML event has implementation: BrowseBackup_Click
+PASS | XAML event has implementation: ChatList_SelectionChanged
+PASS | XAML event has implementation: CompareModels_Click
+PASS | XAML event has implementation: CompleteTask_Click
+PASS | XAML event has implementation: CreateWorkspace_Click
+PASS | XAML event has implementation: DeleteChat_Click
+PASS | XAML event has implementation: DeleteDoc_Click
+PASS | XAML event has implementation: DeleteMemory_Click
+PASS | XAML event has implementation: Diagnostics_Click
+PASS | XAML event has implementation: DownloadModel_Click
+PASS | XAML event has implementation: DraftFromChat_Click
+PASS | XAML event has implementation: ExportChat_Click
+PASS | XAML event has implementation: ExportDocx_Click
+PASS | XAML event has implementation: ExportMemories_Click
+PASS | XAML event has implementation: ImportDocs_Click
+PASS | XAML event has implementation: ImportModel_Click
+PASS | XAML event has implementation: LoadModel_Click
+PASS | XAML event has implementation: ModelList_SelectionChanged
+PASS | XAML event has implementation: NewChat_Click
+PASS | XAML event has implementation: OpenLogs_Click
+PASS | XAML event has implementation: Refresh_Click
+PASS | XAML event has implementation: ReindexSemantic_Click
+PASS | XAML event has implementation: RemoveModel_Click
+PASS | XAML event has implementation: RemoveScheduledBackup_Click
+PASS | XAML event has implementation: RestoreOneDrive_Click
+PASS | XAML event has implementation: Restore_Click
+PASS | XAML event has implementation: ReviewProposals_Click
+PASS | XAML event has implementation: ScanFolders_Click
+PASS | XAML event has implementation: ScheduleBackup_Click
+PASS | XAML event has implementation: SearchDocs_Click
+PASS | XAML event has implementation: Send_Click
+PASS | XAML event has implementation: StartSemantic_Click
+PASS | XAML event has implementation: StopModel_Click
+PASS | XAML event has implementation: StopResponse_Click
+PASS | XAML event has implementation: SyncOneDrive_Click
+PASS | XAML event has implementation: Unlock_Click
+PASS | XAML event has implementation: WorkspaceChanged_Click
+PASS | No duplicate x:Name attributes
+PASS | Self-contained win-x64 target
+PASS | WPF enabled
+PASS | Single EXE packaging configured
+PASS | Native library extraction configured
+PASS | SQLCipher provider used, not default plaintext SQLite
+PASS | Explicit encrypted database provider validation
+PASS | Vault has authenticated encryption
+PASS | No default public AI endpoint in source
+PASS | AI process explicitly binds loopback
+PASS | LLM API key uses documented environment variable
+PASS | Local model health check
+PASS | Model file digest before load
+PASS | Model download requires checksum
+PASS | Model redirects restricted to HTTPS
+PASS | Model GGUF signature validated
+PASS | Backup repository locally encrypted
+PASS | Non-overwrite recovery gate
+PASS | Release refuses missing native tools
+PASS | Release checks vendor checksums
+PASS | User information redacted from engine logs
+PASS | CI workflow YAML parses
+PASS | Tests present with substantive assertions
+SOURCE STRUCTURE CHECKS: 72/72 passed

@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+.vs/
+publish/
+vendor/runtime/
+WorkIntelligence/Resources/runtime.zip
+WorkIntelligence/Resources/runtime.sha256
+*.user
+*.suo
+*.tmp
+*.partial
+*.db
+*.enc

@@ -1,0 +1,150 @@
+  WorkIntelligence.Core.Tests -> /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll
+Test run for /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.17]     WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: True) [FAIL]
+[xUnit.net 00:00:00.18]     WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: False) [FAIL]
+[xUnit.net 00:00:00.18]     WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent [FAIL]
+[xUnit.net 00:00:00.19]     WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords [FAIL]
+  Failed WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: True) [3 ms]
+  Error Message:
+   System.IO.InvalidDataException : Binary file not supported.
+  Stack Trace:
+     at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 26
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 17
+   at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian) in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 25
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: False) [< 1 ms]
+  Error Message:
+   System.IO.InvalidDataException : Binary file not supported.
+  Stack Trace:
+     at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 26
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 17
+   at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian) in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 25
+   at InvokeStub_DocumentTests.WindowsUtf16WithBomIsDecoded(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Synthetic work text"
+Actual:   "﻿Synthetic work text"
+           ↑ (pos 0)
+  Stack Trace:
+     at WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 14
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords [< 1 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                ↓ (pos 5)
+Expected: "alpha\tbeta\ngamma\n"
+Actual:   "alphabetagamma\n"
+                ↑ (pos 5)
+  Stack Trace:
+     at WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 35
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing [FAIL]
+[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess [FAIL]
+[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer [FAIL]
+[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected [FAIL]
+[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess [FAIL]
+  Failed WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing [< 1 ms]
+  Error Message:
+   System.Text.Json.JsonReaderException : Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 11.
+  Stack Trace:
+     at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb& database, StackRowStack& stack)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext() in /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs:line 15
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource<System.Boolean>.GetResult()
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 38
+--- End of stack trace from previous location ---
+  Failed WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess [2 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.EndOfStreamException)
+  Stack Trace:
+     at WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 26
+--- End of stack trace from previous location ---
+  Failed WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 44
+--- End of stack trace from previous location ---
+  Failed WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected [11 ms]
+  Error Message:
+   Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.InvalidDataException)
+Actual:   typeof(System.Text.Json.JsonReaderException)
+---- System.Text.Json.JsonReaderException : 'x' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.
+  Stack Trace:
+     at WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 58
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader& json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb& database, StackRowStack& stack)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext() in /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs:line 15
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource<System.Boolean>.GetResult()
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+  Failed WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess [< 1 ms]
+  Error Message:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)
+  Stack Trace:
+     at WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 32
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:02.42]     WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability [FAIL]
+  Failed WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability [970 ms]
+  Error Message:
+   Assert.Single() Failure: The collection was empty
+  Stack Trace:
+     at WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 88
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:04.35]     WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace [FAIL]
+  Failed WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace [1 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 128
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:05.41]     WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership [FAIL]
+  Failed WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership [1 s]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 106
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.52]     WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment [FAIL]
+  Failed WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment [632 ms]
+  Error Message:
+   Failed import deleted an attachment it did not create.
+  Stack Trace:
+     at WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 73
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+WARNING: Overwriting results file: /tmp/wi-test-results/baseline-regressions.trx
+Results File: /tmp/wi-test-results/baseline-regressions.trx
+
+Failed!  - Failed:    13, Passed:    22, Skipped:     0, Total:    35, Duration: 7 s - WorkIntelligence.Core.Tests.dll (net10.0)

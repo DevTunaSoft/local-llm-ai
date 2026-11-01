@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>WorkIntelligence</AssemblyName>
+    <RootNamespace>WorkIntelligence</RootNamespace>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>embedded</DebugType>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
+    <PackageReference Include="SQLitePCLRaw.provider.sqlcipher" Version="3.0.5" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="3.0.5" />
+    <PackageReference Include="PdfPig" Version="0.1.13" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\\runtime.zip" Condition="Exists('Resources\\runtime.zip')" LogicalName="WorkIntelligence.runtime.zip" />
+    <EmbeddedResource Include="Resources\\runtime.sha256" Condition="Exists('Resources\\runtime.sha256')" LogicalName="WorkIntelligence.runtime.sha256" />
+  </ItemGroup>
+</Project>

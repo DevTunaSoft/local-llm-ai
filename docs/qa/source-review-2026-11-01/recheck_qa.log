@@ -1,0 +1,78 @@
+PASS | Both native archive AND SHA manifest embedded
+PASS | Release generator creates both embedded resources
+PASS | Runtime bundle verifies signed/hash-matched archive before extraction
+PASS | Runtime ZIP archive has size, symlink, and traversal protections
+PASS | Runtime ZIP extraction verifies output hashes
+PASS | Model API name agrees with server alias
+PASS | Model API CORS restricted to localhost
+PASS | Model lifecycle serialized across start/stop
+PASS | Model process cleanup also runs on early failure
+PASS | Long CPU model startup allowance
+PASS | Model requests remain local
+PASS | No untrusted model download redirects
+PASS | SQL schema does not override newer versions
+PASS | SQL connection disposed on encryption init failure
+PASS | Encrypted backup snapshots guarded by document lock
+PASS | Backup uses guarded snapshot method
+PASS | Backup excludes nested application root
+PASS | Failed backups do not display arbitrary stderr
+PASS | Interrupted assistant answers persisted exactly once
+PASS | Model selection preserved across item refresh
+PASS | Stable encryption and no plaintext fallback
+PASS | Unsigned native package is never silently fetched
+PASS | SQLite schema extracted for standalone smoke test
+PASS | SQLite FTS5 insertion and search smoke test
+PASS | SQLite FTS5 deletion trigger and foreign-key smoke test
+PASS | SQLite vector records cascade on document deletion
+PASS | XML validity: WorkIntelligence/MainWindow.xaml
+PASS | XML validity: WorkIntelligence/App.xaml
+PASS | XML validity: tests/WorkIntelligence.Tests.csproj
+PASS | XML validity: WorkIntelligence/WorkIntelligence.csproj
+PASS | XML validity: tests/Core/WorkIntelligence.Core.Tests.csproj
+PASS | XML validity: WorkIntelligence.slnx
+PASS | WPF event wired: AddMemory_Click
+PASS | WPF event wired: AddTask_Click
+PASS | WPF event wired: AddWatchFolder_Click
+PASS | WPF event wired: AssignDocument_Click
+PASS | WPF event wired: Backup_Click
+PASS | WPF event wired: BenchmarkModel_Click
+PASS | WPF event wired: BrowseBackup_Click
+PASS | WPF event wired: ChatList_SelectionChanged
+PASS | WPF event wired: CompareModels_Click
+PASS | WPF event wired: CompleteTask_Click
+PASS | WPF event wired: CreateWorkspace_Click
+PASS | WPF event wired: DeleteChat_Click
+PASS | WPF event wired: DeleteDoc_Click
+PASS | WPF event wired: DeleteMemory_Click
+PASS | WPF event wired: Diagnostics_Click
+PASS | WPF event wired: DownloadModel_Click
+PASS | WPF event wired: DraftFromChat_Click
+PASS | WPF event wired: ExportChat_Click
+PASS | WPF event wired: ExportDocx_Click
+PASS | WPF event wired: ExportMemories_Click
+PASS | WPF event wired: ImportDocs_Click
+PASS | WPF event wired: ImportModel_Click
+PASS | WPF event wired: LoadModel_Click
+PASS | WPF event wired: ModelList_SelectionChanged
+PASS | WPF event wired: NewChat_Click
+PASS | WPF event wired: OpenLogs_Click
+PASS | WPF event wired: Refresh_Click
+PASS | WPF event wired: ReindexSemantic_Click
+PASS | WPF event wired: RemoveModel_Click
+PASS | WPF event wired: RemoveScheduledBackup_Click
+PASS | WPF event wired: RestoreOneDrive_Click
+PASS | WPF event wired: Restore_Click
+PASS | WPF event wired: ReviewProposals_Click
+PASS | WPF event wired: ScanFolders_Click
+PASS | WPF event wired: ScheduleBackup_Click
+PASS | WPF event wired: SearchDocs_Click
+PASS | WPF event wired: Send_Click
+PASS | WPF event wired: StartSemantic_Click
+PASS | WPF event wired: StopModel_Click
+PASS | WPF event wired: StopResponse_Click
+PASS | WPF event wired: SyncOneDrive_Click
+PASS | WPF event wired: Unlock_Click
+PASS | WPF event wired: WorkspaceChanged_Click
+PASS | Windows CI builds and executes tests
+PASS | Maintained SQLCipher provider and mandatory bundled native | Native SQLCipher DLL must be separately approved and tested
+RECHECK SOURCE + SQLITE SMOKE: 77 / 77 passed

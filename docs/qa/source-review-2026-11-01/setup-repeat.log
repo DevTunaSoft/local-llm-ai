@@ -1,0 +1,7 @@
+Pinned Linux test tools installed and verified. These are not Windows release assets.
+Requirement already satisfied: lxml==6.1.1 in /workspace/.tools/qa-venv/lib/python3.12/site-packages (from -r /workspace/local-llm-ai/scripts/qa-requirements.txt (line 1)) (6.1.1)
+Requirement already satisfied: PyYAML==6.0.3 in /workspace/.tools/qa-venv/lib/python3.12/site-packages (from -r /workspace/local-llm-ai/scripts/qa-requirements.txt (line 2)) (6.0.3)
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Determining projects to restore...
+  All projects are up-to-date for restore.

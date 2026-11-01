@@ -1,0 +1,47 @@
+name: Windows source build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-source-validation:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore pinned dependencies
+        run: dotnet restore WorkIntelligence.slnx -p:UseAppHost=false -p:SelfContained=false -p:PublishSingleFile=false
+      - name: Compile Windows source
+        run: dotnet build WorkIntelligence.slnx -c Release --no-restore -p:UseAppHost=false -p:SelfContained=false -p:PublishSingleFile=false
+      - name: Automated unit tests
+        run: dotnet test tests/WorkIntelligence.Tests.csproj -c Release --no-build --no-restore -p:UseAppHost=false -p:SelfContained=false -p:PublishSingleFile=false --logger "console;verbosity=normal"
+      - name: Restore service regression test dependencies
+        run: dotnet restore tests/Core/WorkIntelligence.Core.Tests.csproj
+      - name: Run encrypted-memory and workspace service regressions
+        run: dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --no-restore --logger "console;verbosity=normal"
+      - name: Dependency security audit
+        run: dotnet list WorkIntelligence/WorkIntelligence.csproj package --vulnerable --include-transitive
+      - name: Verify release packaging gate
+        shell: pwsh
+        run: |
+          if (Test-Path 'WorkIntelligence/Resources/runtime.zip') {
+            Write-Host 'Native runtime available; Windows release packaging may be run separately.'
+          } else {
+            Write-Host 'SOURCE BUILD ONLY: no native llama/restic bundle; not a user-ready release.'
+          }
+  linux-service-regressions:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install native test build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential tcl libssl-dev python3-venv
+      - name: Prepare pinned development tools
+        run: bash scripts/setup-linux-tests.sh
+      - name: Compile source and execute real storage and recovery regressions
+        run: bash scripts/validate-source.sh

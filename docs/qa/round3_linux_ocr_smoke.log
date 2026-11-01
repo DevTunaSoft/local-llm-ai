@@ -1,0 +1,4 @@
+Tesseract stdin/stdout test on Linux only; not the C# Windows runtime.
+exit_code=0
+recognized='SAMSARA FLEET SAFETY WORK PROCEDURE'
+PASS

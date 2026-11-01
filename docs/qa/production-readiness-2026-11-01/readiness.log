@@ -1,0 +1,32 @@
+{
+  "ready": false,
+  "requirements": 106,
+  "baseline_status_counts": {
+    "blocked": 4,
+    "deferred": 1,
+    "missing": 21,
+    "partial": 68,
+    "scaffold": 3,
+    "unverified": 9
+  },
+  "runtime_verified_requirements": 0,
+  "missing_native_components": [
+    "llama-server.exe",
+    "restic.exe",
+    "rclone.exe",
+    "sqlcipher.dll",
+    "pdfium.dll",
+    "tesseract.exe",
+    "tessdata/eng.traineddata"
+  ],
+  "blockers": [
+    "Runtime acceptance unverified for 106 of 106 registered features",
+    "Required Windows native distribution absent: llama-server.exe, restic.exe, rclone.exe, sqlcipher.dll, pdfium.dll, tesseract.exe, tessdata/eng.traineddata",
+    "Pinned native file hash manifest absent",
+    "Production Windows runtime acceptance requires Windows: this host is not Windows",
+    ".NET SDK unavailable in this test environment: no updated C# compilation/test evidence",
+    "No evidenced Windows clean-machine/model/OneDrive second-device acceptance artifact",
+    "No trusted publisher signature verification artifact"
+  ],
+  "note": "Source checks, manifest presence and a build do not establish production acceptance. Evidence files must correspond to the exact artifact under test."
+}

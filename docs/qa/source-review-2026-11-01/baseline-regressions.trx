@@ -1,0 +1,542 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="0c92e718-6ed7-4fee-8142-ef2ecb5552b9" name="@5adb609447af 2026-11-01 02:29:01" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-01T02:29:01.5612368+00:00" queuing="2026-11-01T02:29:01.5612369+00:00" start="2026-11-01T02:29:00.9737669+00:00" finish="2026-11-01T02:29:08.8779974+00:00" />
+  <TestSettings name="default" id="b0ac8827-d265-421c-9c22-59060a56e021">
+    <Deployment runDeploymentRoot="_5adb609447af_2026-11-01_02_29_01" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="e9901ec0-1f37-45eb-948e-a148e679be8b" testId="6e3a7b1c-81ab-2c88-1914-fe1306934ad4" testName="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.md&quot;)" computerName="5adb609447af" duration="00:00:00.0000820" startTime="2026-11-01T02:29:01.4993090+00:00" endTime="2026-11-01T02:29:01.4993542+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e9901ec0-1f37-45eb-948e-a148e679be8b" />
+    <UnitTestResult executionId="13804b3a-1e41-4490-915f-ae4aa6ffa0f3" testId="3d2bb737-af4f-4d1d-6240-b145baf9457d" testName="WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess" computerName="5adb609447af" duration="00:00:00.0005057" startTime="2026-11-01T02:29:01.5443411+00:00" endTime="2026-11-01T02:29:01.5446229+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="13804b3a-1e41-4490-915f-ae4aa6ffa0f3">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)</Message>
+          <StackTrace>   at WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 32
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="120d0d95-3db6-4b12-8b2a-3826e00f743b" testId="ade3b50b-8fac-3e1d-6433-2a6799a0baf1" testName="WorkIntelligence.Tests.Tests.BundledRuntimeHasMatchingHashManifest" computerName="5adb609447af" duration="00:00:00.0028186" startTime="2026-11-01T02:29:01.5323835+00:00" endTime="2026-11-01T02:29:01.5324199+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="120d0d95-3db6-4b12-8b2a-3826e00f743b" />
+    <UnitTestResult executionId="8d48fdab-9fc6-49f4-b643-66cbe4eca0c9" testId="dfcaf033-9f88-8c63-922b-d0b8e7952450" testName="WorkIntelligence.Tests.Tests.RejectsBinaryAsText" computerName="5adb609447af" duration="00:00:00.0001875" startTime="2026-11-01T02:29:01.5322650+00:00" endTime="2026-11-01T02:29:01.5323023+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d48fdab-9fc6-49f4-b643-66cbe4eca0c9" />
+    <UnitTestResult executionId="67f37463-6e66-490f-aef5-6e9bef94e6e2" testId="4e774b5c-8758-59ae-4e49-4cb3cd5816cc" testName="WorkIntelligence.Tests.StorageTests.SnapshotContainsEncryptedDatabaseAndAuthenticatedAttachments" computerName="5adb609447af" duration="00:00:00.9138918" startTime="2026-11-01T02:29:06.7129677+00:00" endTime="2026-11-01T02:29:07.6265576+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="67f37463-6e66-490f-aef5-6e9bef94e6e2" />
+    <UnitTestResult executionId="fa3b38f5-914b-49d6-a4bd-bf90b3a2c0ec" testId="62afba14-5aa4-105c-c154-46f9fa41540b" testName="WorkIntelligence.Tests.Tests.RejectsUnsupportedFormat" computerName="5adb609447af" duration="00:00:00.0002720" startTime="2026-11-01T02:29:01.5321157+00:00" endTime="2026-11-01T02:29:01.5321696+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa3b38f5-914b-49d6-a4bd-bf90b3a2c0ec" />
+    <UnitTestResult executionId="c89f5cfb-1b64-480a-940e-ebfa6c48c657" testId="9c65f42d-0b00-fb44-6d6e-a6ebb35a7504" testName="WorkIntelligence.Tests.DocumentTests.OfficeXmlRejectsExternalEntities" computerName="5adb609447af" duration="00:00:00.0072000" startTime="2026-11-01T02:29:01.4862412+00:00" endTime="2026-11-01T02:29:01.4864696+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c89f5cfb-1b64-480a-940e-ebfa6c48c657" />
+    <UnitTestResult executionId="4929dfdf-af48-4af4-95b2-6cb4215593c2" testId="d397b205-d941-b6e3-649a-4cd45c44bae3" testName="WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: False)" computerName="5adb609447af" duration="00:00:00.0002519" startTime="2026-11-01T02:29:01.4848036+00:00" endTime="2026-11-01T02:29:01.4848736+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4929dfdf-af48-4af4-95b2-6cb4215593c2">
+      <Output>
+        <ErrorInfo>
+          <Message>System.IO.InvalidDataException : Binary file not supported.</Message>
+          <StackTrace>   at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 26
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 17
+   at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian) in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 25
+   at InvokeStub_DocumentTests.WindowsUtf16WithBomIsDecoded(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="db955e7b-13cc-45bb-a2ce-3c230f923cb1" testId="a632f1bf-f107-47e8-dc9e-2ff4e522bd48" testName="WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace" computerName="5adb609447af" duration="00:00:01.1641007" startTime="2026-11-01T02:29:04.4888320+00:00" endTime="2026-11-01T02:29:05.6558141+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db955e7b-13cc-45bb-a2ce-3c230f923cb1">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0</Message>
+          <StackTrace>   at WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 128
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="a5470fbb-93d3-48ba-8a73-a8a4f749480e" testId="b130e449-229e-f927-edaf-ff9809ceba52" testName="WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected" computerName="5adb609447af" duration="00:00:00.0116324" startTime="2026-11-01T02:29:01.5427425+00:00" endTime="2026-11-01T02:29:01.5438646+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a5470fbb-93d3-48ba-8a73-a8a4f749480e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: Exception type was not an exact match
+Expected: typeof(System.IO.InvalidDataException)
+Actual:   typeof(System.Text.Json.JsonReaderException)
+---- System.Text.Json.JsonReaderException : 'x' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.</Message>
+          <StackTrace>   at WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 58
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb&amp; database, StackRowStack&amp; stack)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext() in /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs:line 15
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Boolean&gt;.GetResult()
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1cd0edb6-8abb-4543-a47f-efdead616a98" testId="95a1a948-d506-b877-3ed0-b7eee63882a4" testName="WorkIntelligence.Tests.Tests.DownloaderRejectsUntrustedEndpointWithoutNetwork" computerName="5adb609447af" duration="00:00:00.0061773" startTime="2026-11-01T02:29:01.5328499+00:00" endTime="2026-11-01T02:29:01.5328871+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1cd0edb6-8abb-4543-a47f-efdead616a98" />
+    <UnitTestResult executionId="4799258f-922a-4f9a-bc0b-298d62b8f8aa" testId="6df8159b-0fbc-60b1-cf02-a07b7b2bb14d" testName="WorkIntelligence.Tests.Tests.ChunkingRejectsImpossibleOverlap" computerName="5adb609447af" duration="00:00:00.0002575" startTime="2026-11-01T02:29:01.5399838+00:00" endTime="2026-11-01T02:29:01.5400200+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4799258f-922a-4f9a-bc0b-298d62b8f8aa" />
+    <UnitTestResult executionId="f4c24c58-d358-488c-91df-92af0bf34668" testId="26bbb1aa-ef98-ad9b-34cb-fbadc35e9ae4" testName="WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess" computerName="5adb609447af" duration="00:00:00.0020678" startTime="2026-11-01T02:29:01.5423254+00:00" endTime="2026-11-01T02:29:01.5423651+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f4c24c58-d358-488c-91df-92af0bf34668">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.EndOfStreamException)</Message>
+          <StackTrace>   at WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 26
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="c0a3ddab-3389-49a8-ac8f-817234139bf1" testId="c1e8bc6b-be73-2a90-4d79-72aa93c9731a" testName="WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership" computerName="5adb609447af" duration="00:00:01.0547822" startTime="2026-11-01T02:29:05.6572287+00:00" endTime="2026-11-01T02:29:06.7123851+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c0a3ddab-3389-49a8-ac8f-817234139bf1">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0</Message>
+          <StackTrace>   at WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 106
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="25929f1d-b117-4435-bfbc-6838c1888123" testId="df62f198-8976-cc9a-546c-78f484e7aadd" testName="WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability" computerName="5adb609447af" duration="00:00:00.9700187" startTime="2026-11-01T02:29:02.7507909+00:00" endTime="2026-11-01T02:29:03.7205575+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="25929f1d-b117-4435-bfbc-6838c1888123">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Single() Failure: The collection was empty</Message>
+          <StackTrace>   at WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 88
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="04c98dd7-613c-4eff-8182-3bab47c6b104" testId="0ee8d112-3ec7-3962-b038-ac24bbc680fe" testName="WorkIntelligence.Tests.Tests.ExtractsXlsxSharedStringsAndNumbers" computerName="5adb609447af" duration="00:00:00.0038785" startTime="2026-11-01T02:29:01.5325004+00:00" endTime="2026-11-01T02:29:01.5325342+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="04c98dd7-613c-4eff-8182-3bab47c6b104" />
+    <UnitTestResult executionId="b1cd2a28-0ee0-454e-9619-37ac33eb0e4e" testId="e27e6cc8-5b89-4093-e346-f12e47fc038f" testName="WorkIntelligence.Tests.Tests.ExtractsDocxParagraph" computerName="5adb609447af" duration="00:00:00.0005547" startTime="2026-11-01T02:29:01.5330044+00:00" endTime="2026-11-01T02:29:01.5330407+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b1cd2a28-0ee0-454e-9619-37ac33eb0e4e" />
+    <UnitTestResult executionId="9f4683ed-5ae3-42db-8c9d-5b1d016ca99e" testId="959f396a-8df7-68b1-5154-4078a37a57b5" testName="WorkIntelligence.Tests.StorageTests.RealSqlCipherDatabaseIsEncryptedAndRejectsWrongKey" computerName="5adb609447af" duration="00:00:00.7675997" startTime="2026-11-01T02:29:03.7213207+00:00" endTime="2026-11-01T02:29:04.4884688+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9f4683ed-5ae3-42db-8c9d-5b1d016ca99e" />
+    <UnitTestResult executionId="81dbfda4-8581-4341-87a2-8ded18668a4e" testId="4a2aa066-f052-6093-9939-78c2a943d36a" testName="WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer" computerName="5adb609447af" duration="00:00:00.0005639" startTime="2026-11-01T02:29:01.5425548+00:00" endTime="2026-11-01T02:29:01.5425894+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="81dbfda4-8581-4341-87a2-8ded18668a4e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Throws() Failure: No exception was thrown
+Expected: typeof(System.IO.InvalidDataException)</Message>
+          <StackTrace>   at WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 44
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="479b51ff-2289-4808-9c9f-25bbd5976f2b" testId="cfac8d57-ed48-03e7-e235-cb37e54dec65" testName="WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords" computerName="5adb609447af" duration="00:00:00.0007218" startTime="2026-11-01T02:29:01.4957644+00:00" endTime="2026-11-01T02:29:01.4963924+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="479b51ff-2289-4808-9c9f-25bbd5976f2b">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Strings differ
+                ↓ (pos 5)
+Expected: "alpha\tbeta\ngamma\n"
+Actual:   "alphabetagamma\n"
+                ↑ (pos 5)</Message>
+          <StackTrace>   at WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 35
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="dea21d93-d047-4b0a-828e-bd8416933562" testId="55b2349f-009d-fe12-b9ca-c47aa1f745ca" testName="WorkIntelligence.Tests.CompletionStreamTests.UnicodeContentAndCommentsAreHandled" computerName="5adb609447af" duration="00:00:00.0054908" startTime="2026-11-01T02:29:01.5402089+00:00" endTime="2026-11-01T02:29:01.5402550+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dea21d93-d047-4b0a-828e-bd8416933562" />
+    <UnitTestResult executionId="aecf64c5-9ce3-439c-b000-8044a06b4a22" testId="bbcb72cb-fa07-4b94-3c9c-0edc085b7cdb" testName="WorkIntelligence.Tests.StorageTests.DeletingDocumentCascadesTextVectorsAndWorkspaceLinks" computerName="5adb609447af" duration="00:00:01.2047420" startTime="2026-11-01T02:29:01.5455340+00:00" endTime="2026-11-01T02:29:02.7503789+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aecf64c5-9ce3-439c-b000-8044a06b4a22" />
+    <UnitTestResult executionId="6201e5c8-1fd8-467b-9a3d-fe48d05071ce" testId="f60051af-2eec-e481-7874-577f742d2720" testName="WorkIntelligence.Tests.DocumentTests.DocxExportRoundTripsUnicodeAndXmlMetacharacters" computerName="5adb609447af" duration="00:00:00.0128429" startTime="2026-11-01T02:29:01.4876274+00:00" endTime="2026-11-01T02:29:01.4955842+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6201e5c8-1fd8-467b-9a3d-fe48d05071ce" />
+    <UnitTestResult executionId="26f70a14-32bd-4205-8ba6-23cc88a3e0fb" testId="da7b82f6-3231-b42c-997d-fa1dc5b76987" testName="WorkIntelligence.Tests.Tests.OcrRejectsShortImageBeforeLaunchingBinary" computerName="5adb609447af" duration="00:00:00.0003265" startTime="2026-11-01T02:29:01.5326212+00:00" endTime="2026-11-01T02:29:01.5326578+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="26f70a14-32bd-4205-8ba6-23cc88a3e0fb" />
+    <UnitTestResult executionId="3ae8f415-96bb-4a78-a941-00f35d522a1b" testId="13cc53aa-57fa-6aed-216d-e88c008e34d0" testName="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.json&quot;)" computerName="5adb609447af" duration="00:00:00.0001975" startTime="2026-11-01T02:29:01.4994297+00:00" endTime="2026-11-01T02:29:01.4994780+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3ae8f415-96bb-4a78-a941-00f35d522a1b" />
+    <UnitTestResult executionId="794087e1-d01e-4b13-ad9b-d78298ef27c4" testId="a908d1f0-e12d-508e-86fc-24aa9fbe9678" testName="WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment" computerName="5adb609447af" duration="00:00:00.6325479" startTime="2026-11-01T02:29:08.1890356+00:00" endTime="2026-11-01T02:29:08.8218450+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="794087e1-d01e-4b13-ad9b-d78298ef27c4">
+      <Output>
+        <ErrorInfo>
+          <Message>Failed import deleted an attachment it did not create.</Message>
+          <StackTrace>   at WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 73
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="45bbe8c4-7c85-4c67-9a5f-e4d5401762c8" testId="5f224815-e89f-72af-c356-eb9524d03987" testName="WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing" computerName="5adb609447af" duration="00:00:00.0008567" startTime="2026-11-01T02:29:01.5417272+00:00" endTime="2026-11-01T02:29:01.5417671+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45bbe8c4-7c85-4c67-9a5f-e4d5401762c8">
+      <Output>
+        <ErrorInfo>
+          <Message>System.Text.Json.JsonReaderException : Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 11.</Message>
+          <StackTrace>   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb&amp; database, StackRowStack&amp; stack)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+   at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext() in /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs:line 15
+   at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Boolean&gt;.GetResult()
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct) in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 13
+   at WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing() in /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs:line 38
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3654b1ff-5a02-423d-bfe6-af6c4bd2c339" testId="480cc126-0c95-29a3-8c15-4ecfcf33b4f4" testName="WorkIntelligence.Tests.StorageTests.VaultRejectsWrongPasswordAndAttachmentTampering" computerName="5adb609447af" duration="00:00:00.5618367" startTime="2026-11-01T02:29:07.6275246+00:00" endTime="2026-11-01T02:29:08.1887365+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3654b1ff-5a02-423d-bfe6-af6c4bd2c339" />
+    <UnitTestResult executionId="b4e6e869-b24e-4319-abe2-0b29b5834757" testId="dbd1628e-727c-8497-b0a9-b0c70ff53e80" testName="WorkIntelligence.Tests.Tests.RuntimeBundleFailsClosedWhenNotPackaged" computerName="5adb609447af" duration="00:00:00.0010573" startTime="2026-11-01T02:29:01.5327375+00:00" endTime="2026-11-01T02:29:01.5327747+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b4e6e869-b24e-4319-abe2-0b29b5834757" />
+    <UnitTestResult executionId="d94b54d6-77e3-4b3f-9345-62f59c370c30" testId="4687ff1f-a64d-5270-be54-09ba4544f6fe" testName="WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: True)" computerName="5adb609447af" duration="00:00:00.0037729" startTime="2026-11-01T02:29:01.4594771+00:00" endTime="2026-11-01T02:29:01.4728049+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d94b54d6-77e3-4b3f-9345-62f59c370c30">
+      <Output>
+        <ErrorInfo>
+          <Message>System.IO.InvalidDataException : Binary file not supported.</Message>
+          <StackTrace>   at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 26
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 17
+   at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian) in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 25
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="781a1ce0-0d33-4592-a141-e507ca6ac989" testId="f1415392-1702-6081-b589-2d0cb5ed2040" testName="WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent" computerName="5adb609447af" duration="00:00:00.0016064" startTime="2026-11-01T02:29:01.4871840+00:00" endTime="2026-11-01T02:29:01.4872332+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="781a1ce0-0d33-4592-a141-e507ca6ac989">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "Synthetic work text"
+Actual:   "﻿Synthetic work text"
+           ↑ (pos 0)</Message>
+          <StackTrace>   at WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 14
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="84cf8711-a9d0-492c-8860-2dbb4b467553" testId="704ef3ba-6745-7cff-0fab-f22f5564e2d6" testName="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.csv&quot;)" computerName="5adb609447af" duration="00:00:00.0000043" startTime="2026-11-01T02:29:01.5317565+00:00" endTime="2026-11-01T02:29:01.5318226+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84cf8711-a9d0-492c-8860-2dbb4b467553" />
+    <UnitTestResult executionId="7ecf13b8-a518-429b-9720-c9460285af5c" testId="6c250181-2945-3deb-fc77-b8e08da9119e" testName="WorkIntelligence.Tests.CompletionStreamTests.CancellationIsObservedEvenWithBufferedData" computerName="5adb609447af" duration="00:00:00.0014357" startTime="2026-11-01T02:29:01.5414810+00:00" endTime="2026-11-01T02:29:01.5415210+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7ecf13b8-a518-429b-9720-c9460285af5c" />
+    <UnitTestResult executionId="5244fb27-e378-49fd-b9e0-b187dc930179" testId="c7210840-e7e1-89fa-af91-2f4c2f54783b" testName="WorkIntelligence.Tests.Tests.ChunkingPreservesContentBoundaries" computerName="5adb609447af" duration="00:00:00.0038468" startTime="2026-11-01T02:29:01.5397569+00:00" endTime="2026-11-01T02:29:01.5398299+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5244fb27-e378-49fd-b9e0-b187dc930179" />
+    <UnitTestResult executionId="b40b1a09-b385-4ca2-bcb9-eaa87d058840" testId="8141475c-8ccb-52e8-ab34-a5acd1e55a2c" testName="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.txt&quot;)" computerName="5adb609447af" duration="00:00:00.0000047" startTime="2026-11-01T02:29:01.4995403+00:00" endTime="2026-11-01T02:29:01.4995824+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b40b1a09-b385-4ca2-bcb9-eaa87d058840" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ChunkingPreservesContentBoundaries" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="c7210840-e7e1-89fa-af91-2f4c2f54783b">
+      <Execution id="5244fb27-e378-49fd-b9e0-b187dc930179" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ChunkingPreservesContentBoundaries" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.OcrRejectsShortImageBeforeLaunchingBinary" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="da7b82f6-3231-b42c-997d-fa1dc5b76987">
+      <Execution id="26f70a14-32bd-4205-8ba6-23cc88a3e0fb" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="OcrRejectsShortImageBeforeLaunchingBinary" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.txt&quot;)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="8141475c-8ccb-52e8-ab34-a5acd1e55a2c">
+      <Execution id="b40b1a09-b385-4ca2-bcb9-eaa87d058840" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsUtf8Documents" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="4a2aa066-f052-6093-9939-78c2a943d36a">
+      <Execution id="81dbfda4-8581-4341-87a2-8ded18668a4e" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="TokenLimitDoesNotLookLikeCompleteAnswer" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="26bbb1aa-ef98-ad9b-34cb-fbadc35e9ae4">
+      <Execution id="f4c24c58-d358-488c-91df-92af0bf34668" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="NetworkEofWithoutDoneIsNotReportedAsSuccess" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="cfac8d57-ed48-03e7-e235-cb37e54dec65">
+      <Execution id="479b51ff-2289-4808-9c9f-25bbd5976f2b" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="DocxTabsAndBreaksDoNotMergeWords" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.VaultRejectsWrongPasswordAndAttachmentTampering" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="480cc126-0c95-29a3-8c15-4ecfcf33b4f4">
+      <Execution id="3654b1ff-5a02-423d-bfe6-af6c4bd2c339" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="VaultRejectsWrongPasswordAndAttachmentTampering" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="b130e449-229e-f927-edaf-ff9809ceba52">
+      <Execution id="a5470fbb-93d3-48ba-8a73-a8a4f749480e" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="OversizedEventIsRejected" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.UnicodeContentAndCommentsAreHandled" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="55b2349f-009d-fe12-b9ca-c47aa1f745ca">
+      <Execution id="dea21d93-d047-4b0a-828e-bd8416933562" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="UnicodeContentAndCommentsAreHandled" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="a632f1bf-f107-47e8-dc9e-2ff4e522bd48">
+      <Execution id="db955e7b-13cc-45bb-a2ce-3c230f923cb1" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="ScanningAlreadyImportedFileAssignsItToApprovedWorkspace" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="f1415392-1702-6081-b589-2d0cb5ed2040">
+      <Execution id="781a1ce0-0d33-4592-a141-e507ca6ac989" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="Utf8BomIsNotIndexedAsContent" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.DocxExportRoundTripsUnicodeAndXmlMetacharacters" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="f60051af-2eec-e481-7874-577f742d2720">
+      <Execution id="6201e5c8-1fd8-467b-9a3d-fe48d05071ce" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="DocxExportRoundTripsUnicodeAndXmlMetacharacters" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.DeletingDocumentCascadesTextVectorsAndWorkspaceLinks" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="bbcb72cb-fa07-4b94-3c9c-0edc085b7cdb">
+      <Execution id="aecf64c5-9ce3-439c-b000-8044a06b4a22" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="DeletingDocumentCascadesTextVectorsAndWorkspaceLinks" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.RejectsBinaryAsText" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="dfcaf033-9f88-8c63-922b-d0b8e7952450">
+      <Execution id="8d48fdab-9fc6-49f4-b643-66cbe4eca0c9" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="RejectsBinaryAsText" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.json&quot;)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="13cc53aa-57fa-6aed-216d-e88c008e34d0">
+      <Execution id="3ae8f415-96bb-4a78-a941-00f35d522a1b" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsUtf8Documents" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: True)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="4687ff1f-a64d-5270-be54-09ba4544f6fe">
+      <Execution id="d94b54d6-77e3-4b3f-9345-62f59c370c30" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="WindowsUtf16WithBomIsDecoded" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="df62f198-8976-cc9a-546c-78f484e7aadd">
+      <Execution id="25929f1d-b117-4435-bfbc-6838c1888123" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="ReimportAfterDeletingNewestVersionRestoresSearchability" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsDocxParagraph" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="e27e6cc8-5b89-4093-e346-f12e47fc038f">
+      <Execution id="b1cd2a28-0ee0-454e-9619-37ac33eb0e4e" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsDocxParagraph" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: False)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="d397b205-d941-b6e3-649a-4cd45c44bae3">
+      <Execution id="4929dfdf-af48-4af4-95b2-6cb4215593c2" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="WindowsUtf16WithBomIsDecoded" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.RuntimeBundleFailsClosedWhenNotPackaged" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="dbd1628e-727c-8497-b0a9-b0c70ff53e80">
+      <Execution id="b4e6e869-b24e-4319-abe2-0b29b5834757" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="RuntimeBundleFailsClosedWhenNotPackaged" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.csv&quot;)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="704ef3ba-6745-7cff-0fab-f22f5564e2d6">
+      <Execution id="84cf8711-a9d0-492c-8860-2dbb4b467553" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsUtf8Documents" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="5f224815-e89f-72af-c356-eb9524d03987">
+      <Execution id="45bbe8c4-7c85-4c67-9a5f-e4d5401762c8" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="MultilineSseDataIsAssembledBeforeJsonParsing" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsUtf8Documents(filename: &quot;doc.md&quot;)" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="6e3a7b1c-81ab-2c88-1914-fe1306934ad4">
+      <Execution id="e9901ec0-1f37-45eb-948e-a148e679be8b" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsUtf8Documents" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ChunkingRejectsImpossibleOverlap" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="6df8159b-0fbc-60b1-cf02-a07b7b2bb14d">
+      <Execution id="4799258f-922a-4f9a-bc0b-298d62b8f8aa" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ChunkingRejectsImpossibleOverlap" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.DownloaderRejectsUntrustedEndpointWithoutNetwork" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="95a1a948-d506-b877-3ed0-b7eee63882a4">
+      <Execution id="1cd0edb6-8abb-4543-a47f-efdead616a98" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="DownloaderRejectsUntrustedEndpointWithoutNetwork" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.ExtractsXlsxSharedStringsAndNumbers" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="0ee8d112-3ec7-3962-b038-ac24bbc680fe">
+      <Execution id="04c98dd7-613c-4eff-8182-3bab47c6b104" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="ExtractsXlsxSharedStringsAndNumbers" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="a908d1f0-e12d-508e-86fc-24aa9fbe9678">
+      <Execution id="794087e1-d01e-4b13-ad9b-d78298ef27c4" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="FailedImportNeverDeletesAPreexistingAttachment" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.DocumentTests.OfficeXmlRejectsExternalEntities" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="9c65f42d-0b00-fb44-6d6e-a6ebb35a7504">
+      <Execution id="c89f5cfb-1b64-480a-940e-ebfa6c48c657" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.DocumentTests" name="OfficeXmlRejectsExternalEntities" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.CancellationIsObservedEvenWithBufferedData" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="6c250181-2945-3deb-fc77-b8e08da9119e">
+      <Execution id="7ecf13b8-a518-429b-9720-c9460285af5c" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="CancellationIsObservedEvenWithBufferedData" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="c1e8bc6b-be73-2a90-4d79-72aa93c9731a">
+      <Execution id="c0a3ddab-3389-49a8-ac8f-817234139bf1" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="RevisedDocumentRetainsWorkspaceMembership" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.RealSqlCipherDatabaseIsEncryptedAndRejectsWrongKey" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="959f396a-8df7-68b1-5154-4078a37a57b5">
+      <Execution id="9f4683ed-5ae3-42db-8c9d-5b1d016ca99e" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="RealSqlCipherDatabaseIsEncryptedAndRejectsWrongKey" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="3d2bb737-af4f-4d1d-6240-b145baf9457d">
+      <Execution id="13804b3a-1e41-4490-915f-ae4aa6ffa0f3" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.CompletionStreamTests" name="ServerErrorEventIsNotReportedAsEmptySuccess" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.BundledRuntimeHasMatchingHashManifest" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="ade3b50b-8fac-3e1d-6433-2a6799a0baf1">
+      <Execution id="120d0d95-3db6-4b12-8b2a-3826e00f743b" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="BundledRuntimeHasMatchingHashManifest" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.Tests.RejectsUnsupportedFormat" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="62afba14-5aa4-105c-c154-46f9fa41540b">
+      <Execution id="fa3b38f5-914b-49d6-a4bd-bf90b3a2c0ec" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.Tests" name="RejectsUnsupportedFormat" />
+    </UnitTest>
+    <UnitTest name="WorkIntelligence.Tests.StorageTests.SnapshotContainsEncryptedDatabaseAndAuthenticatedAttachments" storage="/workspace/local-llm-ai/tests/core/bin/release/net10.0/workintelligence.core.tests.dll" id="4e774b5c-8758-59ae-4e49-4cb3cd5816cc">
+      <Execution id="67f37463-6e66-490f-aef5-6e9bef94e6e2" />
+      <TestMethod codeBase="/workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="WorkIntelligence.Tests.StorageTests" name="SnapshotContainsEncryptedDatabaseAndAuthenticatedAttachments" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="6e3a7b1c-81ab-2c88-1914-fe1306934ad4" executionId="e9901ec0-1f37-45eb-948e-a148e679be8b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d2bb737-af4f-4d1d-6240-b145baf9457d" executionId="13804b3a-1e41-4490-915f-ae4aa6ffa0f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ade3b50b-8fac-3e1d-6433-2a6799a0baf1" executionId="120d0d95-3db6-4b12-8b2a-3826e00f743b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dfcaf033-9f88-8c63-922b-d0b8e7952450" executionId="8d48fdab-9fc6-49f4-b643-66cbe4eca0c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4e774b5c-8758-59ae-4e49-4cb3cd5816cc" executionId="67f37463-6e66-490f-aef5-6e9bef94e6e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="62afba14-5aa4-105c-c154-46f9fa41540b" executionId="fa3b38f5-914b-49d6-a4bd-bf90b3a2c0ec" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9c65f42d-0b00-fb44-6d6e-a6ebb35a7504" executionId="c89f5cfb-1b64-480a-940e-ebfa6c48c657" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d397b205-d941-b6e3-649a-4cd45c44bae3" executionId="4929dfdf-af48-4af4-95b2-6cb4215593c2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a632f1bf-f107-47e8-dc9e-2ff4e522bd48" executionId="db955e7b-13cc-45bb-a2ce-3c230f923cb1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b130e449-229e-f927-edaf-ff9809ceba52" executionId="a5470fbb-93d3-48ba-8a73-a8a4f749480e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95a1a948-d506-b877-3ed0-b7eee63882a4" executionId="1cd0edb6-8abb-4543-a47f-efdead616a98" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6df8159b-0fbc-60b1-cf02-a07b7b2bb14d" executionId="4799258f-922a-4f9a-bc0b-298d62b8f8aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="26bbb1aa-ef98-ad9b-34cb-fbadc35e9ae4" executionId="f4c24c58-d358-488c-91df-92af0bf34668" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c1e8bc6b-be73-2a90-4d79-72aa93c9731a" executionId="c0a3ddab-3389-49a8-ac8f-817234139bf1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="df62f198-8976-cc9a-546c-78f484e7aadd" executionId="25929f1d-b117-4435-bfbc-6838c1888123" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0ee8d112-3ec7-3962-b038-ac24bbc680fe" executionId="04c98dd7-613c-4eff-8182-3bab47c6b104" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e27e6cc8-5b89-4093-e346-f12e47fc038f" executionId="b1cd2a28-0ee0-454e-9619-37ac33eb0e4e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="959f396a-8df7-68b1-5154-4078a37a57b5" executionId="9f4683ed-5ae3-42db-8c9d-5b1d016ca99e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4a2aa066-f052-6093-9939-78c2a943d36a" executionId="81dbfda4-8581-4341-87a2-8ded18668a4e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cfac8d57-ed48-03e7-e235-cb37e54dec65" executionId="479b51ff-2289-4808-9c9f-25bbd5976f2b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="55b2349f-009d-fe12-b9ca-c47aa1f745ca" executionId="dea21d93-d047-4b0a-828e-bd8416933562" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bbcb72cb-fa07-4b94-3c9c-0edc085b7cdb" executionId="aecf64c5-9ce3-439c-b000-8044a06b4a22" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f60051af-2eec-e481-7874-577f742d2720" executionId="6201e5c8-1fd8-467b-9a3d-fe48d05071ce" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="da7b82f6-3231-b42c-997d-fa1dc5b76987" executionId="26f70a14-32bd-4205-8ba6-23cc88a3e0fb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="13cc53aa-57fa-6aed-216d-e88c008e34d0" executionId="3ae8f415-96bb-4a78-a941-00f35d522a1b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a908d1f0-e12d-508e-86fc-24aa9fbe9678" executionId="794087e1-d01e-4b13-ad9b-d78298ef27c4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5f224815-e89f-72af-c356-eb9524d03987" executionId="45bbe8c4-7c85-4c67-9a5f-e4d5401762c8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="480cc126-0c95-29a3-8c15-4ecfcf33b4f4" executionId="3654b1ff-5a02-423d-bfe6-af6c4bd2c339" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dbd1628e-727c-8497-b0a9-b0c70ff53e80" executionId="b4e6e869-b24e-4319-abe2-0b29b5834757" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4687ff1f-a64d-5270-be54-09ba4544f6fe" executionId="d94b54d6-77e3-4b3f-9345-62f59c370c30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f1415392-1702-6081-b589-2d0cb5ed2040" executionId="781a1ce0-0d33-4592-a141-e507ca6ac989" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="704ef3ba-6745-7cff-0fab-f22f5564e2d6" executionId="84cf8711-a9d0-492c-8860-2dbb4b467553" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6c250181-2945-3deb-fc77-b8e08da9119e" executionId="7ecf13b8-a518-429b-9720-c9460285af5c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c7210840-e7e1-89fa-af91-2f4c2f54783b" executionId="5244fb27-e378-49fd-b9e0-b187dc930179" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8141475c-8ccb-52e8-ab34-a5acd1e55a2c" executionId="b40b1a09-b385-4ca2-bcb9-eaa87d058840" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="35" executed="35" passed="22" failed="13" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.14)
+[xUnit.net 00:00:00.07]   Discovering: WorkIntelligence.Core.Tests
+[xUnit.net 00:00:00.11]   Discovered:  WorkIntelligence.Core.Tests
+[xUnit.net 00:00:00.14]   Starting:    WorkIntelligence.Core.Tests
+[xUnit.net 00:00:00.17]       System.IO.InvalidDataException : Binary file not supported.
+[xUnit.net 00:00:00.17]       Stack Trace:
+[xUnit.net 00:00:00.17]         /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs(26,0): at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes)
+[xUnit.net 00:00:00.17]         /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs(17,0): at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes)
+[xUnit.net 00:00:00.17]         /workspace/local-llm-ai/tests/Core/DocumentTests.cs(25,0): at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian)
+[xUnit.net 00:00:00.17]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.17]            at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.18]       System.IO.InvalidDataException : Binary file not supported.
+[xUnit.net 00:00:00.18]       Stack Trace:
+[xUnit.net 00:00:00.18]         /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs(26,0): at WorkIntelligence.Services.DocumentExtractor.DecodeText(Byte[] bytes)
+[xUnit.net 00:00:00.18]         /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs(17,0): at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes)
+[xUnit.net 00:00:00.18]         /workspace/local-llm-ai/tests/Core/DocumentTests.cs(25,0): at WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(Boolean bigEndian)
+[xUnit.net 00:00:00.18]            at InvokeStub_DocumentTests.WindowsUtf16WithBomIsDecoded(Object, Span`1)
+[xUnit.net 00:00:00.18]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:00.18]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:00.18]                  ↓ (pos 0)
+[xUnit.net 00:00:00.18]       Expected: "Synthetic work text"
+[xUnit.net 00:00:00.19]       Actual:   "﻿Synthetic work text"
+[xUnit.net 00:00:00.19]                  ↑ (pos 0)
+[xUnit.net 00:00:00.19]       Stack Trace:
+[xUnit.net 00:00:00.19]         /workspace/local-llm-ai/tests/Core/DocumentTests.cs(14,0): at WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent()
+[xUnit.net 00:00:00.19]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.19]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.19]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:00.19]                       ↓ (pos 5)
+[xUnit.net 00:00:00.19]       Expected: "alpha\tbeta\ngamma\n"
+[xUnit.net 00:00:00.19]       Actual:   "alphabetagamma\n"
+[xUnit.net 00:00:00.19]                       ↑ (pos 5)
+[xUnit.net 00:00:00.19]       Stack Trace:
+[xUnit.net 00:00:00.19]         /workspace/local-llm-ai/tests/Core/DocumentTests.cs(35,0): at WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords()
+[xUnit.net 00:00:00.19]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.19]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.24]       System.Text.Json.JsonReaderException : Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 11.
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]            at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.Read()
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb&amp; database, StackRowStack&amp; stack)
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs(15,0): at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext()
+[xUnit.net 00:00:00.24]            at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Boolean&gt;.GetResult()
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(13,0): at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct)
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(13,0): at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct)
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(38,0): at WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing()
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.24]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.24]       Expected: typeof(System.IO.EndOfStreamException)
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(26,0): at WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess()
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.24]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.24]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(44,0): at WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer()
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.24]       Assert.Throws() Failure: Exception type was not an exact match
+[xUnit.net 00:00:00.24]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:00.24]       Actual:   typeof(System.Text.Json.JsonReaderException)
+[xUnit.net 00:00:00.24]       ---- System.Text.Json.JsonReaderException : 'x' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(58,0): at WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected()
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.24]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:00.24]            at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+[xUnit.net 00:00:00.24]            at System.Text.Json.Utf8JsonReader.Read()
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlySpan`1 utf8JsonSpan, JsonReaderOptions readerOptions, MetadataDb&amp; database, StackRowStack&amp; stack)
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 utf8Json, JsonReaderOptions readerOptions, Byte[] extraRentedArrayPoolBytes, PooledByteBufferWriter extraPooledByteBufferWriter, Boolean allowDuplicateProperties)
+[xUnit.net 00:00:00.24]            at System.Text.Json.JsonDocument.Parse(ReadOnlyMemory`1 json, JsonDocumentOptions options)
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/WorkIntelligence/Services/CompletionStream.cs(15,0): at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+MoveNext()
+[xUnit.net 00:00:00.24]            at WorkIntelligence.Services.CompletionStream.ReadAsync(TextReader reader, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Boolean&gt;.GetResult()
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(13,0): at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct)
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(13,0): at WorkIntelligence.Tests.CompletionStreamTests.Read(String events, CancellationToken ct)
+[xUnit.net 00:00:00.24]       Assert.Throws() Failure: No exception was thrown
+[xUnit.net 00:00:00.24]       Expected: typeof(System.IO.InvalidDataException)
+[xUnit.net 00:00:00.24]       Stack Trace:
+[xUnit.net 00:00:00.24]         /workspace/local-llm-ai/tests/Core/CompletionStreamTests.cs(32,0): at WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess()
+[xUnit.net 00:00:00.24]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.42]       Assert.Single() Failure: The collection was empty
+[xUnit.net 00:00:02.42]       Stack Trace:
+[xUnit.net 00:00:02.42]         /workspace/local-llm-ai/tests/Core/StorageTests.cs(88,0): at WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability()
+[xUnit.net 00:00:02.42]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:02.42]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+2026-11-01 02:29:04.371: ERROR CORE sqlcipher_page_cipher: hmac check failed for pgno=1
+2026-11-01 02:29:04.371: ERROR CORE sqlite3Codec: error decrypting page 1 data: 1
+2026-11-01 02:29:04.371: ERROR CORE sqlcipher_codec_ctx_set_error 1
+[xUnit.net 00:00:04.35]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:04.35]       Expected: 1
+[xUnit.net 00:00:04.35]       Actual:   0
+[xUnit.net 00:00:04.35]       Stack Trace:
+[xUnit.net 00:00:04.35]         /workspace/local-llm-ai/tests/Core/StorageTests.cs(128,0): at WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace()
+[xUnit.net 00:00:04.35]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:05.41]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:05.41]       Expected: 1
+[xUnit.net 00:00:05.41]       Actual:   0
+[xUnit.net 00:00:05.41]       Stack Trace:
+[xUnit.net 00:00:05.41]         /workspace/local-llm-ai/tests/Core/StorageTests.cs(106,0): at WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership()
+[xUnit.net 00:00:05.41]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:05.41]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.52]       Failed import deleted an attachment it did not create.
+[xUnit.net 00:00:07.52]       Stack Trace:
+[xUnit.net 00:00:07.52]         /workspace/local-llm-ai/tests/Core/StorageTests.cs(73,0): at WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment()
+[xUnit.net 00:00:07.52]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:07.52]            at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:07.52]   Finished:    WorkIntelligence.Core.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.4754433+00:00">
+        <Text>[xUnit.net 00:00:00.17]     WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: True) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.4852469+00:00">
+        <Text>[xUnit.net 00:00:00.18]     WorkIntelligence.Tests.DocumentTests.WindowsUtf16WithBomIsDecoded(bigEndian: False) [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.4874636+00:00">
+        <Text>[xUnit.net 00:00:00.18]     WorkIntelligence.Tests.DocumentTests.Utf8BomIsNotIndexedAsContent [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.4980317+00:00">
+        <Text>[xUnit.net 00:00:00.19]     WorkIntelligence.Tests.DocumentTests.DocxTabsAndBreaksDoNotMergeWords [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.5708311+00:00">
+        <Text>[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.MultilineSseDataIsAssembledBeforeJsonParsing [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.5708758+00:00">
+        <Text>[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.NetworkEofWithoutDoneIsNotReportedAsSuccess [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.5708868+00:00">
+        <Text>[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.TokenLimitDoesNotLookLikeCompleteAnswer [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.5709303+00:00">
+        <Text>[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.OversizedEventIsRejected [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:01.5709669+00:00">
+        <Text>[xUnit.net 00:00:00.24]     WorkIntelligence.Tests.CompletionStreamTests.ServerErrorEventIsNotReportedAsEmptySuccess [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:03.7213920+00:00">
+        <Text>[xUnit.net 00:00:02.42]     WorkIntelligence.Tests.StorageTests.ReimportAfterDeletingNewestVersionRestoresSearchability [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:05.6620172+00:00">
+        <Text>[xUnit.net 00:00:04.35]     WorkIntelligence.Tests.StorageTests.ScanningAlreadyImportedFileAssignsItToApprovedWorkspace [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:06.7132333+00:00">
+        <Text>[xUnit.net 00:00:05.41]     WorkIntelligence.Tests.StorageTests.RevisedDocumentRetainsWorkspaceMembership [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="5adb609447af" outcome="Error" timestamp="2026-11-01T02:29:08.8227598+00:00">
+        <Text>[xUnit.net 00:00:07.52]     WorkIntelligence.Tests.StorageTests.FailedImportNeverDeletesAPreexistingAttachment [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

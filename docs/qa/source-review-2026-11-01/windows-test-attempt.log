@@ -1,0 +1,15 @@
+Test run for /workspace/local-llm-ai/tests/bin/Release/net10.0-windows/WorkIntelligence.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Testhost process for source(s) '/workspace/local-llm-ai/tests/bin/Release/net10.0-windows/WorkIntelligence.Tests.dll' exited with error: You must install or update .NET to run this application.
+App: /workspace/local-llm-ai/tests/bin/Release/net10.0-windows/testhost.dll
+Architecture: x64
+Framework: 'Microsoft.WindowsDesktop.App', version '10.0.0' (x64)
+.NET location: /workspace/.tools/dotnet/
+No frameworks were found.
+Learn more:
+https://aka.ms/dotnet/app-launch-failed
+To install missing framework, download:
+https://aka.ms/dotnet-core-applaunch?framework=Microsoft.WindowsDesktop.App&framework_version=10.0.0&arch=x64&rid=linux-x64&os=debian.13
+. Please check the diagnostic logs for more information.
+
+Test Run Aborted.

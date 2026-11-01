@@ -1,0 +1,25 @@
+PASS | V4 migration reaches correct version
+PASS | V5 migration reaches correct version
+PASS | Legacy memories retained in General
+PASS | Legacy chats retained in General
+PASS | Legacy proposals retained in General
+PASS | Unassigned documents linked into General
+PASS | Real C# semantic query retrieves assigned vectors
+PASS | Real C# semantic query excludes other workspace vectors
+PASS | Real C# lexical query returns assigned document
+PASS | Real C# lexical query excludes other workspaces
+PASS | Real C# lexical query supports explicit all-scope legacy API
+PASS | Approved FTS memory retrieved within workspace
+PASS | Approved FTS memory excluded from other workspace
+PASS | Superseded fact excluded after approved correction
+PASS | Supersession lineage persisted
+PASS | Deleting replacement preserves older historical record
+PASS | Deleting memory removes its FTS hits
+PASS | Reopen preserves V5 version
+PASS | C# memory proposals require explicit approval
+PASS | C# memory replacement checks workspace
+PASS | C# memory corrections remain atomic
+PASS | C# prompt boundaries and capped excerpts exist
+PASS | Model output cannot directly write memory
+PASS | Workspace list rebinding does not accidentally reset active chat
+LEARNING SQL + SOURCE QA: 24 / 24

@@ -1,0 +1,14 @@
+  WorkIntelligence.Core.Tests -> /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll
+Test run for /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:33.13]     WorkIntelligence.Tests.BackupTests.RestoreIgnoresANewerUnrelatedSnapshot [FAIL]
+  Failed WorkIntelligence.Tests.BackupTests.RestoreIgnoresANewerUnrelatedSnapshot [7 s]
+  Error Message:
+   System.IO.InvalidDataException : Cannot locate a unique vault configuration in the restored snapshot.
+  Stack Trace:
+     at WorkIntelligence.Services.BackupService.RestoreToEmptyVaultAsync(String repository, String backupPassword, CancellationToken cancellationToken, Func`2 resolve) in /workspace/local-llm-ai/WorkIntelligence/Services/BackupService.cs:line 83
+   at WorkIntelligence.Tests.BackupTests.RestoreIgnoresANewerUnrelatedSnapshot() in /workspace/local-llm-ai/tests/Core/BackupTests.cs:line 67
+--- End of stack trace from previous location ---
+Results File: /tmp/wi-test-results/backup-before.trx
+
+Failed!  - Failed:     1, Passed:    53, Skipped:     0, Total:    54, Duration: 33 s - WorkIntelligence.Core.Tests.dll (net10.0)

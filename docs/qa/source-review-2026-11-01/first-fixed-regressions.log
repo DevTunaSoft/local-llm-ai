@@ -1,0 +1,6 @@
+  WorkIntelligence.Core.Tests -> /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll
+Test run for /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: /tmp/wi-test-results/fixed-regressions.trx
+
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 7 s - WorkIntelligence.Core.Tests.dll (net10.0)

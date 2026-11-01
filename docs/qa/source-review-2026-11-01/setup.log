@@ -1,0 +1,152 @@
+Configuring SQLite version 3.51.1
+Host System...x86_64-pc-linux-gnu
+Build System...x86_64-pc-linux-gnu
+Source dir = /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535
+Build dir  = /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535
+C compiler... cc -O2 -fPIC -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown 
+C++ compiler... c++ -O2 -fPIC -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown 
+Build C compiler...cc
+Checking for stdlib.h...ok
+Checking for sys/types.h...ok
+Checking if -D_FILE_OFFSET_BITS=64 is needed...no
+SQLITE_DEBUG build? no
+Looking for install ... /usr/bin/install
+Checking for int8_t...ok
+Checking for int16_t...ok
+Checking for int32_t...ok
+Checking for int64_t...ok
+Checking for intptr_t...ok
+Checking for uint8_t...ok
+Checking for uint16_t...ok
+Checking for uint32_t...ok
+Checking for uint64_t...ok
+Checking for uintptr_t...ok
+Checking for gmtime_r...ok
+Checking for isnan...ok
+Checking for localtime_r...ok
+Checking for localtime_s...not found
+Checking for usleep...ok
+Checking for utime...ok
+Checking for pread...ok
+Checking for pread64...ok
+Checking for pwrite...ok
+Checking for pwrite64...ok
+Checking libs for fdatasync...none needed
+Checking libs for nanosleep...none needed
+Checking for sys/types.h...(cached) ok
+Checking for sys/stat.h...ok
+Checking for dlfcn.h...ok
+Checking for unistd.h...ok
+Checking for stdlib.h...(cached) ok
+Checking for malloc.h...ok
+Checking for memory.h...ok
+Checking for string.h...ok
+Checking for strings.h...ok
+Checking for inttypes.h...ok
+Checking for zlib.h...ok
+Checking libs for deflate...-lz
+Use amalgamation for builds? yes
+Use gcov? no
+test-runner flags: no
+Use #line macros in the amalgamation: no
+Checking whether the C compiler accepts -fsanitize=address...yes
+Checking whether the C compiler accepts -fsanitize=bounds-strict...yes
+
+    NOTE: TCL is disabled via --disable-tcl. This means that none
+    of the TCL-based components will be built, including tests
+    and sqlite3_analyzer.
+
+Checking for TCL to use for code generation... 
+Checking for dirent.h...ok
+Checking for sys/time.h...ok
+Checking for realpath...ok
+TCL for code generation: jimsh
+Emscripten SDK? not found
+Statically link tclsqlite3? no
+Statically link CLI shell? no
+Checking whether the C compiler accepts -rpath /usr/local/lib...no
+Checking whether the C compiler accepts -Wl,-rpath,/usr/local/lib...yes
+Support threadsafe operation? Checking for libs...
+Checking libs for pthread_create...none needed
+Checking libs for pthread_mutexattr_init...none needed
+Use an in-RAM database for temporary tables? yes
+Checking libs for dlopen...none needed
+Loadable extension support enabled. 
+Checking libs for ceil...-lm
+Enabling math SQL functions
+ICU support is disabled.
+Checking for line-editing capability...
+Line-editing support for the sqlite3 shell: none
+Build shared library? yes
+Build static library? yes
+Feature flags...
+  - fts3
+  - fts4
+  + fts5
+  - geopoly
+  - rtree
+  - session
+  - update-limit
+  - memsys5
+  - memsys3
+  - scanstatus
+  - column-metadata
+  - dbpage
+  - dbstat
+  - carray
+  + json
+Library feature flags: -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_PERCENTILE -DSQLITE_TEMP_STORE=2 -DSQLITE_THREADSAFE=1
+Shell options: -DSQLITE_HAVE_ZLIB=1
+Created Makefile from Makefile.in
+Created sqlite3.pc from sqlite3.pc.in
+Created sqlite_cfg.h
+cc -g -o jimsh -O1 -DHAVE_REALPATH /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/autosetup/jimsh0.c
+touch .main.mk.checks
+cc -g -o mkkeywordhash -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_PERCENTILE -DSQLITE_TEMP_STORE=2 -DSQLITE_THREADSAFE=1   /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkkeywordhash.c
+cc -g -o lemon /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/lemon.c
+cp /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/lempar.c .
+cc -g -o mksourceid /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mksourceid.c
+cp /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts5/fts5parse.y .
+rm -f fts5parse.h
+./lemon  -S fts5parse.y
+cc -g -o src-verify /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/src-verify.c
+./mkkeywordhash > keywordhash.h
+cp /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/parse.y .
+./lemon -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_PERCENTILE -DSQLITE_TEMP_STORE=2 -DSQLITE_THREADSAFE=1   -S parse.y
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkctimec.tcl
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkpragmatab.tcl
+Overwriting ctime.c...
+cat parse.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbe.c | ./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkopcodeh.tcl >opcodes.h
+Overwriting pragma.h with new pragma table...
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkshellc.tcl shell.c
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mksqlite3h.tcl /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535 -o sqlite3.h
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts5/tool/mkfts5c.tcl
+cp /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts5/fts5.h .
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mkopcodec.tcl opcodes.h >opcodes.c
+rm -rf tsrc
+mkdir tsrc
+cp -f /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqlcipher.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqlcipher.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/crypto_openssl.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/crypto_cc.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/alter.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/analyze.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/attach.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/auth.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/backup.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/bitvec.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/btmutex.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/btree.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/btree.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/btreeInt.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/build.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/callback.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/carray.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/complete.c ctime.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/date.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/dbpage.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/dbstat.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/delete.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/expr.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/fault.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/fkey.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/func.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/global.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/hash.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/hash.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/hwtime.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/insert.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/json.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/legacy.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/loadext.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/main.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/malloc.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mem0.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mem1.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mem2.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mem3.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mem5.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/memdb.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/memjournal.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/msvc.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mutex.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mutex.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mutex_noop.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mutex_unix.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/mutex_w32.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/notify.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_common.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_setup.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_kv.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_unix.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_win.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/os_win.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pager.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pager.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/parse.y /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pcache.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pcache.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pcache1.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/pragma.c pragma.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/prepare.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/printf.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/random.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/resolve.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/rowset.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/select.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/status.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/shell.c.in /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqlite.h.in /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqlite3ext.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqliteInt.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/sqliteLimit.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/table.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/tclsqlite.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/threads.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/tokenize.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/treeview.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/trigger.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/utf.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/update.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/upsert.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/util.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vacuum.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbe.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbe.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbeapi.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbeaux.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbeblob.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbemem.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbesort.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbetrace.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbevtab.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vdbeInt.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vtab.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/vxworks.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/wal.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/wal.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/walker.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/where.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/wherecode.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/whereexpr.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/whereInt.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/src/window.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3Int.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_aux.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_expr.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_hash.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_hash.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_icu.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_porter.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_snippet.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_tokenizer.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_tokenizer.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_tokenizer1.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_tokenize_vtab.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_unicode.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_unicode2.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/fts3/fts3_write.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/icu/sqliteicu.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/icu/icu.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/rtree/rtree.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/rtree/rtree.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/rtree/geopoly.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/session/sqlite3session.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/session/sqlite3session.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/rbu/sqlite3rbu.h /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/rbu/sqlite3rbu.c /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/misc/stmt.c keywordhash.h opcodes.c opcodes.h parse.c parse.h sqlite_cfg.h shell.c sqlite3.h tsrc
+rm -f tsrc/sqlite.h.in tsrc/parse.y
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/vdbe-compress.tcl  <tsrc/vdbe.c >vdbe.new
+mv -f vdbe.new tsrc/vdbe.c
+cp fts5.c fts5.h tsrc
+touch .target_source
+./jimsh /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/tool/mksqlite3c.tcl --linemacros=0 
+cp tsrc/sqlite3ext.h .
+cp /tmp/wi-dependencies-o7aols3u/sqlcipher-6404ee168a2ae53fd029f6e6775fb70a44f11535/ext/session/sqlite3session.h .
+Pinned Linux test tools installed and verified. These are not Windows release assets.
+Collecting lxml==6.1.1 (from -r /workspace/local-llm-ai/scripts/qa-requirements.txt (line 1))
+  Downloading lxml-6.1.1-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.5 kB)
+Collecting PyYAML==6.0.3 (from -r /workspace/local-llm-ai/scripts/qa-requirements.txt (line 2))
+  Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Downloading lxml-6.1.1-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 47.5 MB/s eta 0:00:00
+Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 28.2 MB/s eta 0:00:00
+Installing collected packages: PyYAML, lxml
+Successfully installed PyYAML-6.0.3 lxml-6.1.1
+  Determining projects to restore...
+  Restored /workspace/local-llm-ai/WorkIntelligence/WorkIntelligence.csproj (in 276 ms).
+  1 of 2 projects are up-to-date for restore.
+  Determining projects to restore...
+  All projects are up-to-date for restore.

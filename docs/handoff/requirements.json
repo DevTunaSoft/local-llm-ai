@@ -1,0 +1,1070 @@
+{
+  "metadata": {
+    "as_of": "2026-11-01",
+    "baseline": "repair source ZIP",
+    "status_rule": "source_status is a cautious code-inspection estimate, NOT a passing functional test",
+    "runtime_verification": "No Windows .NET builds/GUI/model/OneDrive recovery tests verified"
+  },
+  "requirements": [
+    {
+      "id": "WIN-001",
+      "category": "Packaging & Windows",
+      "requirement": "Single self-contained Windows x64 WorkIntelligence.exe including .NET and all operational native tools",
+      "source_status": "scaffold",
+      "source_hint": "WorkIntelligence.csproj; scripts/Build-Windows.ps1",
+      "acceptance": "Build and launch one EXE on clean Win11 without developer prerequisites.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-002",
+      "category": "Packaging & Windows",
+      "requirement": "Store large LLM GGUF files outside executable in user-selectable folders",
+      "source_status": "partial",
+      "source_hint": "Services/LocalPaths.cs; ModelDownloader.cs",
+      "acceptance": "First run choose import/download destination and recover from a new path.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-003",
+      "category": "Packaging & Windows",
+      "requirement": "Store encrypted data, documents, caches and settings external to EXE and separate from OneDrive live sync",
+      "source_status": "scaffold",
+      "source_hint": "Services/LocalPaths.cs; KnowledgeStore.cs",
+      "acceptance": "Upgrade EXE while retaining data without live DB sync conflicts.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-004",
+      "category": "Packaging & Windows",
+      "requirement": "Bundle llama.cpp, SQLCipher, PDF renderer, Tesseract, restic, rclone, OCR assets and embedding runtime without separate install",
+      "source_status": "blocked",
+      "source_hint": "scripts/Build-Windows.ps1; vendor/README.md",
+      "acceptance": "All dependencies signed/pinned/hash-verified and packaged correctly.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-005",
+      "category": "Packaging & Windows",
+      "requirement": "First-run wizard configures vault, directories, model, knowledge, authorized backup",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml",
+      "acceptance": "End-to-end GUI walkthrough on clean Windows.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-006",
+      "category": "Packaging & Windows",
+      "requirement": "Portable restore to replacement Windows machine without losing knowledge",
+      "source_status": "blocked",
+      "source_hint": "BackupService.cs; RemoteBackupService.cs",
+      "acceptance": "Second machine restore uses backup password and works offline.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-007",
+      "category": "Packaging & Windows",
+      "requirement": "Safe application upgrades, schema migrations, rollback and old-version safeguards",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Test forward and rollback migrations on copied vaults.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-008",
+      "category": "Packaging & Windows",
+      "requirement": "Signed publisher and checked release / verifiable SBOM/licenses",
+      "source_status": "missing",
+      "source_hint": "vendor/README.md",
+      "acceptance": "Authenticode/signature and SBOM/license scan verified where appropriate.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-009",
+      "category": "Packaging & Windows",
+      "requirement": "Clean machine no Python, Node, Docker, Ollama or .NET runtime required",
+      "source_status": "blocked",
+      "source_hint": "Build-Windows.ps1",
+      "acceptance": "Install and use on clean Win11 VM.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "WIN-010",
+      "category": "Packaging & Windows",
+      "requirement": "User-controlled local app data location, resource limits, safe installation and uninstall",
+      "source_status": "partial",
+      "source_hint": "LocalPaths.cs",
+      "acceptance": "UI config, permissions and preserve/delete options tested.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "MOD-001",
+      "category": "Model Management & Inference",
+      "requirement": "GPT-OSS 20B default with correct GGUF/MXFP4, Harmony tool/reasoning templates",
+      "source_status": "unverified",
+      "source_hint": "Services/ModelRuntime.cs",
+      "acceptance": "Real test with licensed official model; correct reasoning/display separation.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-002",
+      "category": "Model Management & Inference",
+      "requirement": "Qwen3.5 27B advanced with verified Q4 GGUF chat template and reasoning",
+      "source_status": "unverified",
+      "source_hint": "Services/ModelRuntime.cs",
+      "acceptance": "Real inference and sustained RAM tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-003",
+      "category": "Model Management & Inference",
+      "requirement": "Unrestricted compatible GGUF library; custom import, custom directories and SHA256 pinning",
+      "source_status": "partial",
+      "source_hint": "Services/ModelDownloader.cs; KnowledgeStore.cs",
+      "acceptance": "Import/detect incompatible, corrupt and moved model files.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-004",
+      "category": "Model Management & Inference",
+      "requirement": "Verified official model catalog, optional download wizard and progress",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml; ModelDownloader.cs",
+      "acceptance": "Trusted versioned download with progress, resume, checksum and fail handling.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-005",
+      "category": "Model Management & Inference",
+      "requirement": "Resume/cancel interrupted downloads; avoid partial file corruption and malicious redirects",
+      "source_status": "partial",
+      "source_hint": "Services/ModelDownloader.cs",
+      "acceptance": "Network loss and hostile redirect simulation tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-006",
+      "category": "Model Management & Inference",
+      "requirement": "Switch models without restart; unload old model and preserve all knowledge",
+      "source_status": "partial",
+      "source_hint": "Services/ModelRuntime.cs",
+      "acceptance": "Repeated switching without leaks and DB loss.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-007",
+      "category": "Model Management & Inference",
+      "requirement": "One large loaded model by default; CPU-based on integrated Intel",
+      "source_status": "scaffold",
+      "source_hint": "Services/HardwareProbe.cs; ModelRuntime.cs",
+      "acceptance": "32 GB real RAM pressure and no GPU tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-008",
+      "category": "Model Management & Inference",
+      "requirement": "Model-specific context, threads, prompt/temperature, max tokens, timeouts, memory settings",
+      "source_status": "missing",
+      "source_hint": "Services/ModelRuntime.cs",
+      "acceptance": "UI settings persist and are applied to llama runtime.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-009",
+      "category": "Model Management & Inference",
+      "requirement": "Model benchmarks with latency/token rate/RAM/load time and progress",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml.cs",
+      "acceptance": "Repeatable measured benchmark traces.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-010",
+      "category": "Model Management & Inference",
+      "requirement": "Sequential model side-by-side compare of same question, sources and preferred answer",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml.cs",
+      "acceptance": "Compare answers with citations without two models loaded at once.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-011",
+      "category": "Model Management & Inference",
+      "requirement": "Optional automatic model choice based on task and available memory",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Configurable and explainable routing; user override.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-012",
+      "category": "Model Management & Inference",
+      "requirement": "Support compatible future GGUF architectures with compatibility checks",
+      "source_status": "partial",
+      "source_hint": "ModelRuntime.cs",
+      "acceptance": "Versioned capability/format tests and helpful refusal for unsupported models.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-013",
+      "category": "Model Management & Inference",
+      "requirement": "Offline local embedding GGUF supported independently of chat LLM",
+      "source_status": "partial",
+      "source_hint": "Services/EmbeddingRuntime.cs",
+      "acceptance": "Embedding model setup and real vector indexing without network.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-014",
+      "category": "Model Management & Inference",
+      "requirement": "Vision input support when model and projector compatible",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Image question with multimodal model verified and local-only.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-015",
+      "category": "Model Management & Inference",
+      "requirement": "Chat streaming, reasoning formatting, Unicode, retries, cancellation and model crash recovery",
+      "source_status": "partial",
+      "source_hint": "ModelRuntime.cs; MainWindow.xaml.cs",
+      "acceptance": "SSE streams and stop/retry/interrupt test on two models.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "MOD-016",
+      "category": "Model Management & Inference",
+      "requirement": "Reliable process lifecycle, port isolation/API key, health, cleanup and protected runtime",
+      "source_status": "partial",
+      "source_hint": "ModelRuntime.cs; RuntimeBundle.cs",
+      "acceptance": "Repeated start/stop, failed launch, port race, and process-tree cleanup.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-001",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Conversation histories persist across restarts; create, rename, delete, search and export",
+      "source_status": "partial",
+      "source_hint": "Services/KnowledgeStore.cs; MainWindow.xaml",
+      "acceptance": "All controls function and persist; no sensitive data leakage.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-002",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Assistant distinguishes source evidence from generated reasoning and uncertainty",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs; MainWindow.xaml.cs",
+      "acceptance": "Citations correspond to actual chunks, abstains on no evidence.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-003",
+      "category": "Chat & Personal Workflows",
+      "requirement": "User attaches individual authorized files to chats and compares documents",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs; MainWindow.xaml",
+      "acceptance": "File attachment in chat, referenced safely.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-004",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Session stop/retry/resume, no lost partial messages, clear status and errors",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml.cs",
+      "acceptance": "Cancel/resume and crash save behavior exercised.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-005",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Chat grounded in current workspace with leakage protection",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs; MainWindow.xaml.cs",
+      "acceptance": "Cross-workspace access tests and filtered search.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-006",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Work-only purpose; prevent personal and prohibited sensitive file ingestion by default",
+      "source_status": "partial",
+      "source_hint": "none",
+      "acceptance": "Clear permission and data-scope guardrails.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "CHAT-007",
+      "category": "Chat & Personal Workflows",
+      "requirement": "Plain language professional document drafting, IT support, policy comparison and operations use",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml",
+      "acceptance": "Synthetic multi-turn tasks with sources and exports.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-001",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Local encrypted source files and extracted content with hash, version and provenance",
+      "source_status": "partial",
+      "source_hint": "Services/KnowledgeStore.cs",
+      "acceptance": "Import/update/delete and source history tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-002",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "FTS keyword search by text/system/file/date/source",
+      "source_status": "partial",
+      "source_hint": "Services/KnowledgeStore.cs",
+      "acceptance": "Relevance and negative search fixtures.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-003",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Semantic embeddings and hybrid lexical-vector retrieval",
+      "source_status": "partial",
+      "source_hint": "EmbeddingRuntime.cs; KnowledgeStore.cs",
+      "acceptance": "Real embedding model, vector consistency and ranked recall tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-004",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Source citations precisely map to document and page/section/version",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Every sourced claim links to verified excerpt.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-005",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Propose, approve, reject, revise, delete and export memories",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs; KnowledgeStore.cs",
+      "acceptance": "Approval decisions and deletions persist.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-006",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Conversation-derived memory candidate extraction with consent",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs",
+      "acceptance": "Automatic suggestions surfaced, not silently approved.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-007",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Detect contradictory rules, superseded policies, source authority and effective dates",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Conflict test suite identifies current approved rule.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-008",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Corrections captured and applied across subsequent conversations and LLM swaps",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Regression task before/after model swap.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-009",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Watch approved local folders for changes and reindex with safe debounce/retries",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs",
+      "acceptance": "Windows FileSystemWatcher or dependable scan scheduler with changed/deleted files.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-010",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Protect against stale, malicious or prompt-injection content in retrieved documents",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Attack fixtures cannot instruct file/network/credential operations.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-011",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Model-agnostic storage, embedding version compatibility and rebuildable indexes",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Switch embedding model and rebuild without deleting sources.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-012",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Delete derived vectors/FTS and handle retention of historical backups",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Delete item then verify active/search/caches and documented backup expiry.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-013",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Quality evaluation dataset for retrieval relevance, source citation and hallucination rate",
+      "source_status": "missing",
+      "source_hint": "tests",
+      "acceptance": "Repeatable answer/source acceptance metrics; no invented citations.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-014",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Versioned records for company decisions, incidents, approved procedures and owners",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs",
+      "acceptance": "Lifecycle and provenance throughout updates.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-015",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "Portable exports for knowledge, memory and documents in documented nonproprietary formats",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs; DocumentExporter.cs",
+      "acceptance": "Re-import or independently read export without app.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "KNOW-016",
+      "category": "Knowledge, Search & Learning",
+      "requirement": "All knowledge and memory remain shared across every selected LLM",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs; ModelRuntime.cs",
+      "acceptance": "Model swap and restore test with same questions.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-001",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Plain text, Markdown, JSON, XML, CSV, logs and programming documentation ingestion",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs",
+      "acceptance": "Fixtures contain expected content and encoding edge cases.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-002",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "PDF text extraction including page metadata",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs",
+      "acceptance": "Scanned/structured PDF test cases and page-aware citations.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-003",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Scanned and mixed PDF OCR using vetted bundled PDFium and Tesseract",
+      "source_status": "partial",
+      "source_hint": "PdfPageOcr.cs; OcrService.cs",
+      "acceptance": "Actual Windows OCR produces accurate text from known 10-page fixture.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-004",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "PNG/JPEG/BMP/TIFF OCR; screenshots and software error text",
+      "source_status": "partial",
+      "source_hint": "OcrService.cs",
+      "acceptance": "Windows OCR accuracy/corruption and resource-limits tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-005",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "DOCX, XLSX, PPTX extraction with sheets/slide/paragraph structure",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs",
+      "acceptance": "Complex fixtures including formulas and tables.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-006",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Document Studio: drafting, editing, comparing, summaries and citations",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml; DocumentExporter.cs",
+      "acceptance": "Complete UI workflow with source versions.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-007",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Export results to Word and PDF, preserving expected formatting",
+      "source_status": "partial",
+      "source_hint": "DocumentExporter.cs",
+      "acceptance": "Open exported DOCX and PDF on clean Windows and validate content.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-008",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Document import validation for zip bombs, oversized/corrupt files, macros and embedded threats",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs",
+      "acceptance": "Fuzz/resource controls and malicious document tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-009",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Original document not silently altered; secure temporary file lifecycle",
+      "source_status": "partial",
+      "source_hint": "DocumentExtractor.cs; Vault.cs",
+      "acceptance": "File hashes unchanged; no plaintext temp secrets.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-010",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Optional vision Q&A when supported, with explicit model/projector setup",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Actual local multimodal benchmark.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "DOC-011",
+      "category": "Documents, OCR & Outputs",
+      "requirement": "Source comparison: versions, policies, spreadsheets and technical logs",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml",
+      "acceptance": "Correct differences explained with citations.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-001",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Separate workspaces and assignment of documents/knowledge",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs; MainWindow.xaml",
+      "acceptance": "Add/select/scope workspace and persist.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-002",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Workspace-level permission/authorization boundary and export controls",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Negative access/cross-scope tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-003",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Projects, milestones, actions, risks, owners, deadlines, status and decisions",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.Work.cs",
+      "acceptance": "CRUD UI with persisted all fields.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-004",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Decision history and superseded decision reasoning",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Historical as-of queries and provenance.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-005",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Technical incident records, resolution steps and linking prior cases",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Search and trace incident-to-fix.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "WORK-006",
+      "category": "Workspaces, Projects, Operations",
+      "requirement": "Optional future local work systems connections only if individually authorized",
+      "source_status": "deferred",
+      "source_hint": "none",
+      "acceptance": "No automatic data capture or external API use.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "SEC-001",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "SQLCipher encrypted SQLite database with maintained supported provider",
+      "source_status": "blocked",
+      "source_hint": "KnowledgeStore.cs; App.xaml.cs; WorkIntelligence.csproj",
+      "acceptance": "Native provider loads, wrong password denied, disk header ciphertext and no plaintext fallback.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-002",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "AES-GCM encrypted imported attachments, controlled keys and passphrases",
+      "source_status": "partial",
+      "source_hint": "Vault.cs",
+      "acceptance": "Decrypt/authentication failure behavior tested.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-003",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Encrypt embeddings, search indexes, logs and temporary document data",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs; AuditLog.cs",
+      "acceptance": "No unprotected copied work data on disk in typical operations.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-004",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "No cloud AI, telemetry or unauthorized outbound traffic",
+      "source_status": "partial",
+      "source_hint": "ModelRuntime.cs; EmbeddingRuntime.cs",
+      "acceptance": "Monitor actual Win11 network traffic in offline mode.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-005",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Only authorized model downloads and encrypted OneDrive transfer can reach internet",
+      "source_status": "partial",
+      "source_hint": "ModelDownloader.cs; RemoteBackupService.cs",
+      "acceptance": "Allowlist and SSRF/redirect/localhost tests.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-006",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Prompt injection, imported file and malicious model handling / sandboxing",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Threat modeling and adversarial tests.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-007",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Windows ACLs, least privilege and native DLL extraction tamper protection",
+      "source_status": "partial",
+      "source_hint": "RuntimeBundle.cs; LocalPaths.cs",
+      "acceptance": "Cross-user extraction and writable path negative tests.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-008",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Never expose secrets in process arguments, environment logs, diagnostics, backups",
+      "source_status": "partial",
+      "source_hint": "BackupService.cs; ScheduledBackup.cs; AuditLog.cs",
+      "acceptance": "Redaction and inspection of process lists/logs.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-009",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Organizational approval and retention controls; PHI/employee records excluded by default",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "First-run authorization, restrictions and audit evidence.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-010",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Secure recovery password management, key rotation and future cryptographic agility",
+      "source_status": "missing",
+      "source_hint": "Vault.cs; BackupService.cs",
+      "acceptance": "Rotation and independent-machine restore tests.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-011",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Threat model, SBOM, dependency/license checks and security update policy",
+      "source_status": "partial",
+      "source_hint": "vendor/README.md; .github/workflows/windows-build.yml",
+      "acceptance": "Supply-chain report and no known unmitigated severe vulnerabilities.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "SEC-012",
+      "category": "Encryption, Trust & Privacy",
+      "requirement": "Secure deletion policy covering active data, search artifacts, exports and backup retention",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Deletion semantics documented/tested, no false instant backup erasure claims.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-001",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Encrypted local restic snapshots of consistent vault/documents/settings",
+      "source_status": "partial",
+      "source_hint": "BackupService.cs",
+      "acceptance": "Restic execution against active writable vault with integrity restore.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-002",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Scheduled unattended backup when window closed, robust after logout/reboot where policy allows",
+      "source_status": "partial",
+      "source_hint": "ScheduledBackup.cs",
+      "acceptance": "Windows Task Scheduler test in each supported session/power state.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-003",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Retry missed backups / catch-up after sleep, shutdown and network interruption",
+      "source_status": "missing",
+      "source_hint": "ScheduledBackup.cs",
+      "acceptance": "Simulated missed jobs self-heal without duplicate/corruption.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-004",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Explicit approved OneDrive OAuth account setup and remote selection wizard",
+      "source_status": "missing",
+      "source_hint": "RemoteBackupService.cs",
+      "acceptance": "Non-CLI setup with authorized work account.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-005",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Copy only locally encrypted restic repository to OneDrive; never live databases",
+      "source_status": "partial",
+      "source_hint": "RemoteBackupService.cs",
+      "acceptance": "No plaintext in remote test account; inspect traffic.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-006",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Remote backup byte/content verification and evidence of upload completion",
+      "source_status": "partial",
+      "source_hint": "RemoteBackupService.cs",
+      "acceptance": "rclone check, remote inventory and actual recovery.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-007",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Configurable daily/monthly/yearly retention and quota management",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Snapshot prune/forget and backup restore at oldest retained point.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-008",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Backup alerts, health, activity log, storage, missed-job indication",
+      "source_status": "partial",
+      "source_hint": "AuditLog.cs; MainWindow.xaml",
+      "acceptance": "UI accuracy and failure notifications.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-009",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Second-machine restore to empty vault with independent recovery password",
+      "source_status": "partial",
+      "source_hint": "BackupService.cs; RemoteBackupService.cs",
+      "acceptance": "Fresh Windows PC restore and offline question retrieval.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-010",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Export portable knowledge independently of application, and install model separately",
+      "source_status": "partial",
+      "source_hint": "KnowledgeStore.cs",
+      "acceptance": "Migration preserving hashes, provenance and corrections.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-011",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Interrupted/corrupt repository, wrong key, partially restored data recovery",
+      "source_status": "partial",
+      "source_hint": "BackupService.cs",
+      "acceptance": "Fault injection, rollback and no corrupt active vault.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-012",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Never overwrite divergent knowledge; merge or guided conflict resolution",
+      "source_status": "partial",
+      "source_hint": "BackupService.cs",
+      "acceptance": "Refuse overwrites and support controlled optional reconciliation.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-013",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "OneDrive backup privacy/account-authorization and escrow/recovery policy",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Approved tenant, encrypted before upload and authorized retention.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "BKP-014",
+      "category": "Backups, OneDrive & Recovery",
+      "requirement": "Repair/restore verification independent of original PC and Windows user login",
+      "source_status": "unverified",
+      "source_hint": "BackupService.cs",
+      "acceptance": "Cross-device with separate Windows account and credentials.",
+      "verified_runtime": false,
+      "priority": "P0"
+    },
+    {
+      "id": "QA-001",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Functional diagnostics dashboard for models, SQLCipher, indexing, OCR, backups, memory",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml.cs; AuditLog.cs",
+      "acceptance": "Actual failing component detection and actionable messages.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-002",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Progress reporting for long model loads, downloads, embeddings, OCR and backups",
+      "source_status": "partial",
+      "source_hint": "MainWindow.xaml.cs",
+      "acceptance": "Feedback at runtime and cancellability.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-003",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Automated C# unit tests beyond smoke tests and static string checks",
+      "source_status": "partial",
+      "source_hint": "tests/Tests.cs",
+      "acceptance": "Meaningful assertions, coverage and repeatable CI.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-004",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Actual Windows WPF UI automated interaction tests",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Clean Win11 end-to-end clicks and screenshot evidence.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-005",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Windows GitHub Actions build/test plus release packaging and artifact review",
+      "source_status": "partial",
+      "source_hint": ".github/workflows/windows-build.yml",
+      "acceptance": "Verified green workflow, downloadable artifact within constraints.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-006",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "99-point independent audit matrix executed with individual evidence",
+      "source_status": "unverified",
+      "source_hint": "docs/99_POINT_AUDIT.md",
+      "acceptance": "Each case PASS/FAIL/NOT VERIFIED/N/A with logs.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-007",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Fault injection for full disk, corrupted vault, cancelled tasks, reboot, low RAM",
+      "source_status": "missing",
+      "source_hint": "none",
+      "acceptance": "Graceful recovery, no data loss.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-008",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Defect tracker with root cause, patch, reproduction, regression evidence",
+      "source_status": "partial",
+      "source_hint": "docs/RECHECK_FINDINGS_2026-10-31.md",
+      "acceptance": "All severe defects closed with evidence.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-009",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Memory/context benchmarks for 20B/27B on i7-1370P 32GB CPU",
+      "source_status": "unverified",
+      "source_hint": "Services/HardwareProbe.cs",
+      "acceptance": "Real 30-min benchmark without unsafe paging.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-010",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Independent security review including net isolation and supply chain",
+      "source_status": "unverified",
+      "source_hint": "docs/RELEASE_GATES.md",
+      "acceptance": "Signed report and executed negative tests.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-011",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Clean VM standalone EXE run and second PC migration",
+      "source_status": "unverified",
+      "source_hint": "scripts/Build-Windows.ps1",
+      "acceptance": "No external runtimes, full restore, offline Q&A.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-012",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "All UI controls functional; no disguised placeholders or silent exception swallowing",
+      "source_status": "unverified",
+      "source_hint": "MainWindow.xaml.cs",
+      "acceptance": "Every control covered by runtime test.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-013",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Fresh dependency security advisories and version compatibility",
+      "source_status": "unverified",
+      "source_hint": "WorkIntelligence.csproj; vendor/README.md",
+      "acceptance": "Documented upstream evidence per dependency.",
+      "verified_runtime": false,
+      "priority": "P1"
+    },
+    {
+      "id": "QA-014",
+      "category": "Diagnostics, Reliability & QA",
+      "requirement": "Graceful error handling and safe resource cancellation on exit",
+      "source_status": "partial",
+      "source_hint": "App.xaml.cs; ModelRuntime.cs",
+      "acceptance": "Tests prevent stuck processes, data corruption or UI freeze.",
+      "verified_runtime": false,
+      "priority": "P1"
+    }
+  ]
+}

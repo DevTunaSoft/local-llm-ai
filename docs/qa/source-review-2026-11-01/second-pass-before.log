@@ -1,0 +1,47 @@
+  WorkIntelligence.Core.Tests -> /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll
+Test run for /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:09.72]     WorkIntelligence.Tests.StorageTests.ReplacedApprovedFolderDoesNotFollowASymlink [FAIL]
+  Failed WorkIntelligence.Tests.StorageTests.ReplacedApprovedFolderDoesNotFollowASymlink [942 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 0
+Actual:   1
+  Stack Trace:
+     at WorkIntelligence.Tests.StorageTests.ReplacedApprovedFolderDoesNotFollowASymlink() in /workspace/local-llm-ai/tests/Core/StorageTests.cs:line 50
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:11.62]     WorkIntelligence.Tests.DocumentTests.EmptyPdfPageDoesNotRequireNativeOcr [FAIL]
+  Failed WorkIntelligence.Tests.DocumentTests.EmptyPdfPageDoesNotRequireNativeOcr [252 ms]
+  Error Message:
+   System.IO.FileNotFoundException : This development build does not contain the native AI/backup tools. Release packaging must embed the vetted runtime bundle.
+  Stack Trace:
+     at WorkIntelligence.Services.RuntimeBundle.Resolve(String exeName) in /workspace/local-llm-ai/WorkIntelligence/Services/RuntimeBundle.cs:line 14
+   at WorkIntelligence.Services.PdfPageOcr.<>c.<.cctor>b__3_0(String name, Assembly assembly, Nullable`1 path) in /workspace/local-llm-ai/WorkIntelligence/Services/PdfPageOcr.cs:line 16
+   at System.Runtime.InteropServices.NativeLibrary.LoadLibraryCallbackStub(String libraryName, Assembly assembly, Boolean hasDllImportSearchPathFlags, UInt32 dllImportSearchPathFlags)
+   at WorkIntelligence.Services.PdfPageOcr.FPDF_InitLibrary()
+   at WorkIntelligence.Services.PdfPageOcr.FPDF_InitLibrary()
+   at WorkIntelligence.Services.PdfPageOcr.Extract(Byte[] pdf, Int32 pageIndex) in /workspace/local-llm-ai/WorkIntelligence/Services/PdfPageOcr.cs:line 25
+   at WorkIntelligence.Services.DocumentExtractor.Pdf(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 58
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 18
+   at WorkIntelligence.Tests.DocumentTests.EmptyPdfPageDoesNotRequireNativeOcr() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 45
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:11.67]     WorkIntelligence.Tests.DocumentTests.ShortSearchablePdfDoesNotRequireOcr [FAIL]
+  Failed WorkIntelligence.Tests.DocumentTests.ShortSearchablePdfDoesNotRequireOcr [56 ms]
+  Error Message:
+   System.IO.FileNotFoundException : This development build does not contain the native AI/backup tools. Release packaging must embed the vetted runtime bundle.
+  Stack Trace:
+     at WorkIntelligence.Services.RuntimeBundle.Resolve(String exeName) in /workspace/local-llm-ai/WorkIntelligence/Services/RuntimeBundle.cs:line 14
+   at WorkIntelligence.Services.PdfPageOcr.<>c.<.cctor>b__3_0(String name, Assembly assembly, Nullable`1 path) in /workspace/local-llm-ai/WorkIntelligence/Services/PdfPageOcr.cs:line 16
+   at System.Runtime.InteropServices.NativeLibrary.LoadLibraryCallbackStub(String libraryName, Assembly assembly, Boolean hasDllImportSearchPathFlags, UInt32 dllImportSearchPathFlags)
+   at WorkIntelligence.Services.PdfPageOcr.FPDF_InitLibrary()
+   at WorkIntelligence.Services.PdfPageOcr.FPDF_InitLibrary()
+   at WorkIntelligence.Services.PdfPageOcr.Extract(Byte[] pdf, Int32 pageIndex) in /workspace/local-llm-ai/WorkIntelligence/Services/PdfPageOcr.cs:line 25
+   at WorkIntelligence.Services.DocumentExtractor.Pdf(Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 58
+   at WorkIntelligence.Services.DocumentExtractor.Extract(String path, Byte[] bytes) in /workspace/local-llm-ai/WorkIntelligence/Services/DocumentExtractor.cs:line 18
+   at WorkIntelligence.Tests.DocumentTests.ShortSearchablePdfDoesNotRequireOcr() in /workspace/local-llm-ai/tests/Core/DocumentTests.cs:line 20
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+Results File: /tmp/wi-test-results/second-pass-before.trx
+
+Failed!  - Failed:     3, Passed:    40, Skipped:     0, Total:    43, Duration: 11 s - WorkIntelligence.Core.Tests.dll (net10.0)

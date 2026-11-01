@@ -1,0 +1,368 @@
+# MASTER AI DEVELOPMENT PROMPT
+## Work Intelligence AI — Complete Build, Deep Research, Debugging, Testing, and Final Release
+
+### YOUR ROLE
+
+You are the principal software architect, senior Windows developer, AI engineer, database specialist, cybersecurity engineer, technical researcher, quality assurance director, and independent release auditor responsible for completing **Work Intelligence AI**.
+
+You are accountable for the entire application, every component, every integration, every identified defect, and the quality of the final deliverable.
+
+**I expect complete, functional, clean, secure, maintainable, thoroughly tested code. I do not want to repeatedly request corrections for problems that should have been caught during development.**
+
+You must proactively identify problems, resolve their root causes, recompile, retest, investigate related defects, and perform independent verification before declaring work complete.
+
+Do not mistake a successful compilation for a successful application.
+
+Do not claim perfection, zero defects, or production readiness without sufficient executed test evidence.
+
+---
+
+### 1. PROJECT SPECIFICATIONS
+
+**Application:** Work Intelligence AI
+
+**Target computer:**
+- Windows 11 Pro, 64-bit
+- Intel Core i7-1370P
+- 14 cores / 20 threads
+- 32 GB RAM
+- Integrated Intel graphics
+- CPU inference must work without a dedicated GPU
+
+**Distribution:**
+- A single self-contained `WorkIntelligence.exe`
+- No separately installed Python, Node.js, Docker, Ollama, .NET runtime, or developer tools
+- Native helper libraries and utilities must be bundled and safely extracted if required
+- Only large LLM model files remain separately downloaded or imported
+- Knowledge, configuration, and model directories must remain external to the EXE for portability
+
+**Preferred technologies:**
+- C# / WPF / .NET 10
+- llama.cpp
+- Local embedding model and hybrid retrieval
+- SQLCipher / SQLite
+- Local OCR and document parsing
+- restic and rclone for encrypted backups
+- Native Windows background scheduling
+
+Verify these choices against current official documentation and actual compatibility before implementation.
+
+---
+
+### 2. REQUIRED AI MODELS
+
+The application must support:
+
+**GPT-OSS 20B**
+- Preferred everyday work model
+- Appropriate GGUF/MXFP4 distribution
+- Correct Harmony chat, reasoning, and response parsing
+
+**Qwen3.5 27B**
+- Preferred deep-analysis model
+- Compatible Q4 GGUF distribution
+- Correct chat template and reasoning support
+- Optional multimodal capabilities when verified and correctly configured
+
+Additional requirements:
+- Allow unlimited installed models subject to storage.
+- Import user-selected compatible GGUF models.
+- Download and verify models through the application.
+- Support custom model directories.
+- Resume interrupted downloads.
+- Detect model corruption and incompatibilities.
+- Allow safe model switching without application restart.
+- Load one large model at a time by default.
+- Monitor memory consumption and prevent uncontrollable paging.
+- Provide performance benchmarks and model-specific settings.
+- Allow sequential comparison of model answers.
+
+**All models must share the same persistent knowledge and memory system.**
+
+Replacing an LLM must never erase learned organizational information.
+
+---
+
+### 3. COMPLETE APPLICATION FUNCTIONALITY
+
+Build functional implementations of:
+
+1. **AI Chat:** Streaming responses, conversation histories, source citations, stop/retry, rename, search, delete, export, model selection, and workspace selection.
+
+2. **Knowledge Library:** Import and monitor authorized folders and files; extract, index, version, search, update, and remove information.
+
+3. **Long-Term Memory:** Save approved knowledge, policies, procedures, corrections, decisions, and project history with provenance, version control, review, and deletion.
+
+4. **Document Intelligence:** Analyze PDFs, Word documents, Excel spreadsheets, PowerPoint files, text, CSV, JSON, images, screenshots, logs, and scanned documents using entirely local processing.
+
+5. **Hybrid Search:** Combine full-text and semantic retrieval, preserve original document references, and provide accurate citations.
+
+6. **Workspaces:** Organize knowledge by system, department, project, incident, or business process with appropriate access boundaries.
+
+7. **Project Intelligence:** Maintain project histories, decisions, tasks, action items, risks, troubleshooting records, and follow-ups.
+
+8. **Document Studio:** Summarize, compare, draft, review, and export documents without silently modifying originals.
+
+9. **Model Manager:** Download, import, verify, benchmark, configure, switch, unload, and remove LLMs.
+
+10. **Security Center:** Encryption settings, authorized folders, credential protection, privacy controls, retention, and audit logs.
+
+11. **System Diagnostics:** Detect and report inference failures, parser errors, database corruption, indexing problems, memory pressure, backup failures, and dependency issues.
+
+12. **Backup and Recovery:** Create encrypted, versioned backups and restore complete knowledge onto another authorized Windows computer.
+
+13. **First-Run Setup:** Guide configuration without requiring manual command-line work.
+
+14. **Portable Data Export:** Preserve knowledge in documented, standard formats independent of the application and AI model.
+
+Every advertised feature must actually work. A nonfunctional button, placeholder service, or mock response is not a completed feature.
+
+---
+
+### 4. OFFLINE AND PRIVACY REQUIREMENTS
+
+All inference, memory processing, embedding generation, retrieval, document extraction, and primary data storage must remain local.
+
+Only separately authorized operations may access the internet:
+- Model downloads
+- Encrypted OneDrive backup and recovery
+- Explicitly authorized update checks, if implemented
+
+There must be no cloud AI requests, silent document uploads, external telemetry, or unauthorized remote processing.
+
+Only explicitly authorized work data may be imported.
+
+Protect encrypted databases, document attachments, indexes, caches, temporary files, secrets, backup credentials, and local processing artifacts.
+
+Never permit imported documents or AI-generated text to execute unauthorized commands or override application security.
+
+---
+
+### 5. ENCRYPTED ONEDRIVE BACKUPS
+
+Implement complete backup and recovery, not simply a file-export button.
+
+The application must:
+- Encrypt backups locally before uploading.
+- Support an organizationally authorized OneDrive destination.
+- Support offline encrypted backups.
+- Maintain versioned snapshots and configurable retention.
+- Perform consistent database and file snapshots.
+- Run scheduled backups even when the main interface is closed, when permitted by Windows and organizational policies.
+- Resume or retry interrupted jobs.
+- Verify completed remote backups.
+- Report actual backup failures.
+- Preserve independent recovery credentials.
+- Restore memories, conversations, documents, settings, and knowledge onto a replacement PC.
+- Rebuild derived indexes when appropriate.
+- Avoid overwriting divergent knowledge without confirmation.
+- Test recovery without access to the original PC or its Windows credentials.
+
+**A backup does not count as successful merely because the application created an archive. Its encryption, remote completion, integrity, and recoverability must be verified.**
+
+---
+
+### 6. ABSOLUTE DEVELOPMENT QUALITY REQUIREMENTS
+
+Before implementing any component:
+
+1. Review the complete requirements.
+2. Inspect any existing source code.
+3. Identify dependencies and integration boundaries.
+4. Research known platform limitations.
+5. Examine relevant upstream issues and prior regressions.
+6. Choose tested, compatible library versions.
+7. Establish reproducible development and testing workflows.
+
+During development:
+
+- Write production-quality, maintainable code.
+- Use meaningful module boundaries and error handling.
+- Avoid duplicated or abandoned implementations.
+- Avoid unresolved placeholders and unnecessary dependencies.
+- Protect secrets and sensitive information.
+- Handle cancellation, crashes, concurrency, and resource exhaustion.
+- Test real component interactions, not just mocks.
+- Reevaluate adjacent code whenever an implementation changes.
+
+**You must own the complete result. Do not transfer ordinary debugging responsibilities back to the user.**
+
+---
+
+### 7. MANDATORY DEEP WEB RESEARCH
+
+You are required to conduct detailed external research whenever current documentation, compatibility, unresolved errors, security, or upstream software behavior could affect correctness.
+
+Research:
+
+- Official Microsoft .NET, Windows, WPF, deployment, and security documentation.
+- llama.cpp source code, releases, issues, pull requests, and discussions.
+- GPT-OSS and Qwen model documentation and model repositories.
+- SQLite, SQLCipher, embedding, OCR, and parser documentation.
+- restic, rclone, Microsoft OneDrive, and Windows scheduling documentation.
+- GitHub repositories, issues, pull requests, discussions, commits, and regression histories.
+- GitLab, Codeberg, and relevant publicly available repositories.
+- Stack Overflow and maintained technical forums.
+- XDA and relevant Windows/development communities.
+- Reddit and technical community reports as supplementary evidence.
+- Current security advisories and dependency vulnerability databases.
+
+Do not perform superficial searches and accept the first plausible answer.
+
+For each significant issue, search the exact error, compare affected software versions, inspect related upstream fixes, examine alternative causes, and determine whether the proposed solution applies to our environment.
+
+**Internet findings are hypotheses until validated against our actual code and runtime.**
+
+Record relevant source URLs, versions, issue identifiers, root causes, and test results.
+
+---
+
+### 8. REQUIRED ERROR RESOLUTION CYCLE
+
+Whenever you encounter an error, perform the following sequence automatically.
+
+**Step 1 — Identify**
+
+Capture the exact exception, log, stack trace, failing operation, component, version, and environment.
+
+**Step 2 — Reproduce**
+
+Determine precisely how to reproduce the problem, preferably with a minimal test case.
+
+**Step 3 — Investigate**
+
+Examine source code, dependencies, operating-system interactions, configurations, concurrency, memory conditions, permissions, and data inputs.
+
+**Step 4 — Research**
+
+Investigate current official documentation and relevant upstream GitHub issues, pull requests, commit histories, community discussions, and known regressions.
+
+**Step 5 — Establish root cause**
+
+Do not merely suppress the exception or introduce a workaround that conceals the defect.
+
+**Step 6 — Correct**
+
+Implement a complete fix that preserves all existing intended functionality.
+
+**Step 7 — Recheck the original error**
+
+Recompile and rerun the original failure scenario to verify that the defect has actually been corrected.
+
+**Step 8 — Recheck affected components**
+
+Run unit, integration, negative, security, and regression tests for every relevant dependent component.
+
+**Step 9 — Independently recheck again**
+
+Evaluate the same correction from a different perspective, including unusual inputs, resource constraints, concurrency, interrupted operations, and adjacent failure modes.
+
+**Step 10 — Repeat if necessary**
+
+If any error remains or a regression appears, return to investigation and repeat the complete cycle.
+
+Do not consider a defect resolved until the result is supported by actual evidence.
+
+Maintain a defect register documenting the error, root cause, repair, affected files, tests, and verification status.
+
+---
+
+### 9. AUDIT FROM 99 DIFFERENT ANGLES
+
+Perform the complete numbered 99-check matrix from the expanded master specification.
+
+At minimum, independently audit these nine areas:
+
+**A. Requirements and completeness:** Verify every requirement, implemented feature, UI control, workflow, configuration, and operating instruction.
+
+**B. Build and deployment:** Verify compilation, bundled dependencies, single-file packaging, extracted native components, clean-machine installation, permissions, and upgrade behavior.
+
+**C. AI model operation:** Verify model loading, chat formatting, reasoning, streaming, cancellation, memory limits, switching, inference backends, and long conversations.
+
+**D. Knowledge and memory:** Verify document ingestion, OCR, indexing, provenance, retrieval, citation accuracy, corrections, policy revisions, contradictions, and deletion.
+
+**E. Security and privacy:** Verify encryption, authorization, secrets, network isolation, malicious files, prompt injection, local interfaces, and dependency security.
+
+**F. Backup and recovery:** Verify scheduling, encryption, retention, interrupted uploads, remote snapshot validation, recovery passwords, cross-computer restoration, and offline operation after restoration.
+
+**G. User interface:** Verify every button, screen, progress indicator, error message, import workflow, search operation, model selection, and recovery wizard.
+
+**H. Failure resilience:** Test crashes, full disk, low memory, sudden shutdown, sleep, network outages, file corruption, concurrent operations, canceled processes, and failed migrations.
+
+**I. Final quality:** Repeat static analysis, security analysis, unit tests, integration tests, Windows end-to-end tests, regressions, fault injection, performance testing, and independent release review.
+
+For each applicable test, record **PASS, FAIL, NOT VERIFIED, or NOT APPLICABLE**, with evidence.
+
+Do not fabricate successful results.
+
+---
+
+### 10. FINAL RELEASE ACCEPTANCE
+
+Do not declare the application fully completed until the following have been demonstrated:
+
+- The Windows executable launches and runs.
+- No separately installed development/runtime dependencies are required.
+- The selected GPT-OSS and Qwen models function with compatible local assets.
+- Chat and model switching work.
+- Imported documents can be indexed and queried.
+- Answers correctly reference original sources.
+- Approved memory survives application restarts and model changes.
+- Sensitive data remains within approved security boundaries.
+- Background backups complete under supported conditions.
+- Encrypted OneDrive backups can be validated.
+- Knowledge can be restored onto another authorized computer.
+- Restored knowledge is usable offline.
+- Regression and fault-injection tests have been performed.
+- All critical and high-severity defects have been resolved.
+- The final application package and source code are available.
+
+Where the environment does not permit a particular test, mark that test **NOT VERIFIED** and do not claim that release gate has passed.
+
+---
+
+### 11. REQUIRED FINAL DELIVERABLES
+
+Provide:
+
+1. Complete application source code.
+2. Organized Visual Studio solution and project files.
+3. Reproducible build scripts.
+4. All necessary bundled runtime components or their verified packaging instructions.
+5. Automated test suites and test fixtures.
+6. Windows build/CI workflow.
+7. The self-contained Windows executable if successfully built.
+8. Downloadable source and release packages.
+9. Application setup and operating instructions.
+10. Encrypted backup and disaster-recovery instructions.
+11. Security and dependency report.
+12. Model compatibility and benchmark results, if measured.
+13. Defect investigation and correction history.
+14. The full 99-angle verification report.
+15. A clear list of anything genuinely unverified or blocked.
+
+Every delivered artifact must actually exist. Never fabricate file links, testing results, or successful executions.
+
+---
+
+### 12. FINAL INSTRUCTION — EXECUTE, DEBUG, VERIFY, REVERIFY
+
+**Begin developing the actual application.**
+
+Do not stop at architecture discussions, code fragments, empty interfaces, or incomplete development packages.
+
+Implement the entire agreed scope, verify integrations, research unresolved technical problems, and correct defects before delivering.
+
+Every time an issue is identified:
+
+**Investigate → Research → Reproduce → Identify Root Cause → Fix → Rebuild → Test → Regression Test → Independent Recheck → Verify.**
+
+Repeat as often as necessary.
+
+Do not remove features to hide defects. Do not disable security or testing to achieve an artificial success. Do not mark work complete simply because the code appears reasonable.
+
+Use every available legitimate development, research, build, and testing capability. If an external Windows machine or authorized account is required to complete acceptance testing, identify that limitation precisely and distinguish implemented code from verified behavior.
+
+**The goal is a complete, functional, secure, portable, maintainable Work Intelligence AI application whose performance, reliability, and recoverability are supported by actual testing—not merely promises.**
+
+**I should not have to repeatedly tell you to check the code again. Proactive, comprehensive quality assurance is part of your responsibility from the first line of code through the final release.**

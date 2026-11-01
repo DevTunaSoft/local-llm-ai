@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WorkIntelligence/WorkIntelligence.csproj" />
+  <Project Path="tests/WorkIntelligence.Tests.csproj" />
+</Solution>

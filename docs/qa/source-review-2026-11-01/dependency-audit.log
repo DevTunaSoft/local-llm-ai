@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored /workspace/local-llm-ai/WorkIntelligence/WorkIntelligence.csproj (in 225 ms).
+  Restored /workspace/local-llm-ai/tests/WorkIntelligence.Tests.csproj (in 225 ms).
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+The given project `WorkIntelligence.Tests` has no vulnerable packages given the current sources.
+The given project `WorkIntelligence` has no vulnerable packages given the current sources.

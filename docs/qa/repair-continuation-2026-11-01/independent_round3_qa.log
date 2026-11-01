@@ -1,0 +1,22 @@
+PASS | Semantic model server bound to loopback and authenticated
+PASS | Semantic generation uses local embeddings endpoint
+PASS | Document vectors stored under SQLCipher DB with model identity
+PASS | Model switch does not mix incompatible vector spaces
+PASS | Semantic reindex and query hooked to WPF
+PASS | OCR reads images via stdin/stdout, no cleartext temporary image files
+PASS | Invalid image rejected before OCR runtime
+PASS | Scanned PDFs not silently reported as successfully indexed
+PASS | Native OCR and remote programs are packaging requirements
+PASS | Local restic data and restored file contents verified
+PASS | Encrypted OneDrive transfer includes downloaded byte comparison
+PASS | Remote restore refuses overwriting existing vault
+PASS | Backup background uses user DPAPI not cleartext password files
+PASS | No credential is passed as scheduled task CLI argument
+PASS | Scheduled background launch calls backup and optional remote verification
+PASS | Shutdown no longer blocks the UI using GetResult()
+PASS | Changes represented by distinct WPF handlers
+PASS | Historical source of truth preserved for audit
+PASS | V1 DB upgrades through schema V4 to V6
+PASS | Deleting a document clears encrypted vector records
+PASS | XAML remains well formed after new controls
+ROUND3 INDEPENDENT CHECKS: 21 / 21
