@@ -329,11 +329,11 @@ public sealed partial class KnowledgeStore
                 insert.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O"));
                 insert.Parameters.AddWithValue("$w",workspaceId);
                 var newId=(long)(insert.ExecuteScalar()??throw new InvalidOperationException("Memory approval failed."));
-                if(replaceId is long oldId)
+                if(replaceId is long supersededMemoryId)
                 {
                     using var supersede=con.CreateCommand();supersede.Transaction=tx;
                     supersede.CommandText="UPDATE memories SET approved=0,superseded_by=$new WHERE id=$old AND approved=1 AND workspace_id=$w";
-                    supersede.Parameters.AddWithValue("$new",newId);supersede.Parameters.AddWithValue("$old",oldId);
+                    supersede.Parameters.AddWithValue("$new",newId);supersede.Parameters.AddWithValue("$old",supersededMemoryId);
                     supersede.Parameters.AddWithValue("$w",workspaceId);
                     if(supersede.ExecuteNonQuery()!=1)throw new InvalidDataException("The memory changed during approval.");
                 }
