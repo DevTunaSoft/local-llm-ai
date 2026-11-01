@@ -17,9 +17,20 @@ public sealed class ProcessTerminationTests
 
     private static Process StartBlockedProcess()
     {
-        var info = new ProcessStartInfo("/bin/sh") { UseShellExecute = false, RedirectStandardInput = true };
-        info.ArgumentList.Add("-c");
-        info.ArgumentList.Add("read input"); // Blocks on synthetic stdin; no document or credential data.
+        ProcessStartInfo info;
+        if (OperatingSystem.IsWindows())
+        {
+            info = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, RedirectStandardInput = true };
+            info.ArgumentList.Add("/d");
+            info.ArgumentList.Add("/c");
+            info.ArgumentList.Add("more > NUL"); // Wait for redirected stdin to close.
+        }
+        else
+        {
+            info = new ProcessStartInfo("/bin/sh") { UseShellExecute = false, RedirectStandardInput = true };
+            info.ArgumentList.Add("-c");
+            info.ArgumentList.Add("read input");
+        }
         return Process.Start(info)!;
     }
 
