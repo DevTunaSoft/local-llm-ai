@@ -7,6 +7,9 @@ namespace WorkIntelligence.Services;
 /// </summary>
 public static class BackupRetention
 {
+    internal static bool IsOverdue(DateTimeOffset? lastSuccess, DateTimeOffset now)
+        => lastSuccess is null || now - lastSuccess.Value >= TimeSpan.FromHours(25);
+
     public static int Prune(string repository, int keepNewest, CancellationToken ct)
     {
         if (keepNewest is < 2 or > 10000)
