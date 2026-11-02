@@ -21,7 +21,9 @@ public sealed class LiveInferenceTests
         {
             // Default source CI has no vetted native runtime or model. This is not a pass
             // proving inference; the live test must be explicitly enabled by its inputs.
-            Console.WriteLine("LIVE INFERENCE NOT EXECUTED: set WI_LIVE_TEST_GGUF, WI_LIVE_TEST_GGUF_SHA256, and WI_DEV_RUNTIME_DIR.");
+            if (Environment.GetEnvironmentVariable("WI_REQUIRE_LIVE_INFERENCE") == "1")
+                Assert.Fail("Live GGUF inference was required but model, SHA256, or native runtime directory was not provided.");
+            Console.WriteLine("LIVE INFERENCE NOT EXECUTED: supply model, SHA256 and native runtime to run this optional integration test.");
             return;
         }
         Assert.True(File.Exists(model), "Live inference GGUF is missing.");
