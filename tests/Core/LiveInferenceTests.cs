@@ -46,5 +46,18 @@ public sealed class LiveInferenceTests
         await runtime.StopAsync();
         Assert.False(runtime.IsRunning);
         Assert.Null(runtime.ActiveModel);
+        // A second start in the same process catches leaked ports, orphaned
+        // workers, disposed HTTP clients, and lifecycle state that only works once.
+        await runtime.StartAsync(model, expectedHash, new ModelRuntimeOptions(
+            ContextSize: 1024, Threads: 4, MaxTokens: 48, Temperature: 0), timeout.Token);
+        Assert.True(runtime.IsRunning);
+        var repeated = new List<string>();
+        await foreach (var token in runtime.StreamAsync(
+            new[] { (role: "user", content: "Reply with the word AGAIN.") }, timeout.Token, maxTokens: 48))
+            repeated.Add(token);
+        Assert.False(string.IsNullOrWhiteSpace(string.Concat(repeated)), "Restarted model returned an empty completion.");
+        await runtime.StopAsync();
+        Assert.False(runtime.IsRunning);
+        Assert.Null(runtime.ActiveModel);
     }
 }
