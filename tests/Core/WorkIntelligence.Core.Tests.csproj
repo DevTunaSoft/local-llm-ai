@@ -13,9 +13,7 @@
     <Compile Include="../../WorkIntelligence/Services/*.cs" Exclude="../../WorkIntelligence/Services/ScheduledBackup.cs" Link="Services/%(Filename)%(Extension)" />
     <Compile Include="../../WorkIntelligence/Models/*.cs" Link="Models/%(Filename)%(Extension)" />
     <Compile Include="../Tests.cs" Link="OriginalTests.cs" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
-    <PackageReference Include="SQLitePCLRaw.provider.sqlcipher" Version="3.0.5" />
-    <PackageReference Include="SQLitePCLRaw.core" Version="3.0.5" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="PdfPig" Version="0.1.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />

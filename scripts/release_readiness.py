@@ -16,7 +16,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_NATIVE = [
-    "llama-server.exe", "restic.exe", "rclone.exe", "sqlcipher.dll",
+    "llama-server.exe", "rclone.exe",
     "pdfium.dll", "tesseract.exe", "tessdata/eng.traineddata",
 ]
 

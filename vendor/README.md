@@ -1,24 +1,15 @@
 # Bundled Windows native runtime (release-only)
 
-The source archive intentionally does **not** contain third-party executables.
+The source does not include third-party executable binaries. Obtain vetted Windows x64 CPU `llama-server.exe` with its required libraries, reviewed PDFium runtime (`pdfium.dll`), Tesseract OCR (`tesseract.exe` and `tessdata/eng.traineddata`), and rclone for optional authorized OneDrive copies. Verify distribution licenses and security advisories.
 
-For a verified release build, obtain the approved **Windows x64 CPU build** of `llama-server.exe` and all its required DLLs from the official [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp/releases) release, obtain an approved Windows Tesseract 5 build with `tessdata/eng.traineddata`, and obtain `restic.exe` from the official [restic project](https://github.com/restic/restic/releases). Check distribution licenses and security advisories first.
-
-Place the vetted files in `vendor/runtime/`, then create a `vendor/SHA256SUMS.txt` file with exact SHA-256 for every file, in the form:
+Place all files under `vendor/runtime/` and supply `vendor/SHA256SUMS.txt` listing the SHA-256 of every file, for example:
 
 ```
-<sha256>  llama-server.exe
-<sha256>  restic.exe
-<sha256>  llama.dll
+<verified hash>  llama-server.exe
+<verified hash>  rclone.exe
+<verified hash>  tesseract.exe
 ```
 
-These are **placeholders only**; actual digests must be measured against official, independently verified downloads. The release script refuses to package missing or unverified components. Do not ship source-only builds to end users as if they include an inference engine.
+These values are placeholders, not hashes. The Windows publishing script refuses any missing, modified or unlisted native file. The complete bundle is embedded into the self-contained EXE for controlled local extraction. The native SQLite library for ordinary non-encrypted SQLite comes from the Microsoft.Data.Sqlite dependency and does not require separate `sqlcipher.dll`. No restic executable is used for plaintext backup snapshots.
 
-The release process embeds a checked archive into `WorkIntelligence.exe`; installation does not require installing llama.cpp, restic, .NET, or Python separately. At runtime, the native bundle is extracted under the user's local application directory and checked against the embedded package.
-
-The license and SBOM for all third-party native binaries must accompany any distribution.
-
-
-**OCR security:** only the official, vetted Tesseract 5 binary and English `eng.traineddata` are accepted by the release script.
-OCR of PNG/JPEG/BMP/TIFF is performed through stdin/stdout, not temporary plaintext image files.
-Scanned or image-only PDFs still require a separately reviewed PDF rendering pipeline; this is a release blocker, not a feature claimed complete.
+Do not release based solely on a successful build; actual Windows app startup, model inference, OCR and OneDrive validation are still required.

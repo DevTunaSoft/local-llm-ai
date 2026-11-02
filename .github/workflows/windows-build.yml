@@ -41,12 +41,7 @@ jobs:
         run: |
           & dotnet build tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --no-restore 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Build verified Windows SQLCipher test library with FTS5
-        shell: pwsh
-        run: |
-          & ./scripts/Prepare-Windows-TestNative.ps1 -TestOutputDirectory "./tests/Core/bin/Release/net10.0" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Run encrypted-memory and workspace service regressions
+      - name: Run plaintext-storage and workspace service regressions
         shell: pwsh
         run: |
           & dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --no-build --no-restore --logger "console;verbosity=normal" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
@@ -62,7 +57,7 @@ jobs:
           if (Test-Path 'WorkIntelligence/Resources/runtime.zip') {
             Write-Host 'Native runtime available; Windows release packaging may be run separately.'
           } else {
-            Write-Host 'SOURCE BUILD ONLY: no native llama/restic bundle; not a user-ready release.'
+            Write-Host 'SOURCE BUILD ONLY: no native llama/OCR/rclone bundle; not a user-ready release.'
           }
       - name: Report filtered Windows failure diagnostics
         if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -89,7 +84,7 @@ jobs:
       - name: Install native test build prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install --yes build-essential tcl libssl-dev python3-venv
+          sudo apt-get install --yes python3-venv
       - name: Prepare pinned development tools
         run: bash scripts/setup-linux-tests.sh
       - name: Compile source and execute real storage and recovery regressions

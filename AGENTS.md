@@ -1,3 +1,9 @@
+# Current owner directive — 2026-11-02
+
+The user explicitly requested **NO APPLICATION-LAYER ENCRYPTION**. The live SQLite database, document copies, indexed text, memory, chats, and backups are plaintext. No database/vault/backup passwords. No restic, SQLCipher, or DPAPI-protected backup credentials. Preserve existing encrypted vaults **without modifying them** and do not imply that Microsoft Purview automatically protects this app's data. Never weaken HTTPS or local model authentication as those are unrelated security controls. Historical instructions below calling for encryption are superseded by this directive.
+
+Test with real .NET/Windows CI before release; preserve every remaining requirement other than encryption, and report failures accurately. Never upload real workplace data or secrets to GitHub.
+
 # Repository instructions for Codex — Work Intelligence AI
 
 > **Latest code continuation:** `docs/LEARNING_WORKSPACE_CONTINUATION_2026-11-01.md` and

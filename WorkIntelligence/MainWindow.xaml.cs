@@ -11,7 +11,6 @@ namespace WorkIntelligence;
 
 public partial class MainWindow : Window
 {
-    private Vault? _vault;
     private KnowledgeStore? _store;
     private readonly ModelRuntime _runtime = new();
     private readonly EmbeddingRuntime _embeddings = new();
@@ -31,7 +30,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         LocalPaths.Ensure();
-        UnlockButton.Content = Vault.Exists ? "Unlock Vault" : "Create Encrypted Vault";
+        UnlockButton.Content = "Open Local Workspace";
         // Closing is asynchronous: blocking GetResult() on the WPF UI thread can
         // deadlock when a model is starting on the same synchronization context.
     }
@@ -46,12 +45,12 @@ public partial class MainWindow : Window
         _shutdownCts.Cancel();
         _responseCts?.Cancel();
         _modelLoadCts?.Cancel();
-        // Finish persistence and background imports before destroying encryption keys.
+        // Finish persistence and background imports before shutting down.
         try { await _activeOperation; }
         catch (Exception ex) { AuditLog.Error("ShutdownOperation", ex); }
         try { await _runtime.StopAsync(); await _embeddings.StopAsync(); }
         catch (Exception ex) { AuditLog.Error("Shutdown", ex); }
-        try { _store?.Dispose(); _vault?.Dispose(); }
+        try { _store?.Dispose(); }
         catch (Exception ex) { AuditLog.Error("ShutdownDispose", ex); }
         _finalClose = true;
         Close();
@@ -120,17 +119,11 @@ public partial class MainWindow : Window
     }
     private async void Unlock_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
-        if (!Vault.Exists && UnlockPassword.Password.Length < 16)
-            throw new ArgumentException("Choose an initial vault passphrase of at least 16 characters. Keep it available for recovery.");
-        var vault=Vault.Open(UnlockPassword.Password);
-        KnowledgeStore store;
-        try { store=await Task.Run(()=>new KnowledgeStore(vault)); }
-        catch { vault.Dispose();throw; }
-        _vault=vault;_store=store;
-        UnlockPassword.Clear();
+        KnowledgeStore store = await Task.Run(() => new KnowledgeStore());
+        _store=store;
         UnlockPanel.Visibility=Visibility.Collapsed; MainTabs.Visibility=Visibility.Visible;
-        HeaderState.Text="  •  Encrypted local vault unlocked";
-        RefreshAll();StatusText.Text="Vault ready. All document operations are local.";
+        HeaderState.Text="  •  Local plaintext workspace";
+        RefreshAll();StatusText.Text="Workspace ready. The database and imported files are NOT encrypted.";
         _scanTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMinutes(15)};
         _scanTimer.Tick+=async (_,_)=>
         {
@@ -147,14 +140,11 @@ public partial class MainWindow : Window
     });
     private async void Restore_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
-        var folder=new OpenFolderDialog {Title="Choose encrypted backup repository"};
+        var folder=new OpenFolderDialog {Title="Choose plaintext backup repository"};
         if(folder.ShowDialog()!=true)return;
-        // Restore credentials entered in the first-screen password box are for the backup repository.
-        var backupPass=UnlockPassword.Password;
-        if(string.IsNullOrEmpty(backupPass))throw new ArgumentException("Enter your independent backup password in the password field before restoration.");
-        await BackupService.RestoreToEmptyVaultAsync(folder.FolderName,backupPass,_shutdownCts.Token);
-        UnlockPassword.Clear();UnlockButton.Content="Unlock Restored Vault";
-        StatusText.Text="Backup files restored. Enter the original vault passphrase to unlock. Recovery not yet cross-computer verified.";
+        await BackupService.RestoreToEmptyVaultAsync(folder.FolderName,_shutdownCts.Token);
+        UnlockButton.Content="Open Restored Workspace";
+        StatusText.Text="Verified plaintext snapshot restored. Open the local workspace to continue.";
     });
     private void NewChat_Click(object sender,RoutedEventArgs e)
     {
@@ -212,7 +202,7 @@ public partial class MainWindow : Window
     }
     private async void Send_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
-        if(_store is null)throw new InvalidOperationException("Vault is locked.");
+        if(_store is null)throw new InvalidOperationException("Workspace is not opened.");
         if(!_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
         var input=ChatInput.Text.Trim();
         if(input.Length==0)return;
@@ -250,7 +240,7 @@ public partial class MainWindow : Window
             catch (Exception ex) when (_embeddings.IsRunning &&
                 ex is HttpRequestException or IOException or TimeoutException or InvalidDataException or System.Text.Json.JsonException)
             {
-                // Retrieval can still function using encrypted lexical search when
+                // Retrieval can still function using local lexical search when
                 // the optional local embedding worker is unavailable or defective.
                 AuditLog.Error("SemanticRetrievalFallback",ex);
                 references = _store.Search(input,6,workspaceId);
@@ -337,14 +327,14 @@ public partial class MainWindow : Window
     {
         if (_store is null) throw new InvalidOperationException("Unlock vault first.");
         if (!_embeddings.IsRunning) throw new InvalidOperationException("Load an embedding model first.");
-        StatusText.Text="Building encrypted semantic index locally...";
+        StatusText.Text="Building local semantic index...";
         var indexed=await _store.IndexSemanticAsync(_embeddings,_shutdownCts.Token);
         StatusText.Text=$"Semantic indexing complete. Indexed {indexed} new or outdated segments.";
     });
     private void DeleteDoc_Click(object sender,RoutedEventArgs e)
     {
         if(_store is null || DocumentList.SelectedItem is not DocumentRecord d)return;
-        if(MessageBox.Show("Remove this version and its searchable content? Older encrypted backup snapshots may retain it.","Confirm",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
+        if(MessageBox.Show("Remove this version and its searchable content? Older plaintext backup snapshots may retain it.","Confirm",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
         _store.DeleteDocument(d.Id);RefreshAll();StatusText.Text="Document version removed from active vault.";
     }
     private void Refresh_Click(object sender,RoutedEventArgs e)=>RefreshAll();
@@ -423,48 +413,47 @@ public partial class MainWindow : Window
     private async void Backup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {
         if(_store is null)return;
-        StatusText.Text="Creating encrypted backup and validating repository...";
-        var password=BackupPassword.Password;
-        var result=await new BackupService(_store).BackupAsync(BackupFolder.Text.Trim(),password,_shutdownCts.Token);
-        BackupPassword.Clear();StatusText.Text=result;
+        if(MessageBox.Show("This backup contains UNENCRYPTED work information. Store it only in an organization-approved location.",
+            "Plaintext backup",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+        StatusText.Text="Creating plaintext backup and validating checksums...";
+        var result=await new BackupService(_store).BackupAsync(BackupFolder.Text.Trim(),_shutdownCts.Token);
+        StatusText.Text=result;
     });
     private async void SyncOneDrive_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
-        if (_store is null) throw new InvalidOperationException("Unlock the work vault first.");
-        StatusText.Text="Transferring and byte-verifying encrypted backup repository against OneDrive...";
+        if (_store is null) throw new InvalidOperationException("Open the local workspace first.");
+        if(MessageBox.Show("This will upload unencrypted work data to the configured OneDrive destination. Continue only if organizational policy permits it.",
+            "Plaintext OneDrive upload",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+        StatusText.Text="Transferring and byte-verifying plaintext backup repository against OneDrive...";
         await RemoteBackupService.SyncAndVerifyAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token);
-        StatusText.Text="Encrypted OneDrive repository byte-verified. Second-PC test restore remains required.";
+        StatusText.Text="Plaintext OneDrive repository byte-verified. Second-PC test restore remains required.";
     });
     private async void RestoreOneDrive_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
         var remote=RemoteRestoreText.Text.Trim();
-        var backupPass=UnlockPassword.Password;
-        if (backupPass.Length < 16) throw new ArgumentException("Enter the independent backup password before remote recovery.");
-        StatusText.Text="Downloading encrypted OneDrive repository and validating restoration...";
-        await RemoteBackupService.RestoreRemoteToEmptyVaultAsync(remote,backupPass,_shutdownCts.Token);
-        UnlockPassword.Clear();UnlockButton.Content="Unlock Restored Vault";
-        StatusText.Text="Recovered local encrypted vault files. Enter original vault passphrase to unlock.";
+        StatusText.Text="Downloading plaintext OneDrive snapshots and verifying integrity...";
+        await RemoteBackupService.RestoreRemoteToEmptyVaultAsync(remote,_shutdownCts.Token);
+        UnlockButton.Content="Open Restored Workspace";
+        StatusText.Text="Recovered a verified local plaintext snapshot. Open the workspace to continue.";
     });
     private async void ScheduleBackup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
-        if(_store is null)throw new InvalidOperationException("Unlock vault first.");
-        var vaultPass=ScheduleVaultPassword.Password;
-        var backupPass=BackupPassword.Password;
-        if(MessageBox.Show("Store protected scheduled credentials using Windows DPAPI for this Windows account? Backup operates when signed in, even if the window is closed.","Scheduled backups",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
-        await ScheduledBackup.ConfigureAsync(vaultPass,backupPass,BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token);
-        ScheduleVaultPassword.Clear();BackupPassword.Clear();
+        if(_store is null)throw new InvalidOperationException("Open workspace first.");
+        if(MessageBox.Show("Scheduled backups and any OneDrive copies will contain UNENCRYPTED data. Confirm organizational approval before enabling.",
+            "Plaintext scheduled backup",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+        await ScheduledBackup.ConfigureAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token);
         StatusText.Text="Daily 2 AM backup scheduled while your Windows user is signed in. Remote verification runs if configured.";
     });
     private async void RemoveScheduledBackup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
         await ScheduledBackup.RemoveAsync(_shutdownCts.Token);
-        StatusText.Text="Scheduled backup task and its encrypted local credentials removed.";
+        StatusText.Text="Scheduled backup task and local settings removed.";
     });
     private async void Diagnostics_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {
         if(_store is null)return;
         var check=await Task.Run(()=>_store.CheckDatabase());
-        DiagnosticsOutput.Text=$"Date: {DateTimeOffset.Now:O}\nVault: unlocked\nSQLCipher database integrity: {check}\nDocuments: {_store.Documents().Count}\nApproved memories: {_store.Memories().Count}\nRegistered models: {_store.Models().Count}\nAI engine: {(_runtime.IsRunning ? "running" : "stopped")}\n\nNot included in this check: Windows packaged-release launch, model inference validity, remote OneDrive synchronization, cross-PC restoration or a full security penetration test.";
+        DiagnosticsOutput.Text=$"Date: {DateTimeOffset.Now:O}\nStorage: PLAINTEXT\nSQLite database integrity: {check}\nDocuments: {_store.Documents().Count}\nApproved memories: {_store.Memories().Count}\nRegistered models: {_store.Models().Count}\nAI engine: {(_runtime.IsRunning ? "running" : "stopped")}\n\nNot included in this check: Windows packaged-release launch, model inference validity, remote OneDrive synchronization, cross-PC restoration or a full security penetration test.";
         StatusText.Text="Local checks completed. These are limited diagnostics, not production acceptance tests.";
     });
     private void OpenLogs_Click(object sender,RoutedEventArgs e)
@@ -501,7 +490,7 @@ public partial class MainWindow : Window
     private void AddTask_Click(object sender,RoutedEventArgs e)
     {
         if(_store is null || WorkspaceList.SelectedItem is not WorkspaceRecord w)return;
-        try { _store.AddTask(w.Id,TaskTitleInput.Text,TaskDetailsInput.Text);TaskTitleInput.Clear();TaskDetailsInput.Clear();RefreshTasks();StatusText.Text="Project task saved in encrypted vault."; }
+        try { _store.AddTask(w.Id,TaskTitleInput.Text,TaskDetailsInput.Text);TaskTitleInput.Clear();TaskDetailsInput.Clear();RefreshTasks();StatusText.Text="Project task saved to local SQLite database."; }
         catch(Exception ex){AuditLog.Error("ProjectTask",ex);MessageBox.Show(ex.Message);}
     }
     private void CompleteTask_Click(object sender,RoutedEventArgs e)
@@ -512,7 +501,7 @@ public partial class MainWindow : Window
     private async void AddWatchFolder_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {
         if(_store is null)return;
-        if(MessageBox.Show("Only select folders explicitly authorized for company AI processing. Files will be copied into the encrypted vault and indexed while the application runs.",
+        if(MessageBox.Show("Only select folders explicitly authorized for company AI processing. Files will be copied in PLAINTEXT into local storage and indexed while the application runs.",
             "Approve folder",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
         var picker=new OpenFolderDialog{Title="Select approved, non-system work folder"};
         if(picker.ShowDialog()!=true)return;

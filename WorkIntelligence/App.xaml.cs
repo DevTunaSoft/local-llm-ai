@@ -8,20 +8,6 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        // Fail closed unless the independently vetted, bundled SQLCipher native library loads.
-        // No deprecated e_sqlcipher binary, and never silently fall back to plaintext SQLite.
-        try
-        {
-            System.Runtime.InteropServices.NativeLibrary.Load(RuntimeBundle.Resolve("sqlcipher.dll"));
-            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlcipher());
-        }
-        catch (Exception ex)
-        {
-            AuditLog.Error("SQLCipherInitialization", ex);
-            MessageBox.Show("A vetted SQLCipher runtime is required. The encrypted vault cannot start.", "Work Intelligence", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
-            return;
-        }
         DispatcherUnhandledException += (_, args) =>
         {
             AuditLog.Error("UnhandledUI", args.Exception);

@@ -1,172 +1,156 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Data.Sqlite;
 
 namespace WorkIntelligence.Services;
 
+/// <summary>Unencrypted, versioned snapshots. Integrity hashes detect corruption; they do not provide confidentiality.</summary>
 public sealed class BackupService
 {
-    private readonly KnowledgeStore store;
-    private readonly Func<string, string> _resolve;
+    private sealed record ManifestFile(string Path, long Length, string Sha256);
+    private sealed record SnapshotManifest(int Version, string CreatedAt, List<ManifestFile> Files);
+    private readonly KnowledgeStore _store;
+    public BackupService(KnowledgeStore store) => _store = store;
 
-    public BackupService(KnowledgeStore store) : this(store, RuntimeBundle.Resolve) { }
-
-    internal BackupService(KnowledgeStore store, Func<string, string> resolve)
+    public async Task<string> BackupAsync(string repository, CancellationToken ct)
     {
-        this.store = store;
-        _resolve = resolve;
-    }
-
-    public async Task<string> BackupAsync(string repository, string backupPassword, CancellationToken cancellationToken)
-    {
-        Validate(repository, backupPassword);
-        var restic = _resolve("restic.exe");
-        repository = Path.GetFullPath(repository);
-        var appRoot = Path.GetFullPath(LocalPaths.Root);
-        if (repository.Equals(appRoot, StringComparison.OrdinalIgnoreCase) ||
-            repository.StartsWith(appRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Backup repository cannot be located inside the active data folder.");
-        using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(repository), cancellationToken);
-        Directory.CreateDirectory(repository);
-        var staging = Path.Combine(LocalPaths.Root, "Snapshots", Guid.NewGuid().ToString("N"));
-        var payload = Path.Combine(staging, "payload");
-        Directory.CreateDirectory(payload);
+        var location = ValidateRepository(repository);
+        using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(location), ct);
+        Directory.CreateDirectory(location);
+        PathSafety.RejectReparsePoints(location);
+        var staging = Path.Combine(location, ".pending-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(staging);
         try
         {
-            await Task.Run(() => store.CreateBackupSnapshot(payload, cancellationToken), cancellationToken);
-            if (!File.Exists(Path.Combine(repository, "config")))
-                await RunAsync(restic, repository, backupPassword, ["init"], cancellationToken);
-            var summary = await RunAsync(restic, repository, backupPassword,
-                ["backup", payload, "--tag", "work-intelligence", "--json"], cancellationToken);
-            var snapshotId = ReadSnapshotId(summary);
-            // 'check' alone verifies repository metadata, not the backed-up file contents.
-            await RunAsync(restic, repository, backupPassword, ["check", "--read-data"], cancellationToken);
-            var verificationTarget = Path.Combine(staging, "verification");
-            Directory.CreateDirectory(verificationTarget);
-            await RunAsync(restic, repository, backupPassword,
-                ["restore", snapshotId, "--target", verificationTarget, "--verify"], cancellationToken);
-            var restored = Directory.GetFiles(verificationTarget, "vault.json", SearchOption.AllDirectories);
-            if (restored.Length != 1) throw new InvalidDataException("Restored backup has no unique vault metadata.");
-            var restoredPayload = Path.GetDirectoryName(restored[0])!;
-            foreach (var sourceFile in Directory.EnumerateFiles(payload, "*", SearchOption.AllDirectories))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var relative = Path.GetRelativePath(payload, sourceFile);
-                var targetFile = Path.Combine(restoredPayload, relative);
-                if (!File.Exists(targetFile)) throw new InvalidDataException("Restored snapshot is missing a file.");
-                using var original = File.OpenRead(sourceFile);
-                using var recovered = File.OpenRead(targetFile);
-                if (!SHA256.HashData(original).AsSpan().SequenceEqual(SHA256.HashData(recovered)))
-                    throw new InvalidDataException("Restored snapshot did not match its source contents.");
-            }
-            // This verifies only a local restic repository, NOT remote OneDrive arrival.
-            AuditLog.Info("Backup", "Local encrypted backup read, restored and byte-verified.");
-            return "Local encrypted backup restored and verified. OneDrive transfer and second-PC recovery remain UNVERIFIED.";
+            await Task.Run(() => _store.CreateBackupSnapshot(staging, ct), ct);
+            var manifest = BuildManifest(staging, ct);
+            var manifestPath = Path.Combine(staging, "manifest.json");
+            await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest), ct);
+            VerifySnapshot(staging, ct);
+            var completed = Path.Combine(location, "snap-" + DateTime.UtcNow.ToString("yyyyMMddTHHmmssfffffffZ") + "-" + Guid.NewGuid().ToString("N"));
+            Directory.Move(staging, completed);
+            VerifySnapshot(completed, ct);
+            AuditLog.Info("Backup", "Plaintext snapshot created and SHA-256 verified locally.");
+            return "Plaintext versioned snapshot created and verified locally. Files are NOT encrypted; remote recovery is not yet verified.";
         }
-        finally { try { Directory.Delete(staging, recursive: true); } catch (Exception ex) { AuditLog.Error("BackupCleanup", ex); } }
+        finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
     }
 
-    public static Task RestoreToEmptyVaultAsync(string repository, string backupPassword, CancellationToken cancellationToken)
-        => RestoreToEmptyVaultAsync(repository, backupPassword, cancellationToken, RuntimeBundle.Resolve);
-
-    internal static async Task RestoreToEmptyVaultAsync(string repository, string backupPassword, CancellationToken cancellationToken,
-        Func<string, string> resolve)
+    public static async Task RestoreToEmptyVaultAsync(string repository, CancellationToken ct)
     {
-        Validate(repository, backupPassword);
+        var location = ValidateRepository(repository);
         LocalPaths.Ensure();
-        if (File.Exists(LocalPaths.VaultConfig) || File.Exists(LocalPaths.Database))
-            throw new InvalidOperationException("Restore requires an empty vault. Existing knowledge will never be overwritten by this recovery workflow.");
-        var restic=resolve("restic.exe");
-        using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(repository), cancellationToken);
-        var destination=Path.Combine(LocalPaths.Root,"RestoreStaging",Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(destination);
+        LegacyEncryptedDataGuard.AssertNoLegacyData();
+        if (File.Exists(LocalPaths.Database) || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
+            throw new InvalidOperationException("Restore requires an empty data directory. Existing data will never be overwritten.");
+        using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(location), ct);
+        if (!Directory.Exists(location)) throw new DirectoryNotFoundException("Backup repository not found.");
+        PathSafety.RejectReparsePoints(location);
+        var snapshots = Directory.EnumerateDirectories(location, "snap-*", SearchOption.TopDirectoryOnly)
+            .OrderByDescending(x => Path.GetFileName(x), StringComparer.Ordinal).ToArray();
+        if (snapshots.Length == 0) throw new InvalidDataException("No supported plaintext snapshot exists. Legacy restic repositories are not compatible.");
+        var snapshot = snapshots[0];
+        VerifySnapshot(snapshot, ct);
+        var blobsPath = Path.Combine(snapshot, "Blobs");
+        var files = Directory.Exists(blobsPath) ? Directory.EnumerateFiles(blobsPath, "*.bin", SearchOption.TopDirectoryOnly).ToArray() : Array.Empty<string>();
+        var created = new List<string>();
         try
         {
-            await RunAsync(restic, Path.GetFullPath(repository), backupPassword, ["check"], cancellationToken);
-            await RunAsync(restic, Path.GetFullPath(repository), backupPassword,
-                ["restore","latest","--tag","work-intelligence","--target",destination,"--verify"], cancellationToken);
-            var vaultFiles=Directory.GetFiles(destination,"vault.json",SearchOption.AllDirectories);
-            if (vaultFiles.Length != 1) throw new InvalidDataException("Cannot locate a unique vault configuration in the restored snapshot.");
-            var payload=Path.GetDirectoryName(vaultFiles[0])!;
-            var db=Path.Combine(payload,"knowledge.db");
-            if (!File.Exists(db) || new FileInfo(db).Length==0) throw new InvalidDataException("Restored database missing.");
-            var blobSource=Path.Combine(payload,"Blobs");
-            var existingBlobs=Directory.GetFiles(LocalPaths.Blobs,"*",SearchOption.TopDirectoryOnly);
-            if (existingBlobs.Length>0) throw new InvalidOperationException("Destination has existing attachments; manual reconciliation required.");
-            LocalPaths.Ensure();
-            var created = new List<string>();
-            try
+            foreach (var file in files)
             {
-                // Settings copied last: incomplete recovery cannot be presented as an unlocked vault.
-                if (Directory.Exists(blobSource)) foreach(var file in Directory.GetFiles(blobSource,"*.enc"))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var target=Path.Combine(LocalPaths.Blobs,Path.GetFileName(file));
-                    File.Copy(file,target,overwrite:false);created.Add(target);
-                }
-                File.Copy(db,LocalPaths.Database,overwrite:false);created.Add(LocalPaths.Database);
-                File.Copy(vaultFiles[0],LocalPaths.VaultConfig,overwrite:false);created.Add(LocalPaths.VaultConfig);
-                AuditLog.Info("Restore","Encrypted vault files recovered into previously empty destination.");
+                ct.ThrowIfCancellationRequested();
+                var destination = Path.Combine(LocalPaths.Blobs, Path.GetFileName(file));
+                File.Copy(file, destination, false);
+                created.Add(destination);
             }
-            catch
-            {
-                foreach (var createdFile in created.AsEnumerable().Reverse())
-                    try { File.Delete(createdFile); } catch(Exception cleanupEx) { AuditLog.Error("RestoreRollback",cleanupEx); }
-                throw;
-            }
+            var targetDatabase = LocalPaths.Database;
+            File.Copy(Path.Combine(snapshot, "knowledge.db"), targetDatabase, false);
+            created.Add(targetDatabase);
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+                { DataSource = targetDatabase, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA integrity_check";
+            if (command.ExecuteScalar()?.ToString() != "ok") throw new InvalidDataException("Restored database failed integrity check.");
+            AuditLog.Info("Restore", "Verified plaintext snapshot restored into an empty data directory.");
         }
-        finally { try { Directory.Delete(destination,true); } catch(Exception ex) { AuditLog.Error("RestoreCleanup",ex); } }
-    }
-
-    private static void Validate(string repository, string backupPassword)
-    {
-        if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Choose an approved local OneDrive-synchronized or offline repository folder.");
-        if (backupPassword is null || backupPassword.Length < 16) throw new ArgumentException("Backup passphrase must be at least 16 characters.");
-    }
-
-    internal static string ReadSnapshotId(string output)
-    {
-        string? id = null;
-        using var reader = new StringReader(output);
-        while (reader.ReadLine() is { } line)
+        catch
         {
-            if (string.IsNullOrWhiteSpace(line)) continue;
-            using var doc = JsonDocument.Parse(line);
-            if (doc.RootElement.TryGetProperty("message_type", out var type) && type.GetString() == "summary")
+            foreach (var createdFile in created.AsEnumerable().Reverse())
             {
-                if (id is not null) throw new InvalidDataException("Backup returned ambiguous snapshot summaries.");
-                if (!doc.RootElement.TryGetProperty("snapshot_id", out var value) ||
-                    value.ValueKind != JsonValueKind.String || value.GetString() is not { Length: 64 } snapshot ||
-                    !snapshot.All(Uri.IsHexDigit))
-                    throw new InvalidDataException("Backup did not return a valid snapshot identifier.");
-                id = snapshot;
+                try { File.Delete(createdFile); } catch (Exception e) { AuditLog.Error("RestoreRollback", e); }
             }
+            throw;
         }
-        return id ?? throw new InvalidDataException("Backup did not confirm creation of a snapshot.");
+        await Task.CompletedTask;
     }
 
-    private static async Task<string> RunAsync(string executable, string repository, string password, IEnumerable<string> arguments, CancellationToken ct)
+    private static string ValidateRepository(string repository)
     {
-        var start=new ProcessStartInfo(executable) { UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true };
-        start.Environment["RESTIC_PASSWORD"]=password;
-        start.ArgumentList.Add("--repo"); start.ArgumentList.Add(repository);
-        foreach(var arg in arguments) start.ArgumentList.Add(arg);
-        using var proc=new Process {StartInfo=start};
-        if (!proc.Start()) throw new InvalidOperationException("Could not start bundled backup engine.");
-        using var registration=ct.Register(() => ProcessTermination.RequestStop(proc));
-        var stdoutTask=proc.StandardOutput.ReadToEndAsync(ct);
-        var stderrTask=proc.StandardError.ReadToEndAsync(ct);
-        await ProcessTermination.WaitForExitAsync(proc, ct);
-        var stdout=await stdoutTask;
-        var stderr=await stderrTask;
-        if(proc.ExitCode != 0)
-        {
-            AuditLog.Info("Restic", $"Backup command returned exit code {proc.ExitCode}");
-            // Never include arbitrary command output (possible file paths or data) in persistent logs.
-            throw new InvalidOperationException($"Backup engine failed (code {proc.ExitCode}). Review the local backup diagnostics; command output has been suppressed to protect confidential paths.");
-        }
-        _=stderr;
-        return stdout;
+        if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Choose an organization-approved backup directory.");
+        var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(repository));
+        var dataRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(LocalPaths.Root));
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (full.Equals(dataRoot, comparison) || full.StartsWith(dataRoot + Path.DirectorySeparatorChar, comparison)
+            || dataRoot.StartsWith(full + Path.DirectorySeparatorChar, comparison))
+            throw new InvalidOperationException("Backup repository must be separate from the application data directory.");
+        PathSafety.RejectReparsePoints(full);
+        return full;
     }
 
+    private static SnapshotManifest BuildManifest(string snapshot, CancellationToken ct)
+    {
+        var files = Directory.EnumerateFiles(snapshot, "*", SearchOption.AllDirectories).OrderBy(x => x, StringComparer.Ordinal)
+            .Select(path =>
+            {
+                ct.ThrowIfCancellationRequested();
+                PathSafety.RejectReparsePoints(path);
+                var relative = Path.GetRelativePath(snapshot, path).Replace('\\', '/');
+                if (!IsSafeDataPath(relative)) throw new InvalidDataException("Unsafe backup payload filename.");
+                using var input = File.OpenRead(path);
+                return new ManifestFile(relative, input.Length, Convert.ToHexString(SHA256.HashData(input)));
+            }).ToList();
+        if (files.Count == 0 || files.All(x => x.Path != "knowledge.db")) throw new InvalidDataException("Backup has no database.");
+        return new SnapshotManifest(1, DateTimeOffset.UtcNow.ToString("O"), files);
+    }
+
+    private static bool IsSafeDataPath(string path) => path == "knowledge.db" ||
+        Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
+
+    internal static void VerifySnapshot(string snapshot, CancellationToken ct)
+    {
+        PathSafety.RejectReparsePoints(snapshot);
+        var manifestPath = Path.Combine(snapshot, "manifest.json");
+        if (!File.Exists(manifestPath) || new FileInfo(manifestPath).Length > 4 * 1024 * 1024)
+            throw new InvalidDataException("Snapshot manifest is missing or oversized.");
+        var manifest = JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(manifestPath))
+            ?? throw new InvalidDataException("Snapshot manifest malformed.");
+        if (manifest.Version != 1 || manifest.Files is null || manifest.Files.Count is < 1 or > 100000)
+            throw new InvalidDataException("Unsupported or invalid snapshot manifest.");
+        var listed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var record in manifest.Files)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (record is null || !IsSafeDataPath(record.Path) || !listed.Add(record.Path) || record.Length < 0 ||
+                record.Sha256.Length != 64 || !record.Sha256.All(Uri.IsHexDigit))
+                throw new InvalidDataException("Snapshot contains invalid or duplicate file records.");
+            var file = Path.Combine(snapshot, record.Path.Replace('/', Path.DirectorySeparatorChar));
+            PathSafety.RejectReparsePoints(file);
+            if (!File.Exists(file) || new FileInfo(file).Length != record.Length)
+                throw new InvalidDataException("Snapshot is incomplete.");
+            using var stream = File.OpenRead(file);
+            if (!Convert.ToHexString(SHA256.HashData(stream)).Equals(record.Sha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Snapshot checksum mismatch.");
+        }
+        if (!listed.Contains("knowledge.db")) throw new InvalidDataException("Snapshot missing the database.");
+        var found = Directory.EnumerateFiles(snapshot, "*", SearchOption.AllDirectories)
+            .Select(x => Path.GetRelativePath(snapshot, x).Replace('\\', '/')).ToArray();
+        if (found.Length != listed.Count + 1 || found.Any(x => x != "manifest.json" && !listed.Contains(x)))
+            throw new InvalidDataException("Snapshot contains unexpected or unverified files.");
+        using var db = File.OpenRead(Path.Combine(snapshot, "knowledge.db"));
+        Span<byte> header = stackalloc byte[16];
+        if (db.Read(header) != 16 || !header.SequenceEqual("SQLite format 3\\0"u8))
+            throw new InvalidDataException("Snapshot database is not standard SQLite.");
+    }
 }

@@ -9,17 +9,16 @@
     </DockPanel>
     <Border x:Name="UnlockPanel" Grid.Row="1" Background="White" Padding="30" CornerRadius="12" BorderThickness="1" BorderBrush="#D6DCE8">
       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="450">
-        <TextBlock Text="Unlock your private work vault" FontSize="24" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,10"/>
-        <TextBlock Text="First launch creates the encrypted vault. Save this passphrase: it is also needed after restoring a backup." TextWrapping="Wrap" Margin="0,0,0,15" Foreground="#52647A"/>
-        <PasswordBox x:Name="UnlockPassword" Height="38"/>
-        <Button x:Name="UnlockButton" Content="Create or Unlock Vault" Height="40" Click="Unlock_Click"/>
+        <TextBlock Text="Open your local work intelligence workspace" FontSize="24" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,10"/>
+        <TextBlock Text="All local databases, imported attachments and backups are stored UNENCRYPTED. Use only with organizational authorization." TextWrapping="Wrap" Margin="0,0,0,15" Foreground="#52647A"/>
+        <Button x:Name="UnlockButton" Content="Open Local Workspace" Height="40" Click="Unlock_Click"/>
         <Separator Margin="0,15"/>
         <TextBlock Text="Restore a previous backup onto this empty computer" TextAlignment="Center"/>
-        <Button Content="Restore Encrypted Backup" Click="Restore_Click"/>
+        <Button Content="Restore Plaintext Snapshot" Click="Restore_Click"/>
         <TextBlock Text="Optional: configured rclone OneDrive remote folder (e.g., workonedrive:WIBackups)" TextWrapping="Wrap"/>
         <TextBox x:Name="RemoteRestoreText" Height="28"/>
         <Button Content="Restore from OneDrive" Click="RestoreOneDrive_Click"/>
-        <TextBlock Text="No internet is required to unlock or use stored knowledge." Foreground="#52647A" TextAlignment="Center" Margin="0,14,0,0"/>
+        <TextBlock Text="No internet is required to open or use stored knowledge." Foreground="#52647A" TextAlignment="Center" Margin="0,14,0,0"/>
       </StackPanel>
     </Border>
     <TabControl x:Name="MainTabs" Grid.Row="1" Visibility="Collapsed" BorderBrush="#D6DCE8" Background="White">
@@ -77,7 +76,7 @@
           <ListBox Grid.Row="1" x:Name="WorkspaceList" DisplayMemberPath="Name" SelectionChanged="WorkspaceChanged_Click"/>
           <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
           <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title"/>
-          <TextBlock Grid.Row="4" Text="Task details / project decision (stored locally in encrypted vault)"/>
+          <TextBlock Grid.Row="4" Text="Task details / project decision (stored locally without encryption)"/>
           <TextBox Grid.Row="5" x:Name="TaskDetailsInput" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
         </Grid>
       </TabItem>
@@ -90,16 +89,14 @@
       </TabItem>
       <TabItem Header="Backup / Recovery">
         <StackPanel Margin="20" MaxWidth="800">
-          <TextBlock Text="Encrypted portable backups" FontWeight="Bold" FontSize="19" Margin="0,0,0,10"/>
-          <TextBlock Text="Choose an organization-approved folder synchronized by OneDrive, or an external drive. Backups are encrypted by restic before they enter that folder." TextWrapping="Wrap" Margin="0,0,0,12"/>
+          <TextBlock Text="Plaintext versioned backups" FontWeight="Bold" FontSize="19" Margin="0,0,0,10"/>
+          <TextBlock Text="Backups are NOT encrypted. Use only a company-approved backup destination; Purview labels do not automatically secure this app's database or backups." TextWrapping="Wrap" Margin="0,0,0,12"/>
           <TextBlock Text="Repository folder" FontWeight="SemiBold"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="BrowseBackup_Click"/><TextBox x:Name="BackupFolder"/></DockPanel>
-          <TextBlock Text="Independent backup password (minimum 16 characters)" FontWeight="SemiBold" Margin="0,12,0,0"/><PasswordBox x:Name="BackupPassword" Height="35"/>
-          <Button Content="Create and Verify Encrypted Local Snapshot" HorizontalAlignment="Left" Click="Backup_Click"/>
+          <Button Content="Create and Verify Plaintext Snapshot" HorizontalAlignment="Left" Click="Backup_Click"/>
           <TextBlock Text="Configured rclone OneDrive remote folder (e.g., workonedrive:WIBackups)" Margin="0,12,0,0"/>
           <TextBox x:Name="RemoteBackupText" Height="28"/>
-          <Button Content="Sync + Byte-Verify Encrypted OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
-          <TextBlock Text="Optional scheduled backup: re-enter your original vault passphrase to store it protected with Windows DPAPI." TextWrapping="Wrap" Margin="0,15,0,0"/>
-          <PasswordBox x:Name="ScheduleVaultPassword" Height="35"/>
+          <Button Content="Sync + Byte-Verify Plaintext OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
+          <TextBlock Text="Optional daily backup (2 AM). Schedule and copied data contain no application-layer encryption." TextWrapping="Wrap" Margin="0,15,0,0"/>
           <StackPanel Orientation="Horizontal"><Button Content="Enable Daily Backup (2 AM)" Click="ScheduleBackup_Click"/><Button Content="Disable Daily Backup" Click="RemoveScheduledBackup_Click"/></StackPanel>
           <TextBlock Text="Scheduled jobs run only while this Windows user is signed in. OneDrive access requires a separately configured authorized rclone remote; actual Windows/remote validation is pending." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
         </StackPanel>
@@ -111,6 +108,6 @@
         </Grid>
       </TabItem>
     </TabControl>
-    <TextBlock x:Name="StatusText" Grid.Row="2" Text="Locked" Margin="2,10,0,0" FontSize="12" Foreground="#52647A"/>
+    <TextBlock x:Name="StatusText" Grid.Row="2" Text="Workspace closed" Margin="2,10,0,0" FontSize="12" Foreground="#52647A"/>
   </Grid>
 </Window>

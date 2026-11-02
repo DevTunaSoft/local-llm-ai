@@ -3,7 +3,8 @@
     "as_of": "2026-11-01",
     "baseline": "repair source ZIP",
     "status_rule": "source_status is a cautious code-inspection estimate, NOT a passing functional test",
-    "runtime_verification": "No Windows .NET builds/GUI/model/OneDrive recovery tests verified"
+    "runtime_verification": "No Windows .NET builds/GUI/model/OneDrive recovery tests verified",
+    "encryption_architecture_superseded_2026_11_02": "User explicitly requested no application-layer encryption. See docs/UNENCRYPTED_STORAGE_CHANGE_2026-11-02.md."
   },
   "requirements": [
     {
@@ -29,20 +30,20 @@
     {
       "id": "WIN-003",
       "category": "Packaging & Windows",
-      "requirement": "Store encrypted data, documents, caches and settings external to EXE and separate from OneDrive live sync",
-      "source_status": "scaffold",
+      "requirement": "Store plaintext data, documents, caches and settings external to EXE; keep live SQLite out of OneDrive live sync",
+      "source_status": "partial",
       "source_hint": "Services/LocalPaths.cs; KnowledgeStore.cs",
-      "acceptance": "Upgrade EXE while retaining data without live DB sync conflicts.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
     {
       "id": "WIN-004",
       "category": "Packaging & Windows",
-      "requirement": "Bundle llama.cpp, SQLCipher, PDF renderer, Tesseract, restic, rclone, OCR assets and embedding runtime without separate install",
-      "source_status": "blocked",
+      "requirement": "Bundle llama.cpp, standard SQLite native provider, PDF renderer, Tesseract, rclone, OCR assets and embedding runtime without separate install",
+      "source_status": "partial",
       "source_hint": "scripts/Build-Windows.ps1; vendor/README.md",
-      "acceptance": "All dependencies signed/pinned/hash-verified and packaged correctly.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
@@ -339,10 +340,10 @@
     {
       "id": "KNOW-001",
       "category": "Knowledge, Search & Learning",
-      "requirement": "Local encrypted source files and extracted content with hash, version and provenance",
+      "requirement": "Local plaintext source file copies and extracted content with hash, version and provenance",
       "source_status": "partial",
       "source_hint": "Services/KnowledgeStore.cs",
-      "acceptance": "Import/update/delete and source history tests.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P1"
     },
@@ -669,30 +670,30 @@
     {
       "id": "SEC-001",
       "category": "Encryption, Trust & Privacy",
-      "requirement": "SQLCipher encrypted SQLite database with maintained supported provider",
-      "source_status": "blocked",
+      "requirement": "Standard unencrypted SQLite database with FTS5; no SQLCipher dependency; fail closed for preexisting encrypted vaults",
+      "source_status": "partial",
       "source_hint": "KnowledgeStore.cs; App.xaml.cs; WorkIntelligence.csproj",
-      "acceptance": "Native provider loads, wrong password denied, disk header ciphertext and no plaintext fallback.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
     {
       "id": "SEC-002",
       "category": "Encryption, Trust & Privacy",
-      "requirement": "AES-GCM encrypted imported attachments, controlled keys and passphrases",
+      "requirement": "Unencrypted imported attachments with stable local storage and explicit work-data confidentiality warning; do not require app passphrases",
       "source_status": "partial",
       "source_hint": "Vault.cs",
-      "acceptance": "Decrypt/authentication failure behavior tested.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
     {
       "id": "SEC-003",
       "category": "Encryption, Trust & Privacy",
-      "requirement": "Encrypt embeddings, search indexes, logs and temporary document data",
+      "requirement": "Store embeddings, search indexes and permitted logs as plaintext locally; document absence of at-rest protection",
       "source_status": "partial",
       "source_hint": "KnowledgeStore.cs; AuditLog.cs",
-      "acceptance": "No unprotected copied work data on disk in typical operations.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
@@ -709,10 +710,10 @@
     {
       "id": "SEC-005",
       "category": "Encryption, Trust & Privacy",
-      "requirement": "Only authorized model downloads and encrypted OneDrive transfer can reach internet",
+      "requirement": "Only authorized model downloads and explicitly approved plaintext OneDrive backup transfer may reach internet",
       "source_status": "partial",
       "source_hint": "ModelDownloader.cs; RemoteBackupService.cs",
-      "acceptance": "Allowlist and SSRF/redirect/localhost tests.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
@@ -789,10 +790,10 @@
     {
       "id": "BKP-001",
       "category": "Backups, OneDrive & Recovery",
-      "requirement": "Encrypted local restic snapshots of consistent vault/documents/settings",
+      "requirement": "Unencrypted versioned local snapshots of consistent SQLite and document files with SHA-256 integrity manifest",
       "source_status": "partial",
       "source_hint": "BackupService.cs",
-      "acceptance": "Restic execution against active writable vault with integrity restore.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
@@ -829,10 +830,10 @@
     {
       "id": "BKP-005",
       "category": "Backups, OneDrive & Recovery",
-      "requirement": "Copy only locally encrypted restic repository to OneDrive; never live databases",
+      "requirement": "Copy verified plaintext snapshots to approved OneDrive destination; never live databases",
       "source_status": "partial",
       "source_hint": "RemoteBackupService.cs",
-      "acceptance": "No plaintext in remote test account; inspect traffic.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P0"
     },
@@ -929,10 +930,10 @@
     {
       "id": "QA-001",
       "category": "Diagnostics, Reliability & QA",
-      "requirement": "Functional diagnostics dashboard for models, SQLCipher, indexing, OCR, backups, memory",
+      "requirement": "Functional diagnostics dashboard for models, plaintext SQLite integrity, indexing, OCR, backups and learning",
       "source_status": "partial",
       "source_hint": "MainWindow.xaml.cs; AuditLog.cs",
-      "acceptance": "Actual failing component detection and actionable messages.",
+      "acceptance": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet.",
       "verified_runtime": false,
       "priority": "P1"
     },

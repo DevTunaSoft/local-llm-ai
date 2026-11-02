@@ -14,8 +14,8 @@ public static class LocalPaths
     public static string Database => Path.Combine(Data, "knowledge.db");
 
     /// <summary>
-    /// Live encrypted SQLCipher files are never synchronized directly by OneDrive.
-    /// Only an independently encrypted restic repository may be copied to OneDrive.
+    /// Keep the live SQLite database away from sync clients, which can corrupt active files.
+    /// Plaintext backups must be stored only in organization-approved locations.
     /// </summary>
     public static void Ensure()
     {
@@ -25,6 +25,7 @@ public static class LocalPaths
             Environment.GetEnvironmentVariable("OneDriveCommercial"),
             Environment.GetEnvironmentVariable("OneDriveConsumer")
         });
+        LegacyEncryptedDataGuard.AssertNoLegacyData();
         foreach (var path in new[] { Root, Data, Models, Blobs, Runtime, Logs })
         {
             PathSafety.RejectReparsePoints(path);
@@ -50,8 +51,8 @@ public static class LocalPaths
             if (string.Equals(full, sync, comparison) ||
                 full.StartsWith(syncPrefix, comparison))
                 throw new InvalidOperationException(
-                    "The live Work Intelligence vault cannot be stored in a OneDrive-synchronized folder. " +
-                    "Choose an unsynchronized local folder; OneDrive is for encrypted restic backups only.");
+                    "The live Work Intelligence database cannot be stored in a OneDrive-synchronized folder. " +
+                    "Choose an unsynchronized local data folder; plaintext backup exports require organizational approval.");
         }
     }
 }

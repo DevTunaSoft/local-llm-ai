@@ -1,5 +1,5 @@
 # Invoke on Windows using PowerShell 7+ and .NET 10 SDK.
-# Place trusted Windows llama.cpp and restic binaries in vendor/runtime with all required DLLs.
+# Place vetted Windows llama.cpp, OCR, and OneDrive binaries in vendor/runtime with all required DLLs.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -8,9 +8,7 @@ $resources = Join-Path $root 'WorkIntelligence/Resources'
 $archive = Join-Path $resources 'runtime.zip'
 $hashfile = Join-Path $resources 'runtime.sha256'
 if (!(Test-Path (Join-Path $vendor 'llama-server.exe'))) { throw 'Release blocked: vendor/runtime/llama-server.exe missing' }
-if (!(Test-Path (Join-Path $vendor 'restic.exe'))) { throw 'Release blocked: vendor/runtime/restic.exe missing' }
 if (!(Test-Path (Join-Path $vendor 'rclone.exe'))) { throw 'Release blocked: vendor/runtime/rclone.exe missing' }
-if (!(Test-Path (Join-Path $vendor 'sqlcipher.dll'))) { throw 'Release blocked: maintained SQLCipher native library absent' }
 if (!(Test-Path (Join-Path $vendor 'pdfium.dll'))) { throw 'Release blocked: vetted PDFium native renderer absent' }
 if (!(Test-Path (Join-Path $vendor 'tesseract.exe'))) { throw 'Release blocked: vendor/runtime/tesseract.exe missing' }
 if (!(Test-Path (Join-Path $vendor 'tessdata/eng.traineddata'))) { throw 'Release blocked: vendor/runtime/tessdata/eng.traineddata missing' }
@@ -41,13 +39,13 @@ Push-Location $root
 try {
     dotnet restore WorkIntelligence.slnx
     if ($LASTEXITCODE -ne 0) { throw 'Dependency restore failed' }
-    # Core tests link production services, use real SQLCipher and exercise encrypted
-    # vault storage/backup. Omitting them would allow an untested EXE to be built.
+    # Core tests link production services and exercise plaintext storage,
+    # backup integrity, and memory recall. Do not bypass them.
     $env:PATH = "$vendor;$env:PATH"
     dotnet test tests/WorkIntelligence.Tests.csproj -c Release
     if ($LASTEXITCODE -ne 0) { throw 'Windows WPF tests failed. Release blocked.' }
     dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release
-    if ($LASTEXITCODE -ne 0) { throw 'Windows encrypted-service tests failed. Release blocked.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Windows storage-service tests failed. Release blocked.' }
     dotnet publish WorkIntelligence/WorkIntelligence.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o (Join-Path $root 'publish')
     if ($LASTEXITCODE -ne 0) { throw 'Windows publish failed' }
     $exe = Join-Path $root 'publish/WorkIntelligence.exe'

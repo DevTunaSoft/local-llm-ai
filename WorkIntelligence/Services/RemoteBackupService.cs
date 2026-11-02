@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace WorkIntelligence.Services;
 
-/// <summary>Copy only an already encrypted restic repository. Never sends plaintext documents to OneDrive.</summary>
+/// <summary>Copies verified PLAINTEXT snapshots to an explicitly configured organizational OneDrive remote.</summary>
 public static class RemoteBackupService
 {
     // Requires a configured and explicitly authorized rclone OneDrive remote.
@@ -11,27 +11,27 @@ public static class RemoteBackupService
     {
         ValidateRemote(remote);
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(localRepository), ct);
-        if(!File.Exists(Path.Combine(localRepository,"config")))
-            throw new InvalidDataException("Local restic repository not initialized.");
+        if(!Directory.Exists(localRepository) || !Directory.EnumerateDirectories(localRepository, "snap-*").Any())
+            throw new InvalidDataException("No plaintext snapshots exist. Create a verified local backup first.");
         var rclone=RuntimeBundle.Resolve("rclone.exe");
         await RunAsync(rclone,["copy",Path.GetFullPath(localRepository),remote,"--transfers","4","--checkers","8"],ct);
-        // Download both sides and compare bytes; never treat a sync icon as proof of correctness.
+        // Compare both sides byte-for-byte. Remote copies are plaintext, not protected by this app.
         await RunAsync(rclone,["check",Path.GetFullPath(localRepository),remote,"--download","--one-way"],ct);
-        AuditLog.Info("OneDrive", "Encrypted remote repository byte-verification completed.");
+        AuditLog.Info("OneDrive", "Plaintext remote repository byte-verification completed.");
     }
-    public static async Task RestoreRemoteToEmptyVaultAsync(string remote,string vaultBackupPassword,CancellationToken ct)
+    public static async Task RestoreRemoteToEmptyVaultAsync(string remote,CancellationToken ct)
     {
         ValidateRemote(remote);
         LocalPaths.Ensure();
-        if(File.Exists(LocalPaths.VaultConfig) || File.Exists(LocalPaths.Database))
-            throw new InvalidOperationException("Remote recovery requires an empty vault.");
-        var temp=Path.Combine(LocalPaths.Root,"RemoteRestore",Guid.NewGuid().ToString("N"));
+        if(File.Exists(LocalPaths.VaultConfig) || File.Exists(LocalPaths.Database) || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
+            throw new InvalidOperationException("Remote recovery requires an empty local database and attachment folder.");
+        var temp=Path.Combine(Path.GetTempPath(),"WorkIntelligence-RemoteRestore-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(temp);
         try
         {
             var rclone=RuntimeBundle.Resolve("rclone.exe");
             await RunAsync(rclone,["copy",remote,temp,"--transfers","4"],ct);
-            await BackupService.RestoreToEmptyVaultAsync(temp,vaultBackupPassword,ct);
+            await BackupService.RestoreToEmptyVaultAsync(temp,ct);
         }
         finally { try {Directory.Delete(temp,recursive:true);}catch(Exception ex){AuditLog.Error("RemoteRestoreCleanup",ex);} }
     }
@@ -52,6 +52,6 @@ public static class RemoteBackupService
         var outTask=proc.StandardOutput.ReadToEndAsync(ct);var errTask=proc.StandardError.ReadToEndAsync(ct);
         await ProcessTermination.WaitForExitAsync(proc, ct);
         _=await outTask;_=await errTask; // Never log remote paths, account info or tokens.
-        if(proc.ExitCode!=0)throw new InvalidOperationException($"Encrypted OneDrive copy/check failed (code {proc.ExitCode}); backup is not remotely verified.");
+        if(proc.ExitCode!=0)throw new InvalidOperationException($"OneDrive plaintext copy/check failed (code {proc.ExitCode}); backup is not remotely verified.");
     }
 }

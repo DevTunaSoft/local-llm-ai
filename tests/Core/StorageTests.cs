@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 using WorkIntelligence.Services;
 using Xunit;
@@ -12,8 +11,6 @@ namespace WorkIntelligence.Tests;
 
 public sealed class StorageTests : IDisposable
 {
-    private const string Password = "Synthetic test vault password only";
-    private readonly Vault _vault;
     private readonly KnowledgeStore _store;
 
     public StorageTests()
@@ -21,9 +18,7 @@ public sealed class StorageTests : IDisposable
         Assert.StartsWith(Path.GetTempPath(), LocalPaths.Root, StringComparison.Ordinal);
         if (Directory.Exists(LocalPaths.Root)) Directory.Delete(LocalPaths.Root, true);
         LocalPaths.Ensure();
-        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlcipher());
-        _vault = Vault.Open(Password);
-        _store = new KnowledgeStore(_vault);
+        _store = new KnowledgeStore();
     }
 
     private static string Source(string name, string text)
@@ -110,7 +105,7 @@ public sealed class StorageTests : IDisposable
             cmd.CommandText = "PRAGMA user_version=999";
             cmd.ExecuteNonQuery();
         }
-        Assert.Throws<InvalidDataException>(() => new KnowledgeStore(_vault));
+        Assert.Throws<InvalidDataException>(() => new KnowledgeStore());
         using var connection = Connect();
         using var command = connection.CreateCommand();
         command.CommandText = "PRAGMA user_version";
@@ -362,62 +357,41 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
-    public void VaultRejectsExcessiveKdfWorkBeforeDerivingKeys()
+    public void PlaintextDatabaseHasStandardSqliteHeaderAndNoPassword()
     {
-        var settings = JsonNode.Parse(File.ReadAllText(LocalPaths.VaultConfig))!;
-        settings["Iterations"] = int.MaxValue;
-        File.WriteAllText(LocalPaths.VaultConfig, settings.ToJsonString());
-        Assert.Throws<InvalidDataException>(() => Vault.Open(Password));
-    }
-
-    [Theory]
-    [InlineData("Nonce")]
-    [InlineData("Salt")]
-    [InlineData("Verifier")]
-    public void VaultRejectsMalformedCryptoParameters(string field)
-    {
-        var settings = JsonNode.Parse(File.ReadAllText(LocalPaths.VaultConfig))!;
-        settings[field] = Convert.ToBase64String(new byte[1]);
-        File.WriteAllText(LocalPaths.VaultConfig, settings.ToJsonString());
-        Assert.Throws<InvalidDataException>(() => Vault.Open(Password));
-    }
-
-    [Fact]
-    public void RealSqlCipherDatabaseIsEncryptedAndRejectsWrongKey()
-    {
-        _store.AddMemory("Synthetic confidential test marker", "fixture");
+        _store.AddMemory("Synthetic test marker", "fixture");
         var bytes = File.ReadAllBytes(LocalPaths.Database);
-        Assert.False(bytes.AsSpan(0, 16).SequenceEqual("SQLite format 3\0"u8));
-        Assert.DoesNotContain("Synthetic confidential test marker", Encoding.UTF8.GetString(bytes));
-        using var wrong = new SqliteConnection(new SqliteConnectionStringBuilder
-        { DataSource = LocalPaths.Database, Password = "wrong test key", Pooling = false }.ToString());
-        Assert.Throws<SqliteException>(() =>
-        {
-            wrong.Open();
-            using var command = wrong.CreateCommand();
-            command.CommandText = "SELECT count(*) FROM memories";
-            command.ExecuteScalar();
-        });
+        Assert.True(bytes.AsSpan(0, 16).SequenceEqual("SQLite format 3\0"u8));
+        using var connection = Connect();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT content FROM memories LIMIT 1";
+        Assert.Equal("Synthetic test marker", command.ExecuteScalar());
         Assert.Equal("ok", _store.CheckDatabase());
     }
 
     [Fact]
-    public void VaultRejectsWrongPasswordAndAttachmentTampering()
+    public void LegacyVaultConfigurationIsRejectedWithoutDeletion()
     {
-        Assert.Throws<CryptographicException>(() => Vault.Open("Wrong synthetic passphrase"));
-        var plain = Encoding.UTF8.GetBytes("Synthetic attachment 🧪");
-        var encrypted = _vault.Encrypt(plain);
-        Assert.Equal(plain, _vault.Decrypt(encrypted));
-        encrypted[18] ^= 1;
-        Assert.ThrowsAny<CryptographicException>(() => _vault.Decrypt(encrypted));
+        File.WriteAllText(LocalPaths.VaultConfig, "synthetic legacy marker");
+        Assert.Throws<InvalidOperationException>(() => new KnowledgeStore());
+        Assert.Equal("synthetic legacy marker", File.ReadAllText(LocalPaths.VaultConfig));
+        Assert.True(File.Exists(LocalPaths.Database));
+    }
+
+    [Fact]
+    public void PlaintextDocumentAttachmentsAreNotEncrypted()
+    {
+        var imported = _store.Import(Source("raw.txt", "Synthetic plaintext attachment"));
+        var file = Path.Combine(LocalPaths.Blobs, $"{imported.DocumentId}.bin");
+        Assert.Equal("Synthetic plaintext attachment", Encoding.UTF8.GetString(File.ReadAllBytes(file)));
     }
 
     [Fact]
     public void FailedImportNeverDeletesAPreexistingAttachment()
     {
         var first = _store.Import(Source("one.txt", "Synthetic first document"));
-        var nextBlob = Path.Combine(LocalPaths.Blobs, $"{first.DocumentId + 1}.enc");
-        var original = _vault.Encrypt("Preexisting recovery attachment"u8);
+        var nextBlob = Path.Combine(LocalPaths.Blobs, $"{first.DocumentId + 1}.bin");
+        var original = "Preexisting recovery attachment"u8.ToArray();
         File.WriteAllBytes(nextBlob, original);
         Assert.Throws<IOException>(() => _store.Import(Source("two.txt", "Synthetic second document")));
         Assert.True(File.Exists(nextBlob), "Failed import deleted an attachment it did not create.");
@@ -481,14 +455,13 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
-    public void SnapshotContainsEncryptedDatabaseAndAuthenticatedAttachments()
+    public void SnapshotContainsPlaintextDatabaseAndAttachments()
     {
         var document = _store.Import(Source("snapshot.txt", "Synthetic backup content"));
         var snapshot = Path.Combine(LocalPaths.Root, "snapshot");
         _store.CreateBackupSnapshot(snapshot, CancellationToken.None);
-        Assert.Equal(File.ReadAllBytes(LocalPaths.VaultConfig), File.ReadAllBytes(Path.Combine(snapshot, "vault.json")));
-        var blob = Path.Combine(snapshot, "Blobs", $"{document.DocumentId}.enc");
-        Assert.Equal("Synthetic backup content", Encoding.UTF8.GetString(_vault.Decrypt(File.ReadAllBytes(blob))));
+        var blob = Path.Combine(snapshot, "Blobs", $"{document.DocumentId}.bin");
+        Assert.Equal("Synthetic backup content", Encoding.UTF8.GetString(File.ReadAllBytes(blob)));
         using var connection = Connect(Path.Combine(snapshot, "knowledge.db"));
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT content FROM chunks";
@@ -509,7 +482,7 @@ public sealed class StorageTests : IDisposable
         }
         _store.DeleteDocument(doc.DocumentId);
         Assert.Empty(_store.Search("zebra"));
-        Assert.False(File.Exists(Path.Combine(LocalPaths.Blobs, $"{doc.DocumentId}.enc")));
+        Assert.False(File.Exists(Path.Combine(LocalPaths.Blobs, $"{doc.DocumentId}.bin")));
         using var connection = Connect();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT (SELECT count(*) FROM chunks)+(SELECT count(*) FROM chunk_vectors)+(SELECT count(*) FROM workspace_documents)";
@@ -519,7 +492,7 @@ public sealed class StorageTests : IDisposable
     private SqliteConnection Connect(string? path = null)
     {
         var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-        { DataSource = path ?? LocalPaths.Database, Password = _vault.DbPassword, Pooling = false }.ToString());
+        { DataSource = path ?? LocalPaths.Database, Pooling = false }.ToString());
         connection.Open();
         return connection;
     }
@@ -527,7 +500,6 @@ public sealed class StorageTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        _vault.Dispose();
         Directory.Delete(LocalPaths.Root, true);
     }
 }

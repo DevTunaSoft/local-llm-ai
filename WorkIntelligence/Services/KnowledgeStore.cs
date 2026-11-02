@@ -9,9 +9,8 @@ namespace WorkIntelligence.Services;
 
 public sealed partial class KnowledgeStore : IDisposable
 {
-    private readonly Vault _vault;
     private readonly object _writeGate = new();
-    public KnowledgeStore(Vault vault) { _vault = vault; Initialize(); }
+    public KnowledgeStore() { LocalPaths.Ensure(); Initialize(); }
 
     private SqliteConnection Connect()
     {
@@ -19,17 +18,13 @@ public sealed partial class KnowledgeStore : IDisposable
         {
             DataSource = LocalPaths.Database,
             Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false,
-            Password = _vault.DbPassword
+            Pooling = false
         }.ToString());
         try
         {
         connection.Open();
         using (var pragma = connection.CreateCommand())
         {
-            pragma.CommandText = "PRAGMA cipher_version";
-            if (string.IsNullOrWhiteSpace(pragma.ExecuteScalar()?.ToString()))
-                throw new CryptographicException("SQLCipher encryption provider unavailable. Refusing to create an unencrypted database.");
             pragma.CommandText = "PRAGMA foreign_keys=ON";
             pragma.ExecuteNonQuery();
             pragma.CommandText = "PRAGMA busy_timeout=5000";
@@ -92,7 +87,7 @@ public sealed partial class KnowledgeStore : IDisposable
           """;
         cmd.ExecuteNonQuery();
         // Schema 4: a searchable, revision-safe approval ledger. Transactional upgrade
-        // preserves existing encrypted vaults and never rewrites their memory text.
+        // retains historical schema upgrades and never rewrites memory text.
         using (var current = connection.CreateCommand())
         {
             current.CommandText = "PRAGMA user_version";
@@ -120,7 +115,7 @@ public sealed partial class KnowledgeStore : IDisposable
             }
         }
         // Schema 5: logical workspace scopes on chats and memory. Existing knowledge
-        // remains in the General workspace. SQLCipher database is NOT discarded.
+        // remains in the General workspace. An existing plaintext database is preserved.
         using (var current = connection.CreateCommand())
         {
             current.CommandText = "PRAGMA user_version";
@@ -231,11 +226,11 @@ public sealed partial class KnowledgeStore : IDisposable
                     doc.Parameters.AddWithValue("$v", version);
                     doc.Parameters.AddWithValue("$d", DateTimeOffset.UtcNow.ToString("O"));
                     var id = (long)(doc.ExecuteScalar() ?? throw new InvalidOperationException("Failed to create document."));
-                    blobPath = Path.Combine(LocalPaths.Blobs, $"{id}.enc");
+                    blobPath = Path.Combine(LocalPaths.Blobs, $"{id}.bin");
                     using (var file = new FileStream(blobPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                     {
                         blobCreated = true;
-                        file.Write(_vault.Encrypt(input));
+                        file.Write(input);
                         file.Flush(true);
                     }
                     using var add = con.CreateCommand();
@@ -296,7 +291,7 @@ public sealed partial class KnowledgeStore : IDisposable
             cmd.CommandText = "DELETE FROM documents WHERE id=$id";
             cmd.Parameters.AddWithValue("$id", id);
             cmd.ExecuteNonQuery();
-            var path = Path.Combine(LocalPaths.Blobs, $"{id}.enc");
+            var path = Path.Combine(LocalPaths.Blobs, $"{id}.bin");
             if (File.Exists(path)) File.Delete(path);
         }
     }
@@ -324,7 +319,7 @@ public sealed partial class KnowledgeStore : IDisposable
         while (reader.Read()) hits.Add(new(reader.GetInt64(0),reader.GetString(1),reader.GetInt32(2),reader.GetInt32(3),reader.GetString(4),reader.GetDouble(5)));
         return hits;
     }
-    // Semantic vectors are encrypted by the same SQLCipher database as source text.
+    // Semantic vectors are persisted in the plaintext SQLite database.
     // This is intentionally a linear scan for the initial single-user build; use an
     // audited native ANN index only after measured corpus size justifies its complexity.
     public async Task<int> IndexSemanticAsync(EmbeddingRuntime embedder, CancellationToken ct)
@@ -643,15 +638,15 @@ public sealed partial class KnowledgeStore : IDisposable
     }
     public void BackupDatabase(string destination)
     {
-        // Both source and target must be encrypted SQLCipher connections.
+        // Standard SQLite online backup maintains consistency without stopping readers.
         using var source=Connect();
         using var target=new SqliteConnection(new SqliteConnectionStringBuilder
-        { DataSource=destination,Mode=SqliteOpenMode.ReadWriteCreate,Pooling=false,Password=_vault.DbPassword }.ToString());
+        { DataSource=destination,Mode=SqliteOpenMode.ReadWriteCreate,Pooling=false }.ToString());
         target.Open(); source.BackupDatabase(target);
         using var cmd=target.CreateCommand();cmd.CommandText="PRAGMA integrity_check";
         if (!string.Equals(cmd.ExecuteScalar()?.ToString(),"ok",StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Backup database failed integrity check.");
     }
-    // A consistent snapshot includes the database and all imported encrypted blobs.
+    // A consistent snapshot includes the database and all imported raw document attachments.
     // Writers that modify blob files must share the _writeGate with this operation.
     public void CreateBackupSnapshot(string payload, CancellationToken ct)
     {
@@ -661,10 +656,9 @@ public sealed partial class KnowledgeStore : IDisposable
             Directory.CreateDirectory(payload);
             BackupDatabase(Path.Combine(payload, "knowledge.db"));
             ct.ThrowIfCancellationRequested();
-            File.Copy(LocalPaths.VaultConfig, Path.Combine(payload, "vault.json"));
             var blobTarget = Path.Combine(payload, "Blobs");
             Directory.CreateDirectory(blobTarget);
-            foreach (var file in Directory.EnumerateFiles(LocalPaths.Blobs, "*.enc"))
+            foreach (var file in Directory.EnumerateFiles(LocalPaths.Blobs, "*.bin"))
             {
                 ct.ThrowIfCancellationRequested();
                 File.Copy(file, Path.Combine(blobTarget, Path.GetFileName(file)));

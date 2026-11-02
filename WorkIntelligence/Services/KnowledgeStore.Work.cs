@@ -191,7 +191,7 @@ public sealed partial class KnowledgeStore
                 }
             if (missing.Count == 0) return 0;
             ct.ThrowIfCancellationRequested();
-            // No deletion is performed. Archived revisions remain encrypted in the vault.
+            // No deletion is performed. Archived revisions remain in the local plaintext database.
             using var tx = con.BeginTransaction();
             using var retire = con.CreateCommand();
             retire.Transaction = tx;

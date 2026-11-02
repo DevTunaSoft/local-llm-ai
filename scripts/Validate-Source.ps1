@@ -10,8 +10,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Source compilation failed' }
     dotnet test tests/WorkIntelligence.Tests.csproj -c Release --no-build --no-restore @properties --logger 'console;verbosity=normal'
     if ($LASTEXITCODE -ne 0) { throw 'Windows unit tests failed' }
-    # Portable production-service tests additionally cover encrypted memory, migrations,
-    # corrections and workspace isolation; they require a compatible real SQLCipher DLL.
+    # Portable production-service tests cover SQLite, plaintext snapshots, memory,
+    # corrections and workspace isolation; no SQLCipher DLL or restic is required.
     dotnet restore tests/Core/WorkIntelligence.Core.Tests.csproj
     if ($LASTEXITCODE -ne 0) { throw 'Service test restore failed' }
     dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --no-restore --logger 'console;verbosity=normal'
