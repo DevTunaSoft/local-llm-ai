@@ -33,6 +33,10 @@ public static class RemoteBackupService
             var rclone=RuntimeBundle.Resolve("rclone.exe");
             await RequireOneDriveBackendAsync(rclone, remote, ct);
             await RunAsync(rclone,["copy",remote,temp,"--transfers","4"],ct);
+            // A successful transfer alone is not acceptance evidence. Byte-check
+            // every downloaded snapshot against the authorized remote BEFORE
+            // writing any files into the actual local vault.
+            await RunAsync(rclone,["check",remote,temp,"--download","--one-way"],ct);
             await BackupService.RestoreToEmptyVaultAsync(temp,ct);
         }
         finally { try {Directory.Delete(temp,recursive:true);}catch(Exception ex){AuditLog.Error("RemoteRestoreCleanup",ex);} }
