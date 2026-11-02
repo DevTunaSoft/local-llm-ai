@@ -1,0 +1,864 @@
+{
+  "updated_on": "2026-11-02",
+  "status_note": "No full-production acceptance. Keep original 106 requirements; states distinguish historical source inspection from actual runtime evidence. No EXE packaging authorized.",
+  "sources": [
+    "docs/handoff/requirements.json",
+    "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579"
+  ],
+  "counts": {
+    "total": 106,
+    "partial_runtime": 10,
+    "requires_environment": 10,
+    "superseded": 2
+  },
+  "records": [
+    {
+      "id": "WIN-001",
+      "legacy_source_status": "scaffold",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Build and launch one EXE on clean Win11 without developer prerequisites."
+    },
+    {
+      "id": "WIN-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "First run choose import/download destination and recover from a new path."
+    },
+    {
+      "id": "WIN-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "WIN-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "WIN-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "End-to-end GUI walkthrough on clean Windows."
+    },
+    {
+      "id": "WIN-006",
+      "legacy_source_status": "blocked",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Second machine restore uses backup password and works offline."
+    },
+    {
+      "id": "WIN-007",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Test forward and rollback migrations on copied vaults."
+    },
+    {
+      "id": "WIN-008",
+      "legacy_source_status": "missing",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Authenticode/signature and SBOM/license scan verified where appropriate."
+    },
+    {
+      "id": "WIN-009",
+      "legacy_source_status": "blocked",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Install and use on clean Win11 VM."
+    },
+    {
+      "id": "WIN-010",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "UI config, permissions and preserve/delete options tested."
+    },
+    {
+      "id": "MOD-001",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Real test with licensed official model; correct reasoning/display separation."
+    },
+    {
+      "id": "MOD-002",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Real inference and sustained RAM tests."
+    },
+    {
+      "id": "MOD-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Import/detect incompatible, corrupt and moved model files."
+    },
+    {
+      "id": "MOD-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Trusted versioned download with progress, resume, checksum and fail handling."
+    },
+    {
+      "id": "MOD-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Network loss and hostile redirect simulation tests."
+    },
+    {
+      "id": "MOD-006",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Repeated switching without leaks and DB loss."
+    },
+    {
+      "id": "MOD-007",
+      "legacy_source_status": "scaffold",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "32 GB real RAM pressure and no GPU tests."
+    },
+    {
+      "id": "MOD-008",
+      "legacy_source_status": "missing",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Context size, CPU threads, tokens and temperature are stored per model; timeouts and detailed memory controls remain outstanding",
+      "full_acceptance_required": "UI settings persist and are applied to llama runtime."
+    },
+    {
+      "id": "MOD-009",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Repeatable measured benchmark traces."
+    },
+    {
+      "id": "MOD-010",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Compare answers with citations without two models loaded at once."
+    },
+    {
+      "id": "MOD-011",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Configurable and explainable routing; user override."
+    },
+    {
+      "id": "MOD-012",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Versioned capability/format tests and helpful refusal for unsupported models."
+    },
+    {
+      "id": "MOD-013",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Local GGUF embedding worker verified; model-architecture support remains partial",
+      "full_acceptance_required": "Embedding model setup and real vector indexing without network."
+    },
+    {
+      "id": "MOD-014",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Image question with multimodal model verified and local-only."
+    },
+    {
+      "id": "MOD-015",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "SSE streams and stop/retry/interrupt test on two models."
+    },
+    {
+      "id": "MOD-016",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Small-model native Windows inference, restart and shutdown verified; production-size templates not verified",
+      "full_acceptance_required": "Repeated start/stop, failed launch, port race, and process-tree cleanup."
+    },
+    {
+      "id": "CHAT-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "WPF chat create, rename, search and local SQLite persistence tested; full export and restart UI not certified",
+      "full_acceptance_required": "All controls function and persist; no sensitive data leakage."
+    },
+    {
+      "id": "CHAT-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Citations correspond to actual chunks, abstains on no evidence."
+    },
+    {
+      "id": "CHAT-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "File attachment in chat, referenced safely."
+    },
+    {
+      "id": "CHAT-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Cancel/resume and crash save behavior exercised."
+    },
+    {
+      "id": "CHAT-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Cross-workspace access tests and filtered search."
+    },
+    {
+      "id": "CHAT-006",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Clear permission and data-scope guardrails."
+    },
+    {
+      "id": "CHAT-007",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Synthetic multi-turn tasks with sources and exports."
+    },
+    {
+      "id": "KNOW-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "KNOW-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Relevance and negative search fixtures."
+    },
+    {
+      "id": "KNOW-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Persisted semantic-only retrieval and workspace isolation verified with small embeddings",
+      "full_acceptance_required": "Real embedding model, vector consistency and ranked recall tests."
+    },
+    {
+      "id": "KNOW-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Every sourced claim links to verified excerpt."
+    },
+    {
+      "id": "KNOW-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Approval-based memory persistence and corrections tested",
+      "full_acceptance_required": "Approval decisions and deletions persist."
+    },
+    {
+      "id": "KNOW-006",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Automatic suggestions surfaced, not silently approved."
+    },
+    {
+      "id": "KNOW-007",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Conflict test suite identifies current approved rule."
+    },
+    {
+      "id": "KNOW-008",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Regression task before/after model swap."
+    },
+    {
+      "id": "KNOW-009",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Windows FileSystemWatcher or dependable scan scheduler with changed/deleted files."
+    },
+    {
+      "id": "KNOW-010",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Attack fixtures cannot instruct file/network/credential operations."
+    },
+    {
+      "id": "KNOW-011",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Switch embedding model and rebuild without deleting sources."
+    },
+    {
+      "id": "KNOW-012",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Delete item then verify active/search/caches and documented backup expiry."
+    },
+    {
+      "id": "KNOW-013",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Repeatable answer/source acceptance metrics; no invented citations."
+    },
+    {
+      "id": "KNOW-014",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Lifecycle and provenance throughout updates."
+    },
+    {
+      "id": "KNOW-015",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Re-import or independently read export without app."
+    },
+    {
+      "id": "KNOW-016",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Model swap and restore test with same questions."
+    },
+    {
+      "id": "DOC-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Fixtures contain expected content and encoding edge cases."
+    },
+    {
+      "id": "DOC-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Scanned/structured PDF test cases and page-aware citations."
+    },
+    {
+      "id": "DOC-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Actual Windows OCR produces accurate text from known 10-page fixture."
+    },
+    {
+      "id": "DOC-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Windows OCR accuracy/corruption and resource-limits tests."
+    },
+    {
+      "id": "DOC-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Complex fixtures including formulas and tables."
+    },
+    {
+      "id": "DOC-006",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Complete UI workflow with source versions."
+    },
+    {
+      "id": "DOC-007",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Open exported DOCX and PDF on clean Windows and validate content."
+    },
+    {
+      "id": "DOC-008",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Fuzz/resource controls and malicious document tests."
+    },
+    {
+      "id": "DOC-009",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "File hashes unchanged; no plaintext temp secrets."
+    },
+    {
+      "id": "DOC-010",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Actual local multimodal benchmark."
+    },
+    {
+      "id": "DOC-011",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Correct differences explained with citations."
+    },
+    {
+      "id": "WORK-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Add/select/scope workspace and persist."
+    },
+    {
+      "id": "WORK-002",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Negative access/cross-scope tests."
+    },
+    {
+      "id": "WORK-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "CRUD UI with persisted all fields."
+    },
+    {
+      "id": "WORK-004",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Historical as-of queries and provenance."
+    },
+    {
+      "id": "WORK-005",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Search and trace incident-to-fix."
+    },
+    {
+      "id": "WORK-006",
+      "legacy_source_status": "deferred",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "No automatic data capture or external API use."
+    },
+    {
+      "id": "SEC-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "SEC-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "SEC-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "SEC-004",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Monitor actual Win11 network traffic in offline mode."
+    },
+    {
+      "id": "SEC-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "SEC-006",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Threat modeling and adversarial tests."
+    },
+    {
+      "id": "SEC-007",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Cross-user extraction and writable path negative tests."
+    },
+    {
+      "id": "SEC-008",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Redaction and inspection of process lists/logs."
+    },
+    {
+      "id": "SEC-009",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "First-run authorization, restrictions and audit evidence."
+    },
+    {
+      "id": "SEC-010",
+      "legacy_source_status": "missing",
+      "acceptance_state": "superseded_by_plaintext_design",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Rotation and independent-machine restore tests."
+    },
+    {
+      "id": "SEC-011",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Supply-chain report and no known unmitigated severe vulnerabilities."
+    },
+    {
+      "id": "SEC-012",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Deletion semantics documented/tested, no false instant backup erasure claims."
+    },
+    {
+      "id": "BKP-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Versioned plaintext snapshots with integrity manifest and fallback tests verified",
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "BKP-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Windows Task Scheduler test in each supported session/power state."
+    },
+    {
+      "id": "BKP-003",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Simulated missed jobs self-heal without duplicate/corruption."
+    },
+    {
+      "id": "BKP-004",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Non-CLI setup with authorized work account."
+    },
+    {
+      "id": "BKP-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "BKP-006",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "rclone check, remote inventory and actual recovery."
+    },
+    {
+      "id": "BKP-007",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Snapshot prune/forget and backup restore at oldest retained point."
+    },
+    {
+      "id": "BKP-008",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "UI accuracy and failure notifications."
+    },
+    {
+      "id": "BKP-009",
+      "legacy_source_status": "partial",
+      "acceptance_state": "superseded_by_plaintext_design",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Fresh Windows PC restore and offline question retrieval."
+    },
+    {
+      "id": "BKP-010",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Migration preserving hashes, provenance and corrections."
+    },
+    {
+      "id": "BKP-011",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Corrupt-latest local backup can recover from older snapshot; interrupted remote restore remains unverified",
+      "full_acceptance_required": "Fault injection, rollback and no corrupt active vault."
+    },
+    {
+      "id": "BKP-012",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Refuse overwrites and support controlled optional reconciliation."
+    },
+    {
+      "id": "BKP-013",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Approved tenant, encrypted before upload and authorized retention."
+    },
+    {
+      "id": "BKP-014",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Cross-device with separate Windows account and credentials."
+    },
+    {
+      "id": "QA-001",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Validate the updated 2026-11-02 plaintext design in Windows runtime with synthetic fixtures; obtain organizational approval; no production acceptance yet."
+    },
+    {
+      "id": "QA-002",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Feedback at runtime and cancellability."
+    },
+    {
+      "id": "QA-003",
+      "legacy_source_status": "partial",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "Production service xUnit and Windows/Linux source test suites",
+      "full_acceptance_required": "Meaningful assertions, coverage and repeatable CI."
+    },
+    {
+      "id": "QA-004",
+      "legacy_source_status": "missing",
+      "acceptance_state": "partially_verified_subsystem",
+      "evidence_url": "https://github.com/DevTunaSoft/local-llm-ai/actions/runs/41515302579",
+      "verified_scope": "A subset of real Windows UI controls exercised; full interaction coverage not certified",
+      "full_acceptance_required": "Clean Win11 end-to-end clicks and screenshot evidence."
+    },
+    {
+      "id": "QA-005",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Verified green workflow, downloadable artifact within constraints."
+    },
+    {
+      "id": "QA-006",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Each case PASS/FAIL/NOT VERIFIED/N/A with logs."
+    },
+    {
+      "id": "QA-007",
+      "legacy_source_status": "missing",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Graceful recovery, no data loss."
+    },
+    {
+      "id": "QA-008",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "All severe defects closed with evidence."
+    },
+    {
+      "id": "QA-009",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Real 30-min benchmark without unsafe paging."
+    },
+    {
+      "id": "QA-010",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Signed report and executed negative tests."
+    },
+    {
+      "id": "QA-011",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "requires_target_environment_or_authorization",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "No external runtimes, full restore, offline Q&A."
+    },
+    {
+      "id": "QA-012",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Every control covered by runtime test."
+    },
+    {
+      "id": "QA-013",
+      "legacy_source_status": "unverified",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Documented upstream evidence per dependency."
+    },
+    {
+      "id": "QA-014",
+      "legacy_source_status": "partial",
+      "acceptance_state": "not_fully_verified",
+      "evidence_url": null,
+      "verified_scope": null,
+      "full_acceptance_required": "Tests prevent stuck processes, data corruption or UI freeze."
+    }
+  ]
+}
