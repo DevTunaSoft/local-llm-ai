@@ -41,10 +41,17 @@ public sealed class ModelRuntime : IAsyncDisposable
         {
         await StopCoreAsync();
         _options = options;
+        ggufPath = Path.GetFullPath(ggufPath);
         if (!File.Exists(ggufPath)) throw new FileNotFoundException("Model file missing.");
+        if (string.IsNullOrWhiteSpace(expectedSha256) || expectedSha256.Length != 64 || !expectedSha256.All(Uri.IsHexDigit))
+            throw new ArgumentException("Expected SHA-256 must be 64 hexadecimal characters.", nameof(expectedSha256));
         HardwareProbe.ValidateModelMemory(ggufPath);
         await using (var verifyStream = File.OpenRead(ggufPath))
         {
+            var header = new byte[4];
+            verifyStream.ReadExactly(header);
+            if (!header.AsSpan().SequenceEqual("GGUF"u8)) throw new InvalidDataException("Model is not a GGUF file.");
+            verifyStream.Position = 0;
             var actualSha = Convert.ToHexString(await SHA256.HashDataAsync(verifyStream, cancellationToken));
             if (!actualSha.Equals(expectedSha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("Model file was modified since import. Re-import and verify the trusted model file.");
