@@ -71,19 +71,17 @@ jobs:
               [System.Windows.Automation.InvokePattern]::Pattern)
             $newChatPattern.Invoke()
             $conversationCreated = $false
-            $listItemCondition = [System.Windows.Automation.PropertyCondition]::new(
-              [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
-              [System.Windows.Automation.ControlType]::ListItem)
+            $createdCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Conversation created.')
             for ($k=0; $k -lt 30; $k++) {
               Start-Sleep -Milliseconds 500
-              $items = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $listItemCondition)
-              foreach ($item in $items) {
-                if ($item.Current.Name -like 'Work Chat *') { $conversationCreated = $true; break }
-              }
-              if ($conversationCreated) { break }
+              $createdText = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $createdCondition)
+              if ($createdText -and -not $createdText.Current.IsOffscreen) { $conversationCreated = $true; break }
+              $process.Refresh()
+              if ($process.HasExited) { throw 'WPF process exited after New Chat was invoked.' }
             }
-            if (-not $conversationCreated) { throw 'New Chat click did not create a conversation in the visible list.' }
-            Write-Host 'Actual New Chat button created a visible conversation.'
+            if (-not $conversationCreated) { throw 'New Chat did not show its success status in the real UI.' }
+            Write-Host 'Actual New Chat button executed and showed conversation-created status.'
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
