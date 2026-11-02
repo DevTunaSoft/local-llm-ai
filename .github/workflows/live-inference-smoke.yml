@@ -7,6 +7,8 @@ on:
       - 'WorkIntelligence/Services/RuntimeBundle.cs'
       - 'WorkIntelligence/Services/HardwareProbe.cs'
       - 'tests/Core/LiveInferenceTests.cs'
+      - 'tests/Core/LiveEmbeddingTests.cs'
+      - 'WorkIntelligence/Services/EmbeddingRuntime.cs'
       - 'scripts/test-live-inference.ps1'
   workflow_dispatch:
 permissions:
@@ -67,6 +69,28 @@ jobs:
         run: |
           & ./scripts/test-live-inference.ps1 -ModelPath $env:WI_CI_MODEL -RuntimeDirectory $env:WI_CI_RUNTIME_DIR
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Download genuine small embedding GGUF
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $model = Join-Path $env:RUNNER_TEMP 'bge-small-en-v1.5-q4_k_m.gguf'
+          Invoke-WebRequest -Uri 'https://huggingface.co/CompendiumLabs/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5-q4_k_m.gguf?download=true' -OutFile $model -MaximumRedirection 10
+          if ((Get-Item $model).Length -lt 10000000) { throw 'Embedding GGUF file is unexpectedly small.' }
+          $stream = [System.IO.File]::OpenRead($model)
+          try {
+            $header = New-Object byte[] 4
+            if ($stream.Read($header,0,4) -ne 4 -or [System.Text.Encoding]::ASCII.GetString($header) -ne 'GGUF') { throw 'Embedding fixture is not GGUF.' }
+          } finally { $stream.Dispose() }
+          "WI_CI_EMBEDDING=$model" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Run real localhost embedding API test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:WI_DEV_RUNTIME_DIR = $env:WI_CI_RUNTIME_DIR
+          $env:WI_LIVE_EMBEDDING_GGUF = $env:WI_CI_EMBEDDING
+          $env:WI_REQUIRE_LIVE_EMBEDDING = '1'
+          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~RealEmbeddingWorkerReturnsNormalizedDistinctVectors' --logger 'console;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw 'Real local embedding integration test failed.' }
       - name: Record what this test does not prove
         if: always()
         shell: pwsh
