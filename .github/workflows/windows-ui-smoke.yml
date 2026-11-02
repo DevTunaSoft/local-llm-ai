@@ -107,6 +107,29 @@ jobs:
             }
             if (-not $renamed) { throw 'Rename Chat click did not persist the conversation title.' }
             Write-Host 'Actual Rename Chat UI successfully updated the conversation title.'
+            $searchCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'ChatSearchInput')
+            $searchInput = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $searchCondition)
+            if (-not $searchInput) { throw 'Chat search field is missing.' }
+            $searchValue = [System.Windows.Automation.ValuePattern]$searchInput.GetCurrentPattern(
+              [System.Windows.Automation.ValuePattern]::Pattern)
+            $searchValue.SetValue('Renamed CI chat')
+            $searchButtonCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Search Chats')
+            $searchButton = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $searchButtonCondition)
+            if (-not $searchButton) { throw 'Search Chats button missing.' }
+            $searchPattern = [System.Windows.Automation.InvokePattern]$searchButton.GetCurrentPattern(
+              [System.Windows.Automation.InvokePattern]::Pattern)
+            $searchPattern.Invoke()
+            $searchedCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Conversation search complete.')
+            $searched = $false
+            for ($n=0; $n -lt 30; $n++) {
+              Start-Sleep -Milliseconds 500
+              if ($window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $searchedCondition)) { $searched = $true; break }
+            }
+            if (-not $searched) { throw 'Actual chat search did not report completion.' }
+            Write-Host 'Actual Search Chats UI successfully executed.'
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
