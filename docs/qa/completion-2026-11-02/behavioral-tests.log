@@ -1,0 +1,11 @@
+  WorkIntelligence.Core.Tests -> /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll
+Test run for /workspace/local-llm-ai/tests/Core/bin/Release/net10.0/WorkIntelligence.Core.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.48]     WorkIntelligence.Tests.LiveEmbeddingTests.RealEmbeddingWorkerReturnsNormalizedDistinctVectors [SKIP]
+  Skipped WorkIntelligence.Tests.LiveEmbeddingTests.RealEmbeddingWorkerReturnsNormalizedDistinctVectors [1 ms]
+[xUnit.net 00:00:05.82]     WorkIntelligence.Tests.LiveInferenceTests.RealLocalGgufProducesStreamingCompletion [SKIP]
+  Skipped WorkIntelligence.Tests.LiveInferenceTests.RealLocalGgufProducesStreamingCompletion [1 ms]
+WARNING: Overwriting results file: /tmp/workintelligence-qa/core-tests.trx
+Results File: /tmp/workintelligence-qa/core-tests.trx
+
+Passed!  - Failed:     0, Passed:   173, Skipped:     2, Total:   175, Duration: 8 s - WorkIntelligence.Core.Tests.dll (net10.0)

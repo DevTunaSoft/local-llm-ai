@@ -11,3 +11,6 @@ WorkIntelligence/Resources/runtime.sha256
 *.partial
 *.db
 *.enc
+
+__pycache__/
+*.pyc

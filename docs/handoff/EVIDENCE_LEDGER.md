@@ -45,3 +45,13 @@ Machine: Linux x64, kernel 6.18.57/glibc 2.41; SDK 10.0.403; SQLCipher 4.12.0 (S
 | Standalone EXE | NOT APPLICABLE now: user deferred packaging | No EXE built/published for this review |
 
 A full acceptance result is not inferred from a component PASS. See [all 106 IDs](REVIEW_TRACEABILITY_2026-11-01.md) and [remaining limitations](../SOURCE_REVIEW_2026-11-01.md#remaining-work-and-boundaries). A fresh cloud task/snapshot restoration and hosted CI execution were not tested.
+
+## Completion task review — 2026-11-02
+
+Current source-only changes, reproduced defects, portable logs, Windows CI links,
+all-106 review fields and remaining internal/external acceptance are recorded in
+[FINAL_ACCEPTANCE.md](FINAL_ACCEPTANCE.md). Local production-service result:
+173 passed, 0 failed, 2 explicitly skipped native-fixture tests; Windows native
+chat/embedding tests were separately executed in consolidated CI. No packaged
+EXE and no production acceptance. Schema 7 adds versioned work records; older
+schema-6 builds refuse this newer database rather than attempting a downgrade.
