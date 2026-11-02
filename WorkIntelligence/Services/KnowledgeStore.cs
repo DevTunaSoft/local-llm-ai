@@ -10,7 +10,12 @@ namespace WorkIntelligence.Services;
 public sealed partial class KnowledgeStore : IDisposable
 {
     private readonly object _writeGate = new();
-    public KnowledgeStore() { LocalPaths.Ensure(); Initialize(); }
+    public KnowledgeStore()
+    {
+        LocalPaths.Ensure();
+        using var fileLock = FileOperationLock.Acquire("vault-files");
+        Initialize();
+    }
 
     private SqliteConnection Connect()
     {
@@ -705,6 +710,7 @@ public sealed partial class KnowledgeStore : IDisposable
             foreach (var file in Directory.EnumerateFiles(LocalPaths.Blobs, "*.bin"))
             {
                 ct.ThrowIfCancellationRequested();
+                PathSafety.RejectReparsePoints(file);
                 File.Copy(file, Path.Combine(blobTarget, Path.GetFileName(file)));
             }
         }

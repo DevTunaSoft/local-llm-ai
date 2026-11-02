@@ -11,7 +11,14 @@ public sealed class BackupManifestTests
     {
         Directory.CreateDirectory(root);
         var database = Path.Combine(root, "knowledge.db");
-        File.WriteAllBytes(database, "SQLite format 3\0"u8.ToArray());
+        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+            new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "CREATE TABLE fixture(id INTEGER PRIMARY KEY, content TEXT); INSERT INTO fixture VALUES(1,'synthetic');";
+            command.ExecuteNonQuery();
+        }
         var fileHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(database)));
         var manifest = new
         {

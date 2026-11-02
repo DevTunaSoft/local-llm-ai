@@ -20,6 +20,25 @@ public sealed class ModelRuntimeOptionsTests
     public void RejectsInvalidOptions(int context, int threads, int tokens, double temperature)
         => Assert.Throws<ArgumentOutOfRangeException>(() => new ModelRuntimeOptions(context, threads, tokens, temperature).Validate());
 
+    [Theory]
+    [InlineData(0, 600)]
+    [InlineData(86401, 600)]
+    [InlineData(900, 0)]
+    [InlineData(900, 86401)]
+    public void RejectsUnboundedTimeouts(int startup, int response)
+        => Assert.Throws<ArgumentOutOfRangeException>(() => new ModelRuntimeOptions(
+            StartupTimeoutSeconds: startup, ResponseTimeoutSeconds: response).Validate());
+
+    [Fact]
+    public void LegacySettingsReceiveFiniteDefaultTimeouts()
+    {
+        var options = System.Text.Json.JsonSerializer.Deserialize<ModelRuntimeOptions>(
+            "{\"ContextSize\":4096,\"Threads\":8,\"MaxTokens\":1024,\"Temperature\":0.7}")!;
+        Assert.Equal(900, options.StartupTimeoutSeconds);
+        Assert.Equal(600, options.ResponseTimeoutSeconds);
+        options.Validate();
+    }
+
     [Fact]
     public void RejectsNonFiniteTemperature()
         => Assert.Throws<ArgumentOutOfRangeException>(() => new ModelRuntimeOptions(Temperature: double.NaN).Validate());

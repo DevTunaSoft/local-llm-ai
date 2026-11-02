@@ -36,7 +36,7 @@ check('No password controls for opening or backups', all(x not in ui for x in ('
 check('Versioned plaintext snapshots with SHA256 validation',all(x in back for x in ('snapshot', 'SHA256.HashData', 'VerifySnapshot', 'manifest.json', 'File.Move' if False else 'Directory.Move')))
 check('Backups do not call restic', 'restic.exe' not in back and 'RESTIC_PASSWORD' not in back)
 check('Scheduled backups store no vault or backup passwords',all(x not in schedule for x in ('ProtectedData.Protect','VaultPassword','BackupPassword')))
-check('Backups never silently overwrite existing database','File.Copy(Path.Combine(snapshot, "knowledge.db"), targetDatabase, false)' in back)
+check('Backups never silently overwrite existing database','File.Move(file, destination, false)' in back)
 check('Remote sync includes downloaded-byte verification','"--download"' in read('WorkIntelligence/Services/RemoteBackupService.cs'))
 # Execute exactly the SQL extracted from source to validate FTS5, workspaces and schema migrations.
 base=re.search(r'cmd.CommandText = """(\s*PRAGMA journal_mode=DELETE;.*?)""";',src,re.S)

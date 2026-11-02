@@ -26,17 +26,41 @@ public static class RuntimeBundle
             PathSafety.RejectReparsePoints(manifest);
             if (!File.Exists(manifest) || !File.Exists(executable))
                 throw new FileNotFoundException("Development runtime or SHA256SUMS.txt is missing.");
-            var matches = File.ReadLines(manifest)
-                .Select(line => line.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                .Where(parts => parts.Length == 2 &&
-                    string.Equals(parts[1].TrimStart('*'), exeName, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-            if (matches.Length != 1 || matches[0][0].Length != 64 ||
-                !matches[0][0].All(Uri.IsHexDigit))
+            if (new FileInfo(manifest).Length > 1024 * 1024)
+                throw new InvalidDataException("Development runtime manifest is oversized.");
+            var entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var line in File.ReadLines(manifest).Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                var parts = line.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length != 2 || parts[0].Length != 64 || !parts[0].All(Uri.IsHexDigit))
+                    throw new InvalidDataException("Development runtime manifest entry is invalid.");
+                var relative = parts[1].TrimStart('*').Replace('\\', '/');
+                if (relative.StartsWith('/') || relative.Contains(':') ||
+                    relative.Split('/').Any(x => x is "" or "." or "..") || !entries.TryAdd(relative, parts[0]))
+                    throw new InvalidDataException("Development runtime manifest paths are ambiguous or unsafe.");
+            }
+            if (!entries.ContainsKey(exeName) || entries.Count > 1000)
                 throw new InvalidDataException("Development runtime requires exactly one SHA-256 entry per component.");
-            using var input = File.OpenRead(executable);
-            if (!Convert.ToHexString(SHA256.HashData(input)).Equals(matches[0][0], StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Development runtime component SHA-256 mismatch.");
+            // Windows loads transitive DLLs from this directory. Pin every file,
+            // not only the entry-point EXE, and reject added unlisted payloads.
+            var remaining = new HashSet<string>(entries.Keys, StringComparer.OrdinalIgnoreCase);
+            var pending = new Stack<string>();
+            pending.Push(directory);
+            while (pending.Count > 0)
+            {
+                foreach (var path in Directory.EnumerateFileSystemEntries(pending.Pop()))
+                {
+                    PathSafety.RejectReparsePoints(path);
+                    if (Directory.Exists(path)) { pending.Push(path); continue; }
+                    if (path == manifest) continue;
+                    var relative = Path.GetRelativePath(directory, path).Replace('\\', '/');
+                    if (!remaining.Remove(relative)) throw new InvalidDataException("Development runtime contains an unlisted file.");
+                    using var input = File.OpenRead(path);
+                    if (!Convert.ToHexString(SHA256.HashData(input)).Equals(entries[relative], StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Development runtime component SHA-256 mismatch.");
+                }
+            }
+            if (remaining.Count != 0) throw new InvalidDataException("Development runtime manifest references a missing file.");
             return executable;
         }
         var assembly = Assembly.GetExecutingAssembly();

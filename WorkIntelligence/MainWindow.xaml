@@ -46,6 +46,10 @@
                 <TextBox x:Name="ModelMaxTokensInput" Width="65" Text="1024" Margin="4,0,10,0"/>
                 <TextBlock Text="Temperature:" VerticalAlignment="Center"/>
                 <TextBox x:Name="ModelTemperatureInput" Width="45" Text="0.7" Margin="4,0,10,0"/>
+                <TextBlock Text="Load timeout (s):" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelStartupTimeoutInput" Width="55" Text="900" Margin="4,0,10,0"/>
+                <TextBlock Text="Response timeout (s):" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelResponseTimeoutInput" Width="55" Text="600" Margin="4,0,10,0"/>
                 <Button Content="Save Model Settings" Click="SaveModelSettings_Click"/>
               </WrapPanel>
             </StackPanel>
@@ -96,7 +100,7 @@
       </TabItem>
       <TabItem Header="Document Studio">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Use Current Conversation" Click="DraftFromChat_Click"/><Button Content="Export Word DOCX" Click="ExportDocx_Click"/></StackPanel>
+          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Use Current Conversation" Click="DraftFromChat_Click"/><Button Content="Export Word DOCX" Click="ExportDocx_Click"/><Button Content="Export PDF" Click="ExportPdf_Click"/></StackPanel>
           <TextBox Grid.Row="1" x:Name="DocumentTitleInput" Text="Work Intelligence Report" Height="32"/>
           <TextBox Grid.Row="2" x:Name="DocumentDraftInput" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
         </Grid>

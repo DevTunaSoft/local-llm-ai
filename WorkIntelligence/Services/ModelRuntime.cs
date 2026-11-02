@@ -8,10 +8,13 @@ using System.Text.Json;
 
 namespace WorkIntelligence.Services;
 
-public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8, int MaxTokens = 1024, double Temperature = 0.7)
+public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8, int MaxTokens = 1024, double Temperature = 0.7,
+    int StartupTimeoutSeconds = 900, int ResponseTimeoutSeconds = 600)
 {
     public void Validate()
     {
+        if (StartupTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(StartupTimeoutSeconds));
+        if (ResponseTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(ResponseTimeoutSeconds));
         if (ContextSize < 512 || ContextSize > 131072) throw new ArgumentOutOfRangeException(nameof(ContextSize));
         if (Threads < 1 || Threads > 256) throw new ArgumentOutOfRangeException(nameof(Threads));
         if (MaxTokens < 32 || MaxTokens > 32768) throw new ArgumentOutOfRangeException(nameof(MaxTokens));
@@ -80,7 +83,7 @@ public sealed class ModelRuntime : IAsyncDisposable
         {
             using var startupTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             // Larger CPU-only models can legitimately require longer than five minutes.
-            startupTimeout.CancelAfter(TimeSpan.FromMinutes(15));
+            startupTimeout.CancelAfter(TimeSpan.FromSeconds(options.StartupTimeoutSeconds));
             while (!startupTimeout.IsCancellationRequested)
             {
                 startupTimeout.Token.ThrowIfCancellationRequested();
@@ -98,7 +101,12 @@ public sealed class ModelRuntime : IAsyncDisposable
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { break; }
             }
             cancellationToken.ThrowIfCancellationRequested();
-            throw new TimeoutException("Model loading exceeded the fifteen-minute startup limit.");
+            throw new TimeoutException("Model loading exceeded its configured startup timeout.");
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            await StopCoreAsync();
+            throw new TimeoutException("Model loading exceeded its configured startup timeout.");
         }
         catch { await StopCoreAsync(); throw; }
         }
@@ -114,16 +122,42 @@ public sealed class ModelRuntime : IAsyncDisposable
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024)
     {
         if (_client is null || !IsRunning) throw new InvalidOperationException("Select and load a local model first.");
+        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens))
+            yield return fragment;
+    }
+
+    internal static async IAsyncEnumerable<string> StreamResponseAsync(HttpClient client, ModelRuntimeOptions options,
+        IReadOnlyList<(string role, string content)> messages,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024)
+    {
+        options.Validate();
+        using var responseTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        responseTimeout.CancelAfter(TimeSpan.FromSeconds(options.ResponseTimeoutSeconds));
+        var token = responseTimeout.Token;
         var messageList = messages.Select(x => new { role = x.role, content = x.content });
-        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? _options.MaxTokens : maxTokens, 32, _options.MaxTokens), temperature = _options.Temperature });
+        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? options.MaxTokens : maxTokens, 32, options.MaxTokens), temperature = options.Temperature });
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
-        using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var reader = new StreamReader(stream);
-        await foreach (var fragment in CompletionStream.ReadAsync(reader, cancellationToken))
-            yield return fragment;
+        HttpResponseMessage response;
+        try { response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token); }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        { throw new TimeoutException("Local response exceeded its configured timeout."); }
+        using (response)
+        {
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync(token);
+            using var reader = new StreamReader(stream);
+            await using var fragments = CompletionStream.ReadAsync(reader, token).GetAsyncEnumerator(token);
+            while (true)
+            {
+                bool next;
+                try { next = await fragments.MoveNextAsync(); }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                { throw new TimeoutException("Local response exceeded its configured timeout; any partial answer is incomplete."); }
+                if (!next) break;
+                yield return fragments.Current;
+            }
+        }
     }
 
     public async Task StopAsync()

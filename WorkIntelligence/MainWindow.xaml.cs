@@ -241,10 +241,12 @@ public partial class MainWindow : Window
         if (!int.TryParse(ModelContextInput.Text, out var context) ||
             !int.TryParse(ModelThreadsInput.Text, out var threads) ||
             !int.TryParse(ModelMaxTokensInput.Text, out var tokens) ||
+            !int.TryParse(ModelStartupTimeoutInput.Text, out var startupTimeout) ||
+            !int.TryParse(ModelResponseTimeoutInput.Text, out var responseTimeout) ||
             !double.TryParse(ModelTemperatureInput.Text, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var temperature))
             throw new ArgumentException("Model settings require integer context/threads/tokens and an invariant decimal temperature.");
-        var options = new ModelRuntimeOptions(context, threads, tokens, temperature);
+        var options = new ModelRuntimeOptions(context, threads, tokens, temperature, startupTimeout, responseTimeout);
         options.Validate();
         return options;
     }
@@ -258,6 +260,8 @@ public partial class MainWindow : Window
             ModelThreadsInput.Text = options.Threads.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelMaxTokensInput.Text = options.MaxTokens.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelTemperatureInput.Text = options.Temperature.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelStartupTimeoutInput.Text = options.StartupTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelResponseTimeoutInput.Text = options.ResponseTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
         catch (Exception ex)
         {
@@ -686,6 +690,20 @@ public partial class MainWindow : Window
         if(dialog.ShowDialog()!=true)return;
         try{DocumentExporter.SaveDocx(dialog.FileName,DocumentTitleInput.Text,DocumentDraftInput.Text);StatusText.Text="Word document exported.";}
         catch(Exception ex){AuditLog.Error("DocxExport",ex);MessageBox.Show(ex.Message);}
+    }
+    private void ExportPdf_Click(object sender,RoutedEventArgs e)
+    {
+        if(MessageBox.Show("This PDF contains plaintext work data. Use an organization-approved destination.",
+            "Confirm plaintext export",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+        var dialog=new SaveFileDialog{Filter="PDF document|*.pdf",FileName="work-intelligence-report.pdf"};
+        if(dialog.ShowDialog()!=true)return;
+        try
+        {
+            var font=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts),"segoeui.ttf");
+            PdfExporter.Save(dialog.FileName,DocumentTitleInput.Text,DocumentDraftInput.Text,font);
+            StatusText.Text="Searchable PDF exported with embedded local font.";
+        }
+        catch(Exception ex){AuditLog.Error("PdfExport",ex);MessageBox.Show("PDF export failed; try Word export for unsupported font or text: "+ex.Message);}
     }
     private async void BenchmarkModel_Click(object sender,RoutedEventArgs e)=>await RunUiAsync(async()=>
     {

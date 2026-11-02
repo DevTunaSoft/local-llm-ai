@@ -73,6 +73,8 @@ public static class DocumentExtractor
         using var zip = new ZipArchive(ms, ZipArchiveMode.Read, leaveOpen: false);
         if (zip.Entries.Count > 3000 || zip.Entries.Sum(e => e.Length) > 100 * 1024 * 1024)
             throw new InvalidDataException("Office document exceeds safe archive limits.");
+        if (zip.Entries.Select(x => x.FullName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != zip.Entries.Count)
+            throw new InvalidDataException("Office archive contains ambiguous duplicate entries.");
         var output = new StringBuilder();
         if (extension == ".docx")
         {
@@ -93,10 +95,10 @@ public static class DocumentExtractor
         else if (extension == ".pptx")
         {
             XNamespace a = "http://schemas.openxmlformats.org/drawingml/2006/main";
-            foreach (var entry in zip.Entries.Where(e => System.Text.RegularExpressions.Regex.IsMatch(e.FullName, @"^ppt/slides/slide\d+\.xml$"))
-                .OrderBy(e => int.Parse(System.Text.RegularExpressions.Regex.Match(e.Name, @"\d+").Value)))
+            foreach (var (entry, label) in OrderedParts(zip, "ppt/presentation.xml", "ppt/_rels/presentation.xml.rels",
+                "http://schemas.openxmlformats.org/presentationml/2006/main", "sldId", "ppt/slides/slide"))
             {
-                output.AppendLine("[" + entry.Name + "]");
+                output.AppendLine("[" + label + "]");
                 var doc = ReadXml(entry);
                 foreach (var paragraph in doc.Descendants(a + "p"))
                     output.AppendLine(string.Join(" ",paragraph.Descendants(a + "t").Select(x => x.Value)));
@@ -108,10 +110,10 @@ public static class DocumentExtractor
             var stringsEntry = zip.GetEntry("xl/sharedStrings.xml");
             string[] shared = stringsEntry is null ? Array.Empty<string>() : ReadXml(stringsEntry).Descendants(s + "si")
                 .Select(si => string.Concat(si.Descendants(s + "t").Select(t => t.Value))).ToArray();
-            foreach (var entry in zip.Entries.Where(e => System.Text.RegularExpressions.Regex.IsMatch(e.FullName, @"^xl/worksheets/sheet\d+\.xml$"))
-                .OrderBy(e => int.Parse(System.Text.RegularExpressions.Regex.Match(e.Name, @"\d+").Value)))
+            foreach (var (entry, label) in OrderedParts(zip, "xl/workbook.xml", "xl/_rels/workbook.xml.rels",
+                "http://schemas.openxmlformats.org/spreadsheetml/2006/main", "sheet", "xl/worksheets/sheet"))
             {
-                output.AppendLine("[" + entry.Name + "]");
+                output.AppendLine("[" + label + "]");
                 var xml = ReadXml(entry);
                 foreach (var row in xml.Descendants(s + "row"))
                 {
@@ -119,7 +121,12 @@ public static class DocumentExtractor
                     foreach (var cell in row.Elements(s + "c"))
                     {
                         var raw = cell.Element(s + "v")?.Value ?? string.Join("", cell.Descendants(s + "t").Select(x => x.Value));
-                        if (cell.Attribute("t")?.Value == "s" && int.TryParse(raw, out var index) && index >= 0 && index < shared.Length) raw = shared[index];
+                        if (cell.Attribute("t")?.Value == "s")
+                        {
+                            if (!int.TryParse(raw, out var index) || index < 0 || index >= shared.Length)
+                                throw new InvalidDataException("Spreadsheet contains an invalid shared-string reference.");
+                            raw = shared[index];
+                        }
                         cells.Add((cell.Attribute("r")?.Value ?? "cell") + ": " + raw);
                     }
                     output.AppendLine(string.Join(" | ", cells));
@@ -130,6 +137,52 @@ public static class DocumentExtractor
         if (output.Length > 12_000_000) throw new InvalidDataException("Extracted document text too large.");
         return output.ToString();
     }
+    // Office part filenames are storage identities, not display order. Resolve
+    // the document's explicit relationship list and preserve workbook sheet names.
+    private static IEnumerable<(ZipArchiveEntry Entry, string Label)> OrderedParts(ZipArchive zip,
+        string mainPath, string relationshipsPath, string documentNamespace, string element, string fallbackPrefix)
+    {
+        var main = zip.GetEntry(mainPath);
+        if (main is null)
+        {
+            // Compatibility for older minimal fixtures: no logical ordering exists.
+            foreach (var entry in zip.Entries.Where(e =>
+                System.Text.RegularExpressions.Regex.IsMatch(e.FullName, "^" + fallbackPrefix + @"[0-9]{1,9}\.xml$"))
+                .OrderBy(e => long.Parse(System.Text.RegularExpressions.Regex.Match(e.Name, @"\d+").Value,
+                    System.Globalization.CultureInfo.InvariantCulture)))
+                yield return (entry, entry.Name);
+            yield break;
+        }
+        var relationships = zip.GetEntry(relationshipsPath)
+            ?? throw new InvalidDataException("Office part relationships are missing.");
+        XNamespace rel = "http://schemas.openxmlformats.org/package/2006/relationships";
+        XNamespace idNamespace = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        var byId = new Dictionary<string, XElement>(StringComparer.Ordinal);
+        foreach (var relationship in ReadXml(relationships).Descendants(rel + "Relationship"))
+        {
+            var id = (string?)relationship.Attribute("Id");
+            if (string.IsNullOrEmpty(id) || !byId.TryAdd(id, relationship))
+                throw new InvalidDataException("Office contains ambiguous part relationships.");
+        }
+        var position = 0;
+        foreach (var part in ReadXml(main).Descendants(XName.Get(element, documentNamespace)))
+        {
+            var id = (string?)part.Attribute(idNamespace + "id");
+            if (id is null || !byId.TryGetValue(id, out var relationship)
+                || (string?)relationship.Attribute("TargetMode") == "External")
+                throw new InvalidDataException("Office references a missing or external content part.");
+            var target = (string?)relationship.Attribute("Target") ?? "";
+            if (target.Length == 0 || target.Contains('\\') || target.Contains(':') || target.Contains('%')
+                || target.Split('/').Any(x => x is "." or ".."))
+                throw new InvalidDataException("Office contains an unsafe part target.");
+            var path = target.StartsWith('/') ? target[1..] : mainPath[..(mainPath.LastIndexOf('/') + 1)] + target;
+            var entry = zip.GetEntry(path) ?? throw new InvalidDataException("Office content part is missing.");
+            position++;
+            var name = (string?)part.Attribute("name");
+            yield return (entry, element == "sheet" ? $"Sheet {name ?? entry.Name}" : $"Slide {position}");
+        }
+    }
+
     private static XDocument ReadXml(ZipArchiveEntry entry)
     {
         if (entry.Length > 30 * 1024 * 1024) throw new InvalidDataException("Oversized archive entry.");

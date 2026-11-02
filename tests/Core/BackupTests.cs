@@ -170,6 +170,134 @@ public sealed class BackupTests : IDisposable
         await Assert.ThrowsAsync<InvalidDataException>(() => BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task RestoreFallsBackWhenNewestDatabaseHasValidHashesButBrokenSqlitePages()
+    {
+        var first = await SeedBackup();
+        using (var store = new KnowledgeStore())
+            await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+        var newest = Directory.GetDirectories(_repository, "snap-*").Single(x => x != first);
+        var database = Path.Combine(newest, "knowledge.db");
+        // Retain the SQLite header, but truncate all schema/data pages. Update the
+        // checksum to isolate database validation from manifest validation.
+        var bytes = File.ReadAllBytes(database)[..100];
+        File.WriteAllBytes(database, bytes);
+        var manifestPath = Path.Combine(newest, "manifest.json");
+        var manifest = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(manifestPath))!;
+        var record = manifest["Files"]!.AsArray().Single(x => (string?)x!["Path"] == "knowledge.db")!;
+        record["Length"] = bytes.Length;
+        record["Sha256"] = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes));
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        Directory.Delete(LocalPaths.Root, true);
+        await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+        using var restored = new KnowledgeStore();
+        Assert.Single(restored.Memories());
+        Assert.True(Directory.Exists(newest));
+    }
+
+    [Fact]
+    public async Task NullManifestPathIsRejectedWithoutCrashingFallback()
+    {
+        var first = await SeedBackup();
+        var broken = Path.Combine(_repository, "snap-zz-invalid");
+        Directory.CreateDirectory(broken);
+        File.WriteAllText(Path.Combine(broken, "manifest.json"),
+            "{\"Version\":1,\"Files\":[{\"Path\":null,\"Length\":0,\"Sha256\":\"" + new string('0', 64) + "\"}]}");
+        Directory.Delete(LocalPaths.Root, true);
+        await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+        using var restored = new KnowledgeStore();
+        Assert.Single(restored.Memories());
+        Assert.True(Directory.Exists(first));
+    }
+
+    [Fact]
+    public async Task RestorePreservesExistingSettingsAndLeavesNoPromotedFiles()
+    {
+        await SeedBackup();
+        using (var store = new KnowledgeStore())
+        {
+            ModelSettingsStore.Save(new string('A', 64), new ModelRuntimeOptions());
+            await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+        }
+        Directory.Delete(LocalPaths.Root, true);
+        LocalPaths.Ensure();
+        var settings = Path.Combine(LocalPaths.Data, "model-settings.json");
+        File.WriteAllText(settings, "existing settings");
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None));
+        Assert.Equal("existing settings", File.ReadAllText(settings));
+        Assert.False(File.Exists(LocalPaths.Database));
+        Assert.Empty(Directory.EnumerateFiles(LocalPaths.Blobs));
+    }
+
+    [Fact]
+    public async Task SnapshotManifestSymlinkIsRejected()
+    {
+        var snapshot = await SeedBackup();
+        var external = Path.Combine(_repository, "external-manifest.json");
+        File.Move(Path.Combine(snapshot, "manifest.json"), external);
+        File.CreateSymbolicLink(Path.Combine(snapshot, "manifest.json"), external);
+        Assert.Throws<InvalidDataException>(() => BackupService.VerifySnapshot(snapshot, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task RemoteUploadSelectsOnlyCompletedVerifiedSnapshots()
+    {
+        var snapshot = await SeedBackup();
+        var pending = Path.Combine(_repository, ".pending-incomplete");
+        Directory.CreateDirectory(pending);
+        File.WriteAllText(Path.Combine(pending, "sensitive.tmp"), "Synthetic unfinished content");
+        File.WriteAllText(Path.Combine(_repository, "unrelated.txt"), "Synthetic unrelated content");
+        var corrupt = Path.Combine(_repository, "snap-invalid");
+        Directory.CreateDirectory(corrupt);
+        File.WriteAllText(Path.Combine(corrupt, "manifest.json"), "invalid");
+        Assert.Equal(snapshot, Assert.Single(RemoteBackupService.VerifiedUploadSnapshots(_repository, CancellationToken.None)));
+        Assert.True(Directory.Exists(corrupt));
+        Assert.True(Directory.Exists(pending));
+    }
+
+    [Fact]
+    public async Task SymlinkAttachmentCannotBeCopiedIntoABackup()
+    {
+        await SeedBackup();
+        var blob = Directory.GetFiles(LocalPaths.Blobs).Single();
+        var outside = Path.Combine(_repository, "external.txt");
+        File.WriteAllText(outside, "Synthetic unauthorized content");
+        File.Delete(blob);
+        File.CreateSymbolicLink(blob, outside);
+        using var store = new KnowledgeStore();
+        await Assert.ThrowsAsync<InvalidDataException>(() => new BackupService(store).BackupAsync(_repository, CancellationToken.None));
+        Assert.Single(Directory.GetDirectories(_repository, "snap-*"));
+        Assert.Empty(Directory.GetDirectories(_repository, ".pending-*"));
+    }
+
+    [Fact]
+    public async Task MissingDocumentBlobCannotBecomeAVerifiedRecoveryPoint()
+    {
+        var snapshot = await SeedBackup();
+        var blob = Directory.GetFiles(Path.Combine(snapshot, "Blobs")).Single();
+        File.Delete(blob);
+        var manifestPath = Path.Combine(snapshot, "manifest.json");
+        var manifest = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(manifestPath))!;
+        var files = manifest["Files"]!.AsArray();
+        var record = files.Single(x => ((string?)x!["Path"])!.StartsWith("Blobs/", StringComparison.Ordinal));
+        files.Remove(record);
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        Assert.Throws<InvalidDataException>(() => BackupService.VerifySnapshot(snapshot, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task RestoreRefusesAnOrphanedSqliteJournal()
+    {
+        await SeedBackup();
+        Directory.Delete(LocalPaths.Root, true);
+        LocalPaths.Ensure();
+        File.WriteAllText(LocalPaths.Database + "-wal", "Synthetic leftover journal");
+        await Assert.ThrowsAsync<InvalidOperationException>(() => BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None));
+        Assert.Equal("Synthetic leftover journal", File.ReadAllText(LocalPaths.Database + "-wal"));
+        Assert.False(File.Exists(LocalPaths.Database));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_repository)) Directory.Delete(_repository, true);

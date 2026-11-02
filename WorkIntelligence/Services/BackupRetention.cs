@@ -17,6 +17,7 @@ public static class BackupRetention
         if (string.IsNullOrWhiteSpace(repository) || !Directory.Exists(repository))
             throw new DirectoryNotFoundException("Approved backup repository does not exist.");
         var root = Path.GetFullPath(repository);
+        using var repositoryLock = FileOperationLock.Acquire(FileOperationLock.RepositoryKey(root), ct);
         PathSafety.RejectReparsePoints(root);
         var snapshots = Directory.EnumerateDirectories(root, "snap-*", SearchOption.TopDirectoryOnly)
             .OrderByDescending(Path.GetFileName, StringComparer.Ordinal)
