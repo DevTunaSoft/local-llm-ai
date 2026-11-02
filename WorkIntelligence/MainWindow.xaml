@@ -107,6 +107,7 @@
           <TextBlock Text="Repository folder" FontWeight="SemiBold"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="BrowseBackup_Click"/><TextBox x:Name="BackupFolder"/></DockPanel>
           <Button Content="Create and Verify Plaintext Snapshot" HorizontalAlignment="Left" Click="Backup_Click"/>
           <TextBlock Text="Configured rclone OneDrive remote folder (e.g., workonedrive:WIBackups)" Margin="0,12,0,0"/>
+          <Button Content="Configure OneDrive Account (interactive OAuth)" HorizontalAlignment="Left" Click="ConfigureOneDrive_Click" ToolTip="Opens bundled rclone configuration; requires organizational approval and an interactive Microsoft sign-in"/>
           <TextBox x:Name="RemoteBackupText" Height="28"/>
           <Button Content="Sync + Byte-Verify Plaintext OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
           <TextBlock Text="Optional local snapshot retention: leave blank to keep all. Enter 2 or more to preserve at least that many verified backups. Corrupt snapshots are never deleted automatically." TextWrapping="Wrap" Margin="0,12,0,3"/>
