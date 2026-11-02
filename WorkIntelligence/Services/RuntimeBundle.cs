@@ -16,6 +16,8 @@ public static class RuntimeBundle
         var developmentDirectory = Environment.GetEnvironmentVariable("WI_DEV_RUNTIME_DIR");
         if (!string.IsNullOrWhiteSpace(developmentDirectory))
         {
+            if (string.IsNullOrWhiteSpace(exeName) || !exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Development runtime component must be an executable.", nameof(exeName));
             var directory = Path.GetFullPath(developmentDirectory);
             PathSafety.RejectReparsePoints(directory);
             var executable = Path.Combine(directory, exeName);
