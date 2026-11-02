@@ -6,8 +6,7 @@ on:
       - 'WorkIntelligence/Services/ModelRuntime.cs'
       - 'WorkIntelligence/Services/RuntimeBundle.cs'
       - 'WorkIntelligence/Services/HardwareProbe.cs'
-      - 'tests/Core/LiveInferenceTests.cs'
-      - 'tests/Core/LiveEmbeddingTests.cs'
+      - 'tests/Core/**'
       - 'WorkIntelligence/Services/EmbeddingRuntime.cs'
       - 'scripts/test-live-inference.ps1'
   workflow_dispatch:
