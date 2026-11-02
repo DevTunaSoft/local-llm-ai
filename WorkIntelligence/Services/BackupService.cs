@@ -98,7 +98,7 @@ public sealed class BackupService
                 VerifySnapshot(snapshot, ct);
                 return snapshot;
             }
-            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is InvalidDataException or JsonException or IOException or UnauthorizedAccessException)
             {
                 AuditLog.Info("Restore", "A snapshot failed integrity or access checks; trying an older recovery point.");
             }
