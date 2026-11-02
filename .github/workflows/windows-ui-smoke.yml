@@ -63,6 +63,27 @@ jobs:
             }
             if (-not $workspaceOpened) { throw 'Local workspace failed to show AI Chat after Open Local Workspace was invoked.' }
             Write-Host 'Windows UI Automation opened a synthetic local workspace and found the AI Chat tab.'
+            $newChatCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'New Chat')
+            $newChat = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $newChatCondition)
+            if (-not $newChat) { throw 'New Chat button is not visible in the actual UI.' }
+            $newChatPattern = [System.Windows.Automation.InvokePattern]$newChat.GetCurrentPattern(
+              [System.Windows.Automation.InvokePattern]::Pattern)
+            $newChatPattern.Invoke()
+            $conversationCreated = $false
+            $listItemCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+              [System.Windows.Automation.ControlType]::ListItem)
+            for ($k=0; $k -lt 30; $k++) {
+              Start-Sleep -Milliseconds 500
+              $items = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, $listItemCondition)
+              foreach ($item in $items) {
+                if ($item.Current.Name -like 'Work Chat *') { $conversationCreated = $true; break }
+              }
+              if ($conversationCreated) { break }
+            }
+            if (-not $conversationCreated) { throw 'New Chat click did not create a conversation in the visible list.' }
+            Write-Host 'Actual New Chat button created a visible conversation.'
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
