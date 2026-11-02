@@ -25,7 +25,7 @@
       <TabItem Header="AI Chat">
         <Grid Margin="10"><Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
           <DockPanel Grid.Column="0" Margin="0,0,12,0">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><Button Content="New Chat" Click="NewChat_Click"/><Button Content="Delete" Click="DeleteChat_Click"/><Button Content="Export" Click="ExportChat_Click"/></StackPanel>
+            <StackPanel DockPanel.Dock="Top"><StackPanel Orientation="Horizontal"><Button Content="New Chat" Click="NewChat_Click"/><Button Content="Delete" Click="DeleteChat_Click"/><Button Content="Export" Click="ExportChat_Click"/></StackPanel><StackPanel Orientation="Horizontal" Margin="0,6,0,6"><TextBox x:Name="ChatTitleInput" MinWidth="130" MaxLength="120" ToolTip="Conversation title"/><Button Content="Rename Chat" Click="RenameChat_Click"/></StackPanel></StackPanel>
             <ListBox x:Name="ChatList" DisplayMemberPath="Title" SelectionChanged="ChatList_SelectionChanged"/>
           </DockPanel>
           <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
