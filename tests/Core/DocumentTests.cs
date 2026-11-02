@@ -64,6 +64,40 @@ public sealed class DocumentTests
     }
 
     [Fact]
+    public void XlsxExtractsSharedStringsNumbersAndCellCoordinates()
+    {
+        using var buffer = new MemoryStream();
+        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Create, true))
+        {
+            using (var shared = new StreamWriter(zip.CreateEntry("xl/sharedStrings.xml").Open()))
+                shared.Write("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><si><t>Dispatch</t></si></sst>");
+            using (var sheet = new StreamWriter(zip.CreateEntry("xl/worksheets/sheet1.xml").Open()))
+                sheet.Write("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"B1\" t=\"n\"><v>42</v></c></row></sheetData></worksheet>");
+        }
+        var content = DocumentExtractor.Extract("synthetic.xlsx", buffer.ToArray());
+        Assert.Contains("[sheet1.xml]", content);
+        Assert.Contains("A1: Dispatch | B1: 42", content);
+    }
+
+    [Fact]
+    public void PptxExtractsSlidesInNaturalNumberOrder()
+    {
+        using var buffer = new MemoryStream();
+        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Create, true))
+        {
+            using (var second = new StreamWriter(zip.CreateEntry("ppt/slides/slide2.xml").Open()))
+                second.Write("<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:p><a:r><a:t>Second slide</a:t></a:r></a:p></p:sld>");
+            using (var first = new StreamWriter(zip.CreateEntry("ppt/slides/slide1.xml").Open()))
+                first.Write("<p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><a:p><a:r><a:t>First slide</a:t></a:r></a:p></p:sld>");
+        }
+        var content = DocumentExtractor.Extract("synthetic.pptx", buffer.ToArray());
+        Assert.Contains("First slide", content);
+        Assert.Contains("Second slide", content);
+        Assert.True(content.IndexOf("First slide", StringComparison.Ordinal) <
+                    content.IndexOf("Second slide", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void DocxTabsAndBreaksDoNotMergeWords()
     {
         using var buffer = new MemoryStream();
