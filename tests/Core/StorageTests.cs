@@ -141,6 +141,24 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
+    public void ChatSearchFindsTitlesAndMessagesOnlyWithinTheirWorkspace()
+    {
+        var operations = _store.AddWorkspace("Search operations");
+        var leadership = _store.AddWorkspace("Search leadership");
+        var first = _store.CreateChat("Ambulance routing review", operations);
+        _store.AddMessage(first, "user", "UniqueKeywordDispatchGamma", operations);
+        var second = _store.CreateChat("Employee schedules", leadership);
+        _store.AddMessage(second, "user", "UniqueKeywordDispatchGamma", leadership);
+        Assert.Equal(first, Assert.Single(_store.SearchChats("routing", operations)).Id);
+        Assert.Equal(first, Assert.Single(_store.SearchChats("uniquekeyworddispatchgamma", operations)).Id);
+        Assert.Equal(second, Assert.Single(_store.SearchChats("UniqueKeywordDispatchGamma", leadership)).Id);
+        Assert.Empty(_store.SearchChats("Employee schedules", operations));
+        Assert.Equal(first, Assert.Single(_store.SearchChats("  ", operations)).Id);
+        Assert.Throws<InvalidDataException>(() => _store.SearchChats("Dispatch", 99999));
+        Assert.Throws<ArgumentException>(() => _store.SearchChats(new string('x', 201), operations));
+    }
+
+    [Fact]
     public void ChatRenamePersistsAndCannotCrossWorkspaces()
     {
         var operations = _store.AddWorkspace("Rename operations");
