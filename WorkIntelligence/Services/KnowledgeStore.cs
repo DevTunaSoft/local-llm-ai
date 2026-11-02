@@ -557,6 +557,34 @@ public sealed partial class KnowledgeStore : IDisposable
         while (r.Read()) list.Add(new(r.GetInt64(0),r.GetString(1),DateTimeOffset.Parse(r.GetString(2))));
         return list;
     }
+    public List<ChatRecord> SearchChats(string query, long workspaceId, int limit = 100)
+    {
+        query = query?.Trim() ?? throw new ArgumentNullException(nameof(query));
+        limit = Math.Clamp(limit, 1, 500);
+        using var con = Connect();
+        RequireWorkspace(con, workspaceId);
+        if (query.Length == 0) return Chats(workspaceId).Take(limit).ToList();
+        if (query.Length > 200) throw new ArgumentException("Search text exceeds 200 characters.", nameof(query));
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = """
+            SELECT c.id,c.title,c.created_at
+            FROM chats c
+            WHERE c.workspace_id=$w
+              AND (instr(lower(c.title),lower($q)) > 0 OR EXISTS (
+                SELECT 1 FROM messages m WHERE m.chat_id=c.id
+                  AND instr(lower(m.content),lower($q)) > 0))
+            ORDER BY c.id DESC LIMIT $limit
+            """;
+        cmd.Parameters.AddWithValue("$w", workspaceId);
+        cmd.Parameters.AddWithValue("$q", query);
+        cmd.Parameters.AddWithValue("$limit", limit);
+        using var reader = cmd.ExecuteReader();
+        var results = new List<ChatRecord>();
+        while (reader.Read())
+            results.Add(new ChatRecord(reader.GetInt64(0), reader.GetString(1),
+                DateTimeOffset.Parse(reader.GetString(2))));
+        return results;
+    }
     public List<ChatMessage> Messages(long chatId, long? expectedWorkspaceId = null)
     {
         using var con = Connect(); using var cmd = con.CreateCommand();
