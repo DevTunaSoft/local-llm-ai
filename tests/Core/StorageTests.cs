@@ -29,6 +29,34 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
+    public async Task RestoreSelectionFallsBackToOlderVerifiedSnapshot()
+    {
+        var repository = Path.Combine(Path.GetTempPath(), "wi-recovery-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            _store.AddMemory("Synthetic recoverable procedure version one", "fixture");
+            var backup = new BackupService(_store);
+            await backup.BackupAsync(repository, CancellationToken.None);
+            var first = Assert.Single(Directory.GetDirectories(repository, "snap-*"));
+            _store.AddMemory("Synthetic recoverable procedure version two", "fixture");
+            await backup.BackupAsync(repository, CancellationToken.None);
+            var snapshots = Directory.GetDirectories(repository, "snap-*");
+            Assert.Equal(2, snapshots.Length);
+            var newest = snapshots.Single(x => x != first);
+            Assert.Equal(newest, BackupService.SelectLatestVerifiedSnapshot(repository, CancellationToken.None));
+            File.AppendAllText(Path.Combine(newest, "manifest.json"), "corrupted");
+            Assert.Equal(first, BackupService.SelectLatestVerifiedSnapshot(repository, CancellationToken.None));
+            File.AppendAllText(Path.Combine(first, "manifest.json"), "corrupted");
+            Assert.Throws<InvalidDataException>(() =>
+                BackupService.SelectLatestVerifiedSnapshot(repository, CancellationToken.None));
+        }
+        finally
+        {
+            if (Directory.Exists(repository)) Directory.Delete(repository, true);
+        }
+    }
+
+    [Fact]
     public async Task ReplacedApprovedFolderDoesNotFollowASymlink()
     {
         var parent = Path.Combine(Path.GetTempPath(), "wi-reparse-" + Guid.NewGuid().ToString("N"));
