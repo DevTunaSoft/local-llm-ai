@@ -51,7 +51,7 @@ public sealed partial class KnowledgeStore : IDisposable
         {
             check.CommandText = "PRAGMA user_version";
             var version = Convert.ToInt32(check.ExecuteScalar());
-            if (version > 6)
+            if (version > 7)
                 throw new InvalidDataException($"Vault database schema {version} is newer than this application supports. Refusing to modify it.");
         }
         using var cmd = connection.CreateCommand();
@@ -169,6 +169,39 @@ public sealed partial class KnowledgeStore : IDisposable
                     PRAGMA user_version=6;
                     """;
                 recallUpgrade.ExecuteNonQuery();
+                tx.Commit();
+            }
+        }
+        using (var current = connection.CreateCommand())
+        {
+            current.CommandText = "PRAGMA user_version";
+            if (Convert.ToInt32(current.ExecuteScalar()) < 7)
+            {
+                using var tx = connection.BeginTransaction();
+                using var workUpgrade = connection.CreateCommand();
+                workUpgrade.Transaction = tx;
+                workUpgrade.CommandText = """
+                    CREATE TABLE work_records(
+                      id INTEGER PRIMARY KEY,workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+                      kind TEXT NOT NULL,title TEXT NOT NULL,details TEXT NOT NULL,owner TEXT NOT NULL,
+                      due_date TEXT,status TEXT NOT NULL,related_id INTEGER REFERENCES work_records(id),
+                      revision INTEGER NOT NULL,updated_at TEXT NOT NULL);
+                    CREATE INDEX ix_work_records_workspace ON work_records(workspace_id,kind,id);
+                    CREATE TABLE work_record_revisions(
+                      record_id INTEGER NOT NULL REFERENCES work_records(id) ON DELETE CASCADE,
+                      revision INTEGER NOT NULL,payload TEXT NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL,
+                      PRIMARY KEY(record_id,revision));
+                    CREATE VIRTUAL TABLE work_records_fts USING fts5(title,details,content='work_records',content_rowid='id');
+                    CREATE TRIGGER work_records_ai AFTER INSERT ON work_records BEGIN
+                      INSERT INTO work_records_fts(rowid,title,details) VALUES(new.id,new.title,new.details); END;
+                    CREATE TRIGGER work_records_ad AFTER DELETE ON work_records BEGIN
+                      INSERT INTO work_records_fts(work_records_fts,rowid,title,details) VALUES('delete',old.id,old.title,old.details); END;
+                    CREATE TRIGGER work_records_au AFTER UPDATE OF title,details ON work_records BEGIN
+                      INSERT INTO work_records_fts(work_records_fts,rowid,title,details) VALUES('delete',old.id,old.title,old.details);
+                      INSERT INTO work_records_fts(rowid,title,details) VALUES(new.id,new.title,new.details); END;
+                    PRAGMA user_version=7;
+                    """;
+                workUpgrade.ExecuteNonQuery();
                 tx.Commit();
             }
         }

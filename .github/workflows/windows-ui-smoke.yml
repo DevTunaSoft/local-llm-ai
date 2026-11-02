@@ -139,6 +139,47 @@ jobs:
             }
             if (-not $searched) { throw 'Actual chat search did not report completion.' }
             Write-Host 'Actual Search Chats UI successfully executed.'
+            function Find-Control([string]$id) {
+              $condition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::AutomationIdProperty, $id)
+              $control = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+              if (-not $control) { throw "Missing actual WPF control: $id" }
+              return $control
+            }
+            function Set-Text([string]$id, [string]$value) {
+              $control = Find-Control $id
+              ([System.Windows.Automation.ValuePattern]$control.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).SetValue($value)
+            }
+            function Invoke-Named([string]$name) {
+              $condition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::NameProperty, $name)
+              $control = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+              if (-not $control) { throw "Missing actual WPF action: $name" }
+              ([System.Windows.Automation.InvokePattern]$control.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            }
+            $recordTabCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Project Records')
+            $recordTab = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $recordTabCondition)
+            if (-not $recordTab) { throw 'Project Records tab is missing.' }
+            ([System.Windows.Automation.SelectionItemPattern]$recordTab.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)).Select()
+            Set-Text 'WorkTitleInput' 'Synthetic CI project'
+            Set-Text 'WorkDetailsInput' 'Original synthetic project details'
+            Set-Text 'WorkOwnerInput' 'Synthetic CI owner'
+            Invoke-Named 'Save Record'
+            Start-Sleep -Milliseconds 500
+            Set-Text 'WorkDetailsInput' 'Updated synthetic resolution'
+            Set-Text 'WorkReasonInput' 'Synthetic reviewed revision'
+            Invoke-Named 'Save Record'
+            Start-Sleep -Milliseconds 500
+            Invoke-Named 'Revision History'
+            Start-Sleep -Milliseconds 500
+            $draft = Find-Control 'DocumentDraftInput'
+            $history = ([System.Windows.Automation.ValuePattern]$draft.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).Current.Value
+            foreach ($expected in @('Revision 1', 'Original synthetic project details', 'Revision 2', 'Updated synthetic resolution', 'Synthetic reviewed revision', 'Synthetic CI owner')) {
+              if (-not $history.Contains($expected)) { throw "Work record UI did not preserve history field: $expected" }
+            }
+            Write-Host 'Actual project-record creation, owner, revision, and full history display verified.'
+
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }

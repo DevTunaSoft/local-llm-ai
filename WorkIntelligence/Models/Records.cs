@@ -14,3 +14,7 @@ public sealed record FolderScanResult(int Imported,int Skipped,int Failed,IReadO
 public sealed record ConversationRecallRecord(long ChatId,long MessageId,string Text);
 public sealed record MemoryProposal(long Id,string Text,string Source,long? ReplacesMemoryId = null);
 public sealed record MemoryHistoryRecord(long Id,string Text,string Source,DateTimeOffset CreatedAt,bool Active,long? SupersededBy);
+
+public sealed record WorkRecord(long Id,long WorkspaceId,string Kind,string Title,string Details,string Owner,
+    string? DueDate,string Status,long? RelatedId,int Revision,string UpdatedAt);
+public sealed record WorkRecordRevision(int Revision,string Reason,string CreatedAt,WorkRecord Record);

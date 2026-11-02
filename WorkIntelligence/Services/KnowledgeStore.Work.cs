@@ -42,6 +42,32 @@ public sealed partial class KnowledgeStore
             cmd.ExecuteNonQuery();
         }
     }
+    public string ReadAuthorizedDocumentText(long documentId, long workspaceId)
+    {
+        using var fileLock = FileOperationLock.Acquire("vault-files");
+        using var con = Connect();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = """
+            SELECT d.name,d.sha256 FROM documents d
+            JOIN workspace_documents wd ON wd.document_id=d.id
+            WHERE d.id=$id AND wd.workspace_id=$w
+            """;
+        cmd.Parameters.AddWithValue("$id", documentId);
+        cmd.Parameters.AddWithValue("$w", workspaceId);
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read()) throw new InvalidDataException("Selected document is not assigned to the current workspace.");
+        var name = reader.GetString(0);
+        var expected = reader.GetString(1);
+        var path = Path.Combine(LocalPaths.Blobs, documentId.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".bin");
+        PathSafety.RejectReparsePoints(path);
+        if (!File.Exists(path) || new FileInfo(path).Length > 25 * 1024 * 1024)
+            throw new InvalidDataException("Stored source document is missing or oversized.");
+        var bytes = File.ReadAllBytes(path);
+        if (!Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).Equals(expected, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("Stored document no longer matches its imported source hash.");
+        return DocumentExtractor.Extract(name, bytes);
+    }
+
     public List<WorkTaskRecord> Tasks(long workspaceId)
     {
         using var con=Connect();using var cmd=con.CreateCommand();
@@ -63,6 +89,24 @@ public sealed partial class KnowledgeStore
             return (long)(cmd.ExecuteScalar()??0L);
         }
     }
+    public void UpdateTask(long taskId, long workspaceId, string title, string details)
+    {
+        title = title.Trim();
+        if (title.Length is < 1 or > 200 || details.Length > 20_000)
+            throw new ArgumentException("Task title/details exceed limits.");
+        lock (_writeGate)
+        {
+            using var con = Connect();
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = "UPDATE work_tasks SET title=$t,details=$d WHERE id=$id AND workspace_id=$w";
+            cmd.Parameters.AddWithValue("$t", title);
+            cmd.Parameters.AddWithValue("$d", details);
+            cmd.Parameters.AddWithValue("$id", taskId);
+            cmd.Parameters.AddWithValue("$w", workspaceId);
+            if (cmd.ExecuteNonQuery() != 1) throw new InvalidDataException("Task is not in the selected workspace.");
+        }
+    }
+
     public void SetTaskStatus(long taskId,string status)
     {
         if(status is not ("Open" or "In Progress" or "Blocked" or "Completed"))throw new ArgumentException("Invalid task status.");

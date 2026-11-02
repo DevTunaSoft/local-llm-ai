@@ -581,6 +581,33 @@ public sealed class StorageTests : IDisposable
         return connection;
     }
 
+    [Fact]
+    public void ComparisonReadsOnlyAssignedHashVerifiedSourceCopies()
+    {
+        var file = Path.Combine(LocalPaths.Root, "comparison.txt");
+        File.WriteAllText(file, "Synthetic comparison source");
+        var imported = _store.Import(file);
+        _store.AssignDocument(imported.DocumentId, 1);
+        var other = _store.AddWorkspace("Comparison isolated workspace");
+        Assert.Equal("Synthetic comparison source", _store.ReadAuthorizedDocumentText(imported.DocumentId, 1));
+        Assert.Throws<InvalidDataException>(() => _store.ReadAuthorizedDocumentText(imported.DocumentId, other));
+        File.AppendAllText(Path.Combine(LocalPaths.Blobs, imported.DocumentId + ".bin"), "tamper");
+        Assert.Throws<InvalidDataException>(() => _store.ReadAuthorizedDocumentText(imported.DocumentId, 1));
+    }
+
+    [Fact]
+    public void TaskEditsPersistAndCannotTargetAnotherWorkspace()
+    {
+        var other = _store.AddWorkspace("Task isolated workspace");
+        var task = _store.AddTask(1, "Synthetic action", "Original details");
+        _store.UpdateTask(task, 1, "Revised action", "Revised details");
+        var updated = Assert.Single(_store.Tasks(1));
+        Assert.Equal("Revised action", updated.Title);
+        Assert.Equal("Revised details", updated.Details);
+        Assert.Throws<InvalidDataException>(() => _store.UpdateTask(task, other, "Unauthorized change", "Data"));
+        Assert.Equal("Revised details", Assert.Single(_store.Tasks(1)).Details);
+    }
+
     public void Dispose()
     {
         _store.Dispose();

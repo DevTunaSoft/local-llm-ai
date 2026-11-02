@@ -123,7 +123,7 @@ public sealed class BackupService
         throw new InvalidDataException("No valid plaintext snapshot could be verified. Existing data remains unchanged.");
     }
 
-    private static string ValidateRepository(string repository)
+    internal static string ValidateRepository(string repository)
     {
         if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Choose an organization-approved backup directory.");
         var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(repository));

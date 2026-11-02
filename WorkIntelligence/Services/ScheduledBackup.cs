@@ -27,13 +27,14 @@ public static class ScheduledBackup
             throw new ArgumentOutOfRangeException(nameof(keepNewestSnapshots), "Keep at least two recovery snapshots.");
         // Validate backup destination with same rules as interactive backups before persisting settings.
         if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Backup folder required.");
-        var config = new Settings(Path.GetFullPath(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim(), keepNewestSnapshots);
+        var config = new Settings(BackupService.ValidateRepository(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim(), keepNewestSnapshots);
+        var command = StartupOptions.ScheduledCommand(executable, System.Reflection.Assembly.GetEntryAssembly()?.Location, LocalPaths.Root);
         var temp = SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(config), ct);
             await RunTaskSchedulerAsync(["/Create", "/F", "/SC", "DAILY", "/ST", "02:00",
-                "/TN", TaskName, "/TR", $"\"{executable}\" --scheduled-backup", "/IT"], ct);
+                "/TN", TaskName, "/TR", command, "/IT"], ct);
             File.Move(temp, SettingsPath, true);
         }
         finally { if (File.Exists(temp)) File.Delete(temp); }

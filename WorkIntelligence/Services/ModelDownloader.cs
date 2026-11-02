@@ -9,8 +9,15 @@ public static class ModelDownloader
     public static async Task<string> DownloadAsync(string downloadUrl, string filename, string expectedSha256,
         IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = Timeout.InfiniteTimeSpan };
+        return await DownloadWithClientAsync(client, downloadUrl, filename, expectedSha256, progress, cancellationToken);
+    }
+
+    internal static async Task<string> DownloadWithClientAsync(HttpClient client, string downloadUrl, string filename,
+        string expectedSha256, IProgress<double>? progress, CancellationToken cancellationToken)
+    {
         if (!Uri.TryCreate(downloadUrl,UriKind.Absolute,out var uri) || uri.Scheme != Uri.UriSchemeHttps ||
-            uri.Host is not ("huggingface.co" or "www.huggingface.co"))
+            uri.Host is not ("huggingface.co" or "www.huggingface.co") || uri.Port != 443 || uri.UserInfo.Length != 0)
             throw new ArgumentException("Only HTTPS Hugging Face model-download URLs are allowed.");
         if (!System.Text.RegularExpressions.Regex.IsMatch(filename,@"^[a-zA-Z0-9_.-]{1,120}\.gguf$",System.Text.RegularExpressions.RegexOptions.IgnoreCase))
             throw new ArgumentException("Choose a simple .gguf filename with no folders.");
@@ -19,8 +26,10 @@ public static class ModelDownloader
         LocalPaths.Ensure();
         var final=Path.Combine(LocalPaths.Models,filename);
         var partial=final+".partial";
+        using var downloadLock = await FileOperationLock.AcquireAsync("download:" + filename.ToUpperInvariant(), cancellationToken);
+        PathSafety.RejectReparsePoints(final);
+        PathSafety.RejectReparsePoints(partial);
         if (File.Exists(final)) throw new IOException("Model already exists. Select another filename or import the existing model.");
-        using var client=new HttpClient(new HttpClientHandler { AllowAutoRedirect=false }) { Timeout=Timeout.InfiniteTimeSpan };
         var offset=File.Exists(partial) ? new FileInfo(partial).Length : 0;
         using var request=new HttpRequestMessage(HttpMethod.Get,uri);
         if(offset>0)request.Headers.Range=new RangeHeaderValue(offset,null);
@@ -57,7 +66,7 @@ public static class ModelDownloader
             }
             verified=true;
         }
-        finally { if(!verified && File.Exists(partial)) File.Delete(partial); }
+        finally { if(!verified && !cancellationToken.IsCancellationRequested && File.Exists(partial)) File.Delete(partial); }
         File.Move(partial,final);
         return final;
     }
@@ -66,7 +75,7 @@ public static class ModelDownloader
         var current = original.RequestUri ?? throw new ArgumentException("Missing model URL.");
         for (var redirects = 0; redirects <= 6; redirects++)
         {
-            if (current.Scheme != Uri.UriSchemeHttps ||
+            if (current.Scheme != Uri.UriSchemeHttps || current.Port != 443 || current.UserInfo.Length != 0 ||
                 !(current.Host.Equals("huggingface.co", StringComparison.OrdinalIgnoreCase) ||
                   current.Host.EndsWith(".huggingface.co", StringComparison.OrdinalIgnoreCase) ||
                   current.Host.EndsWith(".hf.co", StringComparison.OrdinalIgnoreCase) ||

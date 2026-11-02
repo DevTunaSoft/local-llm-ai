@@ -10,7 +10,7 @@ namespace WorkIntelligence.Tests;
 /// </summary>
 public sealed class LiveInferenceTests
 {
-    [Fact]
+    [LiveModelFact("WI_LIVE_TEST_GGUF", "WI_REQUIRE_LIVE_INFERENCE")]
     public async Task RealLocalGgufProducesStreamingCompletion()
     {
         var model = Environment.GetEnvironmentVariable("WI_LIVE_TEST_GGUF");

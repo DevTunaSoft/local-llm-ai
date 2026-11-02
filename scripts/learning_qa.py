@@ -19,6 +19,7 @@ base=extract(source,r'cmd.CommandText = """(\s*PRAGMA journal_mode=DELETE;.*?)""
 m4=extract(source,r'upgrade.CommandText = """(.*?)""";')
 m5=extract(source,r'migration.CommandText = """(.*?)""";')
 m6=extract(source,r'recallUpgrade.CommandText = """(.*?)""";')
+m7=extract(source,r'workUpgrade.CommandText = """(.*?)""";')
 with tempfile.TemporaryDirectory() as folder:
     c=sqlite3.connect(str(Path(folder)/'schema.db'))
     c.execute('PRAGMA foreign_keys=ON')
@@ -37,6 +38,8 @@ with tempfile.TemporaryDirectory() as folder:
     check('V5 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==5)
     c.executescript(m6)
     check('V6 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==6)
+    c.executescript(m7)
+    check('V7 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==7)
     check('Legacy memories retained in General',c.execute('SELECT content,workspace_id FROM memories').fetchone()==('Legacy procedure',1))
     check('Legacy chats retained in General',c.execute('SELECT title,workspace_id FROM chats').fetchone()==('Legacy Chat',1))
     c.execute("INSERT INTO chats(title,created_at,workspace_id) VALUES('Other chat','now',1)")
@@ -88,7 +91,7 @@ with tempfile.TemporaryDirectory() as folder:
     # Verify a newly created schema can be re-opened without executing migrations a second time.
     c.close()
     with sqlite3.connect(str(Path(folder)/'schema.db')) as reopened:
-        check('Reopen preserves V6 version',reopened.execute('PRAGMA user_version').fetchone()[0]==6)
+        check('Reopen preserves V7 version',reopened.execute('PRAGMA user_version').fetchone()[0]==7)
 check('C# memory proposals require explicit approval', 'ResolveMemoryProposal(long id,bool approve)' in work and 'if(approve)' in work)
 check('C# memory replacement checks workspace', 'approved=1 AND workspace_id=$w' in work)
 check('C# memory corrections remain atomic', 'using var tx=con.BeginTransaction()' in work and 'tx.Commit();' in work)

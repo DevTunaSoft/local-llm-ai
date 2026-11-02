@@ -41,4 +41,20 @@ public sealed class PdfExportTests
         }
         finally { File.Delete(file); }
     }
+    [Fact]
+    public void WideTextWrapsInsideThePageMargins()
+    {
+        var file = Path.Combine(Path.GetTempPath(), "wi-pdf-" + Guid.NewGuid().ToString("N") + ".pdf");
+        try
+        {
+            var body = new string('W', 500);
+            PdfExporter.Save(file, "Report", body, Font);
+            using var document = PdfDocument.Open(file);
+            var letters = document.GetPages().SelectMany(x => x.Letters).ToArray();
+            Assert.All(letters, x => Assert.InRange(x.GlyphRectangle.Right, 48, 548));
+            Assert.Equal(500, letters.Count(x => x.Value == "W"));
+        }
+        finally { File.Delete(file); }
+    }
+
 }

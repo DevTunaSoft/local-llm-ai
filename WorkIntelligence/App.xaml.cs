@@ -7,6 +7,18 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Resolve the scheduled task's explicit data location before any LocalPaths
+        // access; Task Scheduler need not inherit the launching process environment.
+        try
+        {
+            var root = StartupOptions.DataRoot(e.Args);
+            if (root is not null) Environment.SetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT", root);
+        }
+        catch (ArgumentException)
+        {
+            Shutdown(2);
+            return;
+        }
         base.OnStartup(e);
         DispatcherUnhandledException += (_, args) =>
         {

@@ -61,8 +61,8 @@
       </TabItem>
       <TabItem Header="Knowledge Library">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="180"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></StackPanel>
-          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="Name"/>
+          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Compare Two Selected" Click="CompareDocuments_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></StackPanel>
+          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="Name" SelectionMode="Extended"/>
           <TextBlock Grid.Row="2" Text="Search locally indexed document text" FontWeight="SemiBold" Margin="3,12,3,2"/>
           <DockPanel Grid.Row="3"><Button DockPanel.Dock="Right" Content="Search" Click="SearchDocs_Click"/><TextBox x:Name="SearchInput"/></DockPanel>
           <TextBox x:Name="SearchResults" Grid.Row="4" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
@@ -92,8 +92,8 @@
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
           <StackPanel Grid.Row="0" Orientation="Horizontal"><TextBox x:Name="WorkspaceNameInput" MinWidth="270" ToolTip="New workspace name"/><Button Content="Create Workspace" Click="CreateWorkspace_Click"/><Button Content="Assign Selected Library Document" Click="AssignDocument_Click"/></StackPanel>
           <ListBox Grid.Row="1" x:Name="WorkspaceList" DisplayMemberPath="Name" SelectionChanged="WorkspaceChanged_Click"/>
-          <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
-          <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title"/>
+          <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Save Selected Task" Click="SaveTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
+          <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title" SelectionChanged="TaskList_SelectionChanged"/>
           <TextBlock Grid.Row="4" Text="Task details / project decision (stored locally without encryption)"/>
           <TextBox Grid.Row="5" x:Name="TaskDetailsInput" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
         </Grid>
@@ -126,6 +126,18 @@
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
           <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Run Local Checks" Click="Diagnostics_Click"/><Button Content="Open Local Log Folder" Click="OpenLogs_Click"/></StackPanel>
           <TextBox x:Name="DiagnosticsOutput" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"/>
+        </Grid>
+      </TabItem>
+      <TabItem Header="Project Records">
+        <Grid Margin="12">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="150"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <TextBlock Text="Records use the workspace selected under Workspaces &amp; Projects. Changes retain prior revisions and your reason." TextWrapping="Wrap"/>
+          <ListBox x:Name="WorkRecordList" Grid.Row="1" DisplayMemberPath="Title" SelectionChanged="WorkRecordList_SelectionChanged"/>
+          <WrapPanel Grid.Row="2"><TextBlock Text="Type:" VerticalAlignment="Center"/><ComboBox x:Name="WorkKindBox" Width="110"/><TextBlock Text="Status:" VerticalAlignment="Center"/><ComboBox x:Name="WorkStatusBox" Width="110"/><TextBlock Text="Owner:" VerticalAlignment="Center"/><TextBox x:Name="WorkOwnerInput" Width="180" MaxLength="200"/><TextBlock Text="Due:" VerticalAlignment="Center"/><DatePicker x:Name="WorkDueInput" Width="130"/></WrapPanel>
+          <TextBox x:Name="WorkTitleInput" Grid.Row="3" MaxLength="200" ToolTip="Record title"/>
+          <DockPanel Grid.Row="4"><TextBlock Text="Related project or prior case:" VerticalAlignment="Center"/><ComboBox x:Name="WorkRelatedBox" Width="300" DisplayMemberPath="Title"/><Button Content="Clear Link" Click="ClearWorkLink_Click"/></DockPanel>
+          <TextBox x:Name="WorkDetailsInput" Grid.Row="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxLength="20000"/>
+          <StackPanel Grid.Row="6"><TextBlock Text="Reason for this revision / decision rationale"/><TextBox x:Name="WorkReasonInput" MaxLength="2000"/><WrapPanel><Button Content="New Record" Click="NewWorkRecord_Click"/><Button Content="Save Record" Click="SaveWorkRecord_Click"/><Button Content="Revision History" Click="WorkHistory_Click"/></WrapPanel></StackPanel>
         </Grid>
       </TabItem>
     </TabControl>
