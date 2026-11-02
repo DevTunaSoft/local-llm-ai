@@ -113,6 +113,32 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task OptInRetentionKeepsNewestVerifiedSnapshotsAndNeverDeletesCorruptOnes()
+    {
+        await SeedBackup();
+        using (var store = new KnowledgeStore())
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                store.AddMemory("Synthetic retention item " + i, "fixture");
+                await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+            }
+        }
+        var snapshots = Directory.GetDirectories(_repository, "snap-*")
+            .OrderByDescending(Path.GetFileName, StringComparer.Ordinal).ToArray();
+        Assert.Equal(4, snapshots.Length);
+        var corrupt = snapshots[3];
+        File.AppendAllText(Path.Combine(corrupt, "manifest.json"), "invalid");
+        Assert.Throws<ArgumentOutOfRangeException>(() => BackupRetention.Prune(_repository, 1, CancellationToken.None));
+        Assert.Equal(1, BackupRetention.Prune(_repository, 2, CancellationToken.None));
+        var remaining = Directory.GetDirectories(_repository, "snap-*");
+        Assert.Equal(3, remaining.Length);
+        Assert.Contains(corrupt, remaining);
+        Assert.Contains(snapshots[0], remaining);
+        Assert.Contains(snapshots[1], remaining);
+    }
+
+    [Fact]
     public async Task RestoreRefusesToOverwriteLiveData()
     {
         await SeedBackup();
