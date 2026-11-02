@@ -36,7 +36,7 @@ public static class RemoteBackupService
             // A successful transfer alone is not acceptance evidence. Byte-check
             // every downloaded snapshot against the authorized remote BEFORE
             // writing any files into the actual local vault.
-            await RunAsync(rclone,["check",remote,temp,"--download","--one-way"],ct);
+            await RunAsync(rclone, BuildRestoreVerificationArgs(remote, temp), ct);
             await BackupService.RestoreToEmptyVaultAsync(temp,ct);
         }
         finally { try {Directory.Delete(temp,recursive:true);}catch(Exception ex){AuditLog.Error("RemoteRestoreCleanup",ex);} }
@@ -48,6 +48,17 @@ public static class RemoteBackupService
            remote.Contains("..",StringComparison.Ordinal) || remote.EndsWith(':') || remote.EndsWith('/'))
            throw new ArgumentException("Choose an existing configured rclone OneDrive remote and a dedicated subfolder, e.g., workonedrive:WIBackups.");
     }
+    // This exact command is used as the gate before restoring into a live vault.
+    // Preserve source/destination order: the authorized OneDrive remote must be
+    // the source, and every source byte must match the staged download.
+    internal static string[] BuildRestoreVerificationArgs(string remote, string stagedDirectory)
+    {
+        ValidateRemote(remote);
+        if (string.IsNullOrWhiteSpace(stagedDirectory) || !Path.IsPathFullyQualified(stagedDirectory))
+            throw new ArgumentException("Staged restore location must be absolute.", nameof(stagedDirectory));
+        return ["check", remote, stagedDirectory, "--download", "--one-way"];
+    }
+
     internal static bool IsOneDriveConfig(string remoteName, string redactedConfig)
     {
         if (redactedConfig.Length > 32768) return false;
