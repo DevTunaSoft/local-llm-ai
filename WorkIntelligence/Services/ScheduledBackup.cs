@@ -6,12 +6,12 @@ namespace WorkIntelligence.Services;
 /// <summary>Unencrypted backup settings and unattended user-session snapshots. No secrets stored by this app.</summary>
 public static class ScheduledBackup
 {
-    private sealed record Settings(string Repository, string? OneDriveRemote);
+    private sealed record Settings(string Repository, string? OneDriveRemote, int? KeepNewestSnapshots = null);
     private const string TaskName = "WorkIntelligence-UserDailyBackup";
     private static string SettingsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.json");
     private static string LegacySecretsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.dpapi");
 
-    public static async Task ConfigureAsync(string repository, string? remote, CancellationToken ct)
+    public static async Task ConfigureAsync(string repository, string? remote, CancellationToken ct, int? keepNewestSnapshots = null)
     {
         LocalPaths.Ensure();
         LegacyEncryptedDataGuard.AssertNoLegacyData();
@@ -22,9 +22,11 @@ public static class ScheduledBackup
         var executable = Environment.ProcessPath;
         if (string.IsNullOrWhiteSpace(executable) || !File.Exists(executable))
             throw new InvalidOperationException("A stable executable path is required for Task Scheduler.");
+        if (keepNewestSnapshots is int keep && keep is < 2 or > 10000)
+            throw new ArgumentOutOfRangeException(nameof(keepNewestSnapshots), "Keep at least two recovery snapshots.");
         // Validate backup destination with same rules as interactive backups before persisting settings.
         if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Backup folder required.");
-        var config = new Settings(Path.GetFullPath(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim());
+        var config = new Settings(Path.GetFullPath(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim(), keepNewestSnapshots);
         var temp = SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
@@ -53,6 +55,8 @@ public static class ScheduledBackup
         await new BackupService(store).BackupAsync(settings.Repository, ct);
         if (!string.IsNullOrWhiteSpace(settings.OneDriveRemote))
             await RemoteBackupService.SyncAndVerifyAsync(settings.Repository, settings.OneDriveRemote, ct);
+        if (settings.KeepNewestSnapshots is int keep)
+            BackupRetention.Prune(settings.Repository, keep, ct);
         AuditLog.Info("ScheduledBackup", "Scheduled plaintext snapshot completed. OneDrive status is recorded by the synchronization step.");
     }
 
