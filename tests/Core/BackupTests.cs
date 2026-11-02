@@ -77,6 +77,27 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task RestoreUsesOlderSnapshotWhenNewestManifestIsCorrupted()
+    {
+        var first = await SeedBackup("Synthetic recovery from older snapshot");
+        using (var store = new KnowledgeStore())
+        {
+            store.AddMemory("Synthetic newer-only memory", "fixture");
+            await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+        }
+        var newest = Directory.GetDirectories(_repository, "snap-*").Single(x => x != first);
+        File.AppendAllText(Path.Combine(newest, "manifest.json"), "corrupted");
+        Directory.Delete(LocalPaths.Root, true);
+        await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+        using var restored = new KnowledgeStore();
+        Assert.Single(restored.Search("recovery older"));
+        Assert.Single(restored.Memories());
+        Assert.DoesNotContain(restored.Memories(), x => x.Text == "Synthetic newer-only memory");
+        Assert.True(Directory.Exists(first));
+        Assert.True(Directory.Exists(newest));
+    }
+
+    [Fact]
     public async Task RestoreRefusesToOverwriteLiveData()
     {
         await SeedBackup();
