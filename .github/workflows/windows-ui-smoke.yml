@@ -27,6 +27,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $env:WORKINTELLIGENCE_DATA_ROOT = Join-Path $env:RUNNER_TEMP 'wi-ui-test-vault'
           $dll = Join-Path $PWD 'WorkIntelligence/bin/Release/net10.0-windows/win-x64/WorkIntelligence.dll'
           if (-not (Test-Path -LiteralPath $dll)) { throw "Compiled WPF DLL missing: $dll" }
           $stdout = Join-Path $env:RUNNER_TEMP 'wi-ui-stdout.txt'
@@ -93,6 +94,29 @@ jobs:
               Get-Content $stderr | Select-Object -Last 20 | ForEach-Object { Write-Host 'WPF stderr: [redacted]' }
             }
           }
+      - name: Verify New Chat persisted in actual SQLite vault
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:WORKINTELLIGENCE_DATA_ROOT = Join-Path $env:RUNNER_TEMP 'wi-ui-test-vault'
+          $code = @'
+          import os, sqlite3
+          from pathlib import Path
+          vault = Path(os.environ["WORKINTELLIGENCE_DATA_ROOT"])
+          databases = list(vault.rglob("knowledge.db"))
+          if len(databases) != 1:
+              raise RuntimeError(f"Expected one local SQLite database, found {len(databases)}")
+          with sqlite3.connect(f"file:{databases[0].as_posix()}?mode=ro", uri=True) as connection:
+              chats = connection.execute("SELECT title FROM chats WHERE title LIKE 'Work Chat %'").fetchall()
+              if len(chats) != 1:
+                  raise RuntimeError(f"New Chat UI did not persist exactly one conversation: {len(chats)}")
+              result = connection.execute("PRAGMA integrity_check").fetchone()
+              if result != ('ok',):
+                  raise RuntimeError("Local SQLite data failed integrity check")
+          print("GUI-created chat persisted in valid local SQLite storage.")
+          '@
+          $code | python -
+          if ($LASTEXITCODE -ne 0) { throw 'WPF chat persistence verification failed.' }
       - name: Scope reminder
         if: always()
         shell: pwsh
