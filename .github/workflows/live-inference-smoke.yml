@@ -26,7 +26,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; 'User-Agent' = 'WorkIntelligence-CI'; Accept = 'application/vnd.github+json' }
-          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/ggml-org/llama.cpp/releases/latest' -Headers $headers
+          $releases = @(Invoke-RestMethod -Uri 'https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=12' -Headers $headers)
+          $release = $releases | Where-Object { @($_.assets | Where-Object { $_.name -like '*bin-win-cpu-x64.zip' }).Count -gt 0 } | Select-Object -First 1
+          if (-not $release) { throw 'Recent llama.cpp releases have no Windows x64 CPU archive.' }
           $asset = @($release.assets | Where-Object { $_.name -match 'bin-win-cpu-x64\.zip$' }) | Select-Object -First 1
           if (-not $asset) { throw 'No native Windows x64 CPU llama.cpp release asset found.' }
           $zip = Join-Path $env:RUNNER_TEMP 'llama-cpu.zip'
