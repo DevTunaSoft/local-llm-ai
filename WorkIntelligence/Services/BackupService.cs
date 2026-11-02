@@ -144,6 +144,15 @@ public sealed class BackupService
     private static bool IsSafeDataPath(string? path) => path == "knowledge.db" || path is not null && PortableSettings.Files.Contains(path) ||
         path is not null && Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
 
+    internal static DateTimeOffset SnapshotTime(string snapshot)
+    {
+        var manifest=JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(Path.Combine(snapshot,"manifest.json")))
+            ?? throw new InvalidDataException("Snapshot manifest is malformed.");
+        if(!DateTimeOffset.TryParse(manifest.CreatedAt,System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,out var created))throw new InvalidDataException("Snapshot time is invalid.");
+        return created;
+    }
+
     internal static void VerifySnapshot(string snapshot, CancellationToken ct)
     {
         PathSafety.RejectReparsePoints(snapshot);

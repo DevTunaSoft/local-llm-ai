@@ -68,7 +68,12 @@ public static class FirstRunSetup
 public static class StartupSelection
 {
     private static string FilePath=>Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"WorkIntelligenceLauncher","startup.json");
-    public static string? Load()=>Read(FilePath);
+    public static string? Load()
+    {
+        var root=Read(FilePath);
+        if(root is not null && !Directory.Exists(root))throw new DirectoryNotFoundException("Saved data location is unavailable.");
+        return root;
+    }
     public static void Save(string root)=>Write(FilePath,FirstRunSetup.ValidateDataLocation(root));
     internal static string? Read(string file)
     {

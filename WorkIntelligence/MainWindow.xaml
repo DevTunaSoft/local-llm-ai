@@ -32,12 +32,12 @@
           </DockPanel>
           <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel Orientation="Vertical" Grid.Row="0" Margin="0,0,0,6">
-              <StackPanel Orientation="Horizontal">
+              <WrapPanel>
                 <TextBlock Text="Model:" VerticalAlignment="Center"/>
                 <ComboBox x:Name="ChatModelBox" Width="300" DisplayMemberPath="DisplayName" Margin="7,0" SelectionChanged="ChatModelBox_SelectionChanged"/>
                 <Button Content="Load Model" Click="LoadModel_Click"/><CheckBox x:Name="ManualModelOverride" Content="Use selected model (manual override)" VerticalAlignment="Center" Margin="8,0"/>
                 <Button Content="Stop Model" Click="StopModel_Click"/>
-              </StackPanel>
+              </WrapPanel>
               <WrapPanel Margin="0,5,0,0" VerticalAlignment="Center">
                 <TextBlock Text="Context:" VerticalAlignment="Center"/>
                 <TextBox x:Name="ModelContextInput" Width="65" Text="4096" Margin="4,0,10,0"/>
@@ -86,7 +86,7 @@
           <TextBox Grid.Row="3" x:Name="ModelUrl" ToolTip="HTTPS URL under huggingface.co"/>
           <TextBox Grid.Row="4" x:Name="ModelFilename" ToolTip="Destination filename ending in .gguf"/>
           <TextBox Grid.Row="5" x:Name="ModelSha" ToolTip="Expected SHA-256 from a trusted source"/>
-          <StackPanel Grid.Row="6" Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/><GroupBox Header="Optional local model routing" Margin="0,15,0,0"><StackPanel Margin="8"><CheckBox x:Name="AutoRoutingEnabled" Content="Choose a model by task and available memory"/><WrapPanel Margin="0,8"><TextBlock Text="General:"/><ComboBox x:Name="RouteGeneralBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Analysis:"/><ComboBox x:Name="RouteAnalysisBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Code:"/><ComboBox x:Name="RouteCodeBox" Width="180" DisplayMemberPath="DisplayName"/></WrapPanel><Button Content="Save Routing Preferences" Click="SaveRouting_Click" HorizontalAlignment="Left"/><TextBlock Text="Keyword rules select Code, Analysis or General. Missing/oversized preferences fall back to a fitting model. The chat override uses your selected model. All inference remains local." TextWrapping="Wrap"/></StackPanel></GroupBox></StackPanel>
+          <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto"><StackPanel Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/><GroupBox Header="Optional local model routing" Margin="0,15,0,0"><StackPanel Margin="8"><CheckBox x:Name="AutoRoutingEnabled" Content="Choose a model by task and available memory"/><WrapPanel Margin="0,8"><TextBlock Text="General:"/><ComboBox x:Name="RouteGeneralBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Analysis:"/><ComboBox x:Name="RouteAnalysisBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Code:"/><ComboBox x:Name="RouteCodeBox" Width="180" DisplayMemberPath="DisplayName"/></WrapPanel><Button Content="Save Routing Preferences" Click="SaveRouting_Click" HorizontalAlignment="Left"/><TextBlock Text="Keyword rules select Code, Analysis or General. Missing/oversized preferences fall back to a fitting model. The chat override uses your selected model. All inference remains local." TextWrapping="Wrap"/></StackPanel></GroupBox></StackPanel></ScrollViewer>
         </Grid>
       </TabItem>
       <TabItem Header="Workspaces &amp; Projects">
@@ -108,7 +108,7 @@
         </Grid>
       </TabItem>
       <TabItem Header="Backup / Recovery">
-        <StackPanel Margin="20" MaxWidth="800">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20" MaxWidth="800">
           <TextBlock Text="Plaintext versioned backups" FontWeight="Bold" FontSize="19" Margin="0,0,0,10"/>
           <TextBlock Text="Backups are NOT encrypted. Use only a company-approved backup destination; Purview labels do not automatically secure this app's database or backups." TextWrapping="Wrap" Margin="0,0,0,12"/>
           <TextBlock Text="Repository folder" FontWeight="SemiBold"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="BrowseBackup_Click"/><TextBox x:Name="BackupFolder"/></DockPanel>
@@ -119,10 +119,15 @@
           <Button Content="Sync + Byte-Verify Plaintext OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
           <TextBlock Text="Optional local snapshot retention: leave blank to keep all. Enter 2 or more to preserve at least that many verified backups. Corrupt snapshots are never deleted automatically." TextWrapping="Wrap" Margin="0,12,0,3"/>
           <TextBox x:Name="BackupKeepCountInput" Width="90" HorizontalAlignment="Left" MaxLength="5" ToolTip="Optional number of newest verified snapshots to preserve; blank keeps all"/>
+          <CheckBox x:Name="CalendarRetentionEnabled" Content="Use calendar retention after successful backup verification" Margin="0,10,0,4"/>
+          <WrapPanel><TextBlock Text="Daily buckets:"/><TextBox x:Name="RetentionDailyInput" Width="45" Text="7"/><TextBlock Text="Monthly:"/><TextBox x:Name="RetentionMonthlyInput" Width="45" Text="12"/><TextBlock Text="Yearly:"/><TextBox x:Name="RetentionYearlyInput" Width="45" Text="3"/><TextBlock Text="Quota GiB (optional):"/><TextBox x:Name="RetentionQuotaInput" Width="70"/></WrapPanel>
+          <TextBlock Text="Retention always keeps at least two verified snapshots. Calendar rules keep the newest snapshot in each selected bucket. Exceeding a quota raises a warning; protected/corrupt recovery points are preserved. Remote snapshots are not automatically pruned." TextWrapping="Wrap"/>
+          <Button Content="Refresh Backup Health" Click="RefreshBackupHealth_Click" HorizontalAlignment="Left" Margin="0,8"/>
+          <TextBlock x:Name="BackupHealthText" TextWrapping="Wrap"/>
           <TextBlock Text="Optional daily backup (2 AM). Schedule and copied data contain no application-layer encryption." TextWrapping="Wrap" Margin="0,15,0,0"/>
           <StackPanel Orientation="Horizontal"><Button Content="Enable Daily Backup (2 AM)" Click="ScheduleBackup_Click"/><Button Content="Disable Daily Backup" Click="RemoveScheduledBackup_Click"/></StackPanel>
-          <TextBlock Text="Scheduled jobs run only while this Windows user is signed in. OneDrive access requires a separately configured authorized rclone remote; actual Windows/remote validation is pending." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
-        </StackPanel>
+          <TextBlock Text="Scheduled jobs run while this Windows user is signed in, catch missed starts and retry failures up to three times at 15-minute intervals. App catch-up uses bounded backoff. OneDrive requires an explicitly authorized remote; actual logout/reboot/account acceptance remains separate." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
+        </StackPanel></ScrollViewer>
       </TabItem>
       <TabItem Header="Diagnostics">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

@@ -113,6 +113,7 @@ public partial class MainWindow : Window
         finally { _refreshingWorkspaceItems = false; }
         RefreshTasks();
         RefreshWorkRecords();
+        RefreshBackupHealth();
         MemoryList.ItemsSource=_store.Memories(SelectedWorkspaceId);
         var selectedModelId = (ChatModelBox.SelectedItem as ModelRecord)?.Id
             ?? (ModelList.SelectedItem as ModelRecord)?.Id;
@@ -172,6 +173,8 @@ public partial class MainWindow : Window
                 if(result.Imported>0 && _embeddings.IsRunning) await _store.IndexSemanticAsync(_embeddings,_shutdownCts.Token);
                 if(result.Imported>0 || result.Retired>0) {RefreshAll();StatusText.Text=$"Monitored folders: {result.Imported} imported, {result.Retired} removed from active search.";}
                 if(result.Failed>0) StatusText.Text=$"Folder monitoring reported {result.Failed} errors. Review approved paths.";
+                if(await ScheduledBackup.CatchUpIfOverdueAsync(_shutdownCts.Token))StatusText.Text="Overdue scheduled backup completed and verified.";
+                RefreshBackupHealth();
             });
         };
         _scanTimer.Start();
@@ -595,11 +598,12 @@ public partial class MainWindow : Window
     private async void Backup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {
         if(_store is null)return;
-        if(MessageBox.Show("This backup contains UNENCRYPTED work information. Store it only in an organization-approved location.",
+        if(MessageBox.Show("This backup contains UNENCRYPTED work information. Store it only in an organization-approved location. Enabled calendar retention will prune unprotected verified local snapshots after success.",
             "Plaintext backup",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
         StatusText.Text="Creating plaintext backup and validating checksums...";
-        var result=await new BackupService(_store).BackupAsync(BackupFolder.Text.Trim(),_shutdownCts.Token);
-        StatusText.Text=result;
+        await BackupJobRunner.RunAsync(new(BackupFolder.Text.Trim(),Calendar:ReadCalendarRetention()),_shutdownCts.Token);
+        RefreshBackupHealth();
+        StatusText.Text="Plaintext snapshot verified. Review backup health for retention/quota status.";
     });
     private void ConfigureOneDrive_Click(object sender,RoutedEventArgs e)
     {
@@ -640,6 +644,34 @@ public partial class MainWindow : Window
         UnlockButton.Content="Open Restored Workspace";
         StatusText.Text="Recovered a verified local plaintext snapshot. Open the workspace to continue.";
     });
+    private CalendarRetention? ReadCalendarRetention()
+    {
+        if(CalendarRetentionEnabled.IsChecked!=true)return null;
+        if(!int.TryParse(RetentionDailyInput.Text,out var daily)||!int.TryParse(RetentionMonthlyInput.Text,out var monthly)
+            ||!int.TryParse(RetentionYearlyInput.Text,out var yearly))throw new ArgumentException("Calendar retention counts must be integers.");
+        long? quota=null;
+        if(!string.IsNullOrWhiteSpace(RetentionQuotaInput.Text))
+        {
+            if(!int.TryParse(RetentionQuotaInput.Text,out var gib)||gib is <1 or >1048576)throw new ArgumentException("Quota must be an integer from 1 to 1048576 GiB, or blank.");
+            quota=checked((long)gib*1024*1024*1024);
+        }
+        var keep=2;
+        if(!string.IsNullOrWhiteSpace(BackupKeepCountInput.Text) && !int.TryParse(BackupKeepCountInput.Text,out keep))throw new ArgumentException("Keep count must be an integer.");
+        var policy=new CalendarRetention(keep,daily,monthly,yearly,quota);policy.Validate();return policy;
+    }
+    private void RefreshBackupHealth_Click(object sender,RoutedEventArgs e)
+    {
+        try{RefreshBackupHealth();}catch(Exception ex){AuditLog.Error("BackupHealth",ex);MessageBox.Show(ex.Message);}
+    }
+    private void RefreshBackupHealth()
+    {
+        var health=BackupHealthStore.Load();
+        BackupHealthText.Text=$"Status: {health.Status}; consecutive failures: {health.ConsecutiveFailures}\n"+
+            $"Last verified backup: {health.LastSuccess?.ToString("u") ?? "never"}; local: {health.LastLocalSuccess?.ToString("u") ?? "never"}; remote: {health.LastRemoteSuccess?.ToString("u") ?? "never"}\n"+
+            $"Next catch-up retry: {health.NextRetry?.ToString("u") ?? "none"}; error type: {health.ErrorKind ?? "none"}\n"+
+            $"Local snapshots: {health.SnapshotCount}; storage: {health.LocalBytes/(1024d*1024*1024):F2} GiB"+
+            (health.QuotaExceeded?"; QUOTA EXCEEDED — protected recovery points retained":"");
+    }
     private async void ScheduleBackup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
         if(_store is null)throw new InvalidOperationException("Open workspace first.");
@@ -653,7 +685,7 @@ public partial class MainWindow : Window
                 throw new ArgumentException("Backup retention requires a number from 2 to 10000. Leave blank to disable pruning.");
             keep = parsedKeep;
         }
-        await ScheduledBackup.ConfigureAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token,keep);
+        await ScheduledBackup.ConfigureAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token,keep,ReadCalendarRetention());
         StatusText.Text="Daily 2 AM backup scheduled while your Windows user is signed in. Remote verification runs if configured.";
     });
     private async void RemoveScheduledBackup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>

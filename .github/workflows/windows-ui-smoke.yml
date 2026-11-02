@@ -64,10 +64,14 @@ jobs:
             $setupButton = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $setupCondition)
             if (-not $setupButton) { throw 'First-run setup action is missing.' }
             ([System.Windows.Automation.InvokePattern]$setupButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            $setupWindowCondition = [System.Windows.Automation.AndCondition]::new(
+              $setupCondition,
+              [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window),
+              [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id))
             $setup = $null
             for ($attempt=0; $attempt -lt 30; $attempt++) {
               Start-Sleep -Milliseconds 300
-              $setup = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Children, $setupCondition)
+              $setup = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $setupWindowCondition)
               if ($setup) { break }
             }
             if (-not $setup) { throw 'Actual setup wizard did not appear.' }

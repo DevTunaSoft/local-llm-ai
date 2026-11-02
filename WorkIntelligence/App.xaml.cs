@@ -9,11 +9,19 @@ public partial class App : Application
     {
         // Resolve the scheduled task's explicit data location before any LocalPaths
         // access; Task Scheduler need not inherit the launching process environment.
+        var needsLocationRecovery=false;
         try
         {
             var root = StartupOptions.DataRoot(e.Args);
             if(root is null && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT")))
-                root=StartupSelection.Load();
+            {
+                try{root=StartupSelection.Load();}
+                catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Text.Json.JsonException)
+                {
+                    needsLocationRecovery=true;
+                    MessageBox.Show("The saved data location is unavailable or invalid. Its files and saved selection are preserved. Choose a valid local data folder in setup before continuing.","Data location",MessageBoxButton.OK,MessageBoxImage.Warning);
+                }
+            }
             if (root is not null) Environment.SetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT", root);
         }
         catch (ArgumentException)
@@ -48,7 +56,7 @@ public partial class App : Application
         var window = new MainWindow();
         MainWindow = window;
         window.Show();
-        if(e.Args.Contains("--setup",StringComparer.OrdinalIgnoreCase) ||
+        if(needsLocationRecovery || e.Args.Contains("--setup",StringComparer.OrdinalIgnoreCase) ||
             (!e.Args.Contains("--skip-setup",StringComparer.OrdinalIgnoreCase) &&
              !File.Exists(LocalPaths.Database) && !File.Exists(Path.Combine(LocalPaths.Data,WorkspacePreferencesStore.FileName))))
             window.Dispatcher.InvokeAsync(()=>window.BeginSetup());
