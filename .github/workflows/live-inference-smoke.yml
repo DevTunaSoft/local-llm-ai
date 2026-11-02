@@ -10,6 +10,7 @@ on:
       - 'WorkIntelligence/Services/EmbeddingRuntime.cs'
       - 'scripts/test-live-inference.ps1'
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:
