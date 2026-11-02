@@ -104,7 +104,7 @@ public partial class MainWindow : Window
     private void RefreshWorkspaceChats()
     {
         if (_store is null) return;
-        var chats = _store.Chats(SelectedWorkspaceId);
+        var chats = string.IsNullOrWhiteSpace(ChatSearchInput.Text) ? _store.Chats(SelectedWorkspaceId) : _store.SearchChats(ChatSearchInput.Text, SelectedWorkspaceId);
         if (!chats.Any(c => c.Id == _chatId)) _chatId = 0;
         ChatList.ItemsSource = chats;
         if (_chatId != 0) ChatList.SelectedItem = chats.First(c => c.Id == _chatId);
@@ -156,6 +156,19 @@ public partial class MainWindow : Window
     private void ChatList_SelectionChanged(object sender,SelectionChangedEventArgs e)
     {
         if(ChatList.SelectedItem is ChatRecord c) { _chatId=c.Id;ChatTitleInput.Text=c.Title;ShowChat(); }
+    }
+    private void SearchChats_Click(object sender,RoutedEventArgs e)
+    {
+        if (_busy || _closing || _store is null) return;
+        try { RefreshWorkspaceChats(); StatusText.Text = "Conversation search complete."; }
+        catch (Exception ex) { AuditLog.Error("SearchChats", ex); StatusText.Text = ex.Message; }
+    }
+    private void ClearChatSearch_Click(object sender,RoutedEventArgs e)
+    {
+        if (_busy || _closing) return;
+        ChatSearchInput.Clear();
+        RefreshWorkspaceChats();
+        StatusText.Text = "Showing all conversations in the selected workspace.";
     }
     private void RenameChat_Click(object sender,RoutedEventArgs e)
     {
