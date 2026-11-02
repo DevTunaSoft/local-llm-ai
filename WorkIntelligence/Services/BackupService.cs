@@ -24,6 +24,11 @@ public sealed class BackupService
         try
         {
             await Task.Run(() => _store.CreateBackupSnapshot(staging, ct), ct);
+            // Persist per-model local configuration with the portable vault snapshot.
+            var modelSettingsPath = Path.Combine(LocalPaths.Data, "model-settings.json");
+            PathSafety.RejectReparsePoints(modelSettingsPath);
+            if (File.Exists(modelSettingsPath))
+                File.Copy(modelSettingsPath, Path.Combine(staging, "model-settings.json"), overwrite: false);
             var manifest = BuildManifest(staging, ct);
             var manifestPath = Path.Combine(staging, "manifest.json");
             await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest), ct);
@@ -63,6 +68,15 @@ public sealed class BackupService
             var targetDatabase = LocalPaths.Database;
             File.Copy(Path.Combine(snapshot, "knowledge.db"), targetDatabase, false);
             created.Add(targetDatabase);
+            var savedSettings = Path.Combine(snapshot, "model-settings.json");
+            if (File.Exists(savedSettings))
+            {
+                var targetSettings = Path.Combine(LocalPaths.Data, "model-settings.json");
+                if (File.Exists(targetSettings))
+                    throw new InvalidOperationException("Restore refuses to overwrite existing model settings.");
+                File.Copy(savedSettings, targetSettings, false);
+                created.Add(targetSettings);
+            }
             using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
                 { DataSource = targetDatabase, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
             connection.Open();
@@ -135,7 +149,7 @@ public sealed class BackupService
         return new SnapshotManifest(1, DateTimeOffset.UtcNow.ToString("O"), files);
     }
 
-    private static bool IsSafeDataPath(string path) => path == "knowledge.db" ||
+    private static bool IsSafeDataPath(string path) => path is "knowledge.db" or "model-settings.json" ||
         Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
 
     internal static void VerifySnapshot(string snapshot, CancellationToken ct)
