@@ -119,6 +119,11 @@ public partial class MainWindow : Window
     }
     private async void Unlock_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
+        if (WorkAuthorizationCheck.IsChecked != true)
+        {
+            StatusText.Text = "Confirm organizational authorization before opening work data.";
+            return;
+        }
         KnowledgeStore store = await Task.Run(() => new KnowledgeStore());
         _store=store;
         UnlockPanel.Visibility=Visibility.Collapsed; MainTabs.Visibility=Visibility.Visible;
