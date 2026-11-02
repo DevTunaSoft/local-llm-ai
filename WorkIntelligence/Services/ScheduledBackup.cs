@@ -8,6 +8,7 @@ public static class ScheduledBackup
 {
     private sealed record Settings(string Repository, string? OneDriveRemote, int? KeepNewestSnapshots = null);
     private const string TaskName = "WorkIntelligence-UserDailyBackup";
+    private static string SuccessPath => Path.Combine(LocalPaths.Data, "scheduled-backup-last-success.txt");
     private static string SettingsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.json");
     private static string LegacySecretsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.dpapi");
 
@@ -57,8 +58,37 @@ public static class ScheduledBackup
             await RemoteBackupService.SyncAndVerifyAsync(settings.Repository, settings.OneDriveRemote, ct);
         if (settings.KeepNewestSnapshots is int keep)
             BackupRetention.Prune(settings.Repository, keep, ct);
+        var completed = DateTimeOffset.UtcNow.ToString("O");
+        var tempSuccess = SuccessPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try { await File.WriteAllTextAsync(tempSuccess, completed, ct); File.Move(tempSuccess, SuccessPath, true); }
+        finally { if (File.Exists(tempSuccess)) File.Delete(tempSuccess); }
         AuditLog.Info("ScheduledBackup", "Scheduled plaintext snapshot completed. OneDrive status is recorded by the synchronization step.");
     }
+
+    /// <summary>
+    /// Catch up after a missed daily trigger when the user next opens the application.
+    /// This does not guarantee backup during logout/sleep and never silently configures
+    /// a cloud account. A failed backup remains overdue for the next attempt.
+    /// </summary>
+    public static async Task<bool> CatchUpIfOverdueAsync(CancellationToken ct)
+    {
+        if (!File.Exists(SettingsPath)) return false;
+        DateTimeOffset? last = null;
+        if (File.Exists(SuccessPath))
+        {
+            if (new FileInfo(SuccessPath).Length > 128)
+                throw new InvalidDataException("Scheduled backup completion state is malformed.");
+            if (!DateTimeOffset.TryParse(await File.ReadAllTextAsync(SuccessPath, ct), out var parsed))
+                throw new InvalidDataException("Scheduled backup completion timestamp is invalid.");
+            last = parsed;
+        }
+        if (!IsOverdue(last, DateTimeOffset.UtcNow)) return false;
+        await RunJobAsync(ct);
+        return true;
+    }
+
+    internal static bool IsOverdue(DateTimeOffset? lastSuccess, DateTimeOffset now)
+        => lastSuccess is null || now - lastSuccess.Value >= TimeSpan.FromHours(25);
 
     private static async Task RunTaskSchedulerAsync(IEnumerable<string> args, CancellationToken ct)
     {
