@@ -514,6 +514,28 @@ public partial class MainWindow : Window
         var result=await new BackupService(_store).BackupAsync(BackupFolder.Text.Trim(),_shutdownCts.Token);
         StatusText.Text=result;
     });
+    private void ConfigureOneDrive_Click(object sender,RoutedEventArgs e)
+    {
+        if (_busy || _closing || _store is null) return;
+        if (MessageBox.Show("The interactive Microsoft OneDrive sign-in uses rclone and may store OAuth tokens in your Windows user profile. Confirm that your organization authorizes this account and unencrypted backups before continuing.",
+            "Authorized OneDrive setup", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        try
+        {
+            var rclone = RuntimeBundle.Resolve("rclone.exe");
+            Process.Start(new ProcessStartInfo(rclone, "config")
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(rclone)!
+            }) ?? throw new InvalidOperationException("OneDrive configuration did not start.");
+            StatusText.Text = "Complete interactive Microsoft OneDrive authorization. Then enter remote:approved-folder and run byte verification.";
+        }
+        catch (Exception ex)
+        {
+            AuditLog.Error("OneDriveSetup", ex);
+            StatusText.Text = "Could not start OneDrive setup. Review local diagnostics and bundled runtime.";
+        }
+    }
+
     private async void SyncOneDrive_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
         if (_store is null) throw new InvalidOperationException("Open the local workspace first.");
