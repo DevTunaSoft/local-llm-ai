@@ -40,6 +40,13 @@ jobs:
             Add-Type -AssemblyName UIAutomationClient
             Add-Type -AssemblyName UIAutomationTypes
             $window = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
+            $approvalCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'WorkAuthorizationCheck')
+            $approval = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $approvalCondition)
+            if (-not $approval) { throw 'Organizational authorization checkbox is missing.' }
+            $toggle = [System.Windows.Automation.TogglePattern]$approval.GetCurrentPattern(
+              [System.Windows.Automation.TogglePattern]::Pattern)
+            if ($toggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::On) { $toggle.Toggle() }
             $condition = [System.Windows.Automation.PropertyCondition]::new(
               [System.Windows.Automation.AutomationElement]::NameProperty, 'Open Local Workspace')
             $button = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
