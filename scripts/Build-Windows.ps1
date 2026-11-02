@@ -58,7 +58,7 @@ try {
     Write-Host "Built source/package candidate: $exe"
     Write-Host "Publisher signature status: $($signature.Status)"
     if ($signature.Status -ne 'Valid') {
-        Write-Warning 'Unsigned or untrusted publisher. PRODUCTION RELEASE BLOCKED until approved code signing.'
+        throw 'PRODUCTION RELEASE BLOCKED: executable is not signed by a trusted publisher.'
     }
-    Write-Host 'PRODUCTION RELEASE BLOCKED until real model, Windows desktop, security and cross-PC restore tests have passed.'
+    Write-Host 'SIGNED PACKAGE CANDIDATE ONLY. Real-model, desktop, security, and cross-PC restore acceptance tests remain mandatory.'
 } finally { Pop-Location }
