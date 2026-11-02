@@ -46,6 +46,11 @@ jobs:
         run: |
           & ./scripts/Prepare-Windows-TestNative.ps1 -TestOutputDirectory "./tests/Core/bin/Release/net10.0" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare pinned Windows restic test binary
+        shell: pwsh
+        run: |
+          & ./scripts/Prepare-Windows-TestRestic.ps1 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run encrypted-memory and workspace service regressions
         shell: pwsh
         run: |
