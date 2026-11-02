@@ -46,13 +46,20 @@ jobs:
             if (-not $approval) { throw 'Organizational authorization checkbox is missing.' }
             $toggle = [System.Windows.Automation.TogglePattern]$approval.GetCurrentPattern(
               [System.Windows.Automation.TogglePattern]::Pattern)
-            if ($toggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::On) { $toggle.Toggle() }
             $condition = [System.Windows.Automation.PropertyCondition]::new(
               [System.Windows.Automation.AutomationElement]::NameProperty, 'Open Local Workspace')
             $button = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
             if (-not $button) { throw 'Actual Open Local Workspace button is not discoverable through Windows UI Automation.' }
             $invoke = [System.Windows.Automation.InvokePattern]$button.GetCurrentPattern(
               [System.Windows.Automation.InvokePattern]::Pattern)
+            if ($toggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::Off) { throw 'Authorization checkbox must default to unchecked.' }
+            $invoke.Invoke()
+            $refusalCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Confirm organizational authorization before opening work data.')
+            if (-not $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $refusalCondition)) {
+              throw 'Unauthorized workspace opening did not show refusal state.'
+            }
+            $toggle.Toggle()
             $invoke.Invoke()
             $chatCondition = [System.Windows.Automation.PropertyCondition]::new(
               [System.Windows.Automation.AutomationElement]::NameProperty, 'AI Chat')
