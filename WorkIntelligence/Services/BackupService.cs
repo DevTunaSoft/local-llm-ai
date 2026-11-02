@@ -47,11 +47,7 @@ public sealed class BackupService
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(location), ct);
         if (!Directory.Exists(location)) throw new DirectoryNotFoundException("Backup repository not found.");
         PathSafety.RejectReparsePoints(location);
-        var snapshots = Directory.EnumerateDirectories(location, "snap-*", SearchOption.TopDirectoryOnly)
-            .OrderByDescending(x => Path.GetFileName(x), StringComparer.Ordinal).ToArray();
-        if (snapshots.Length == 0) throw new InvalidDataException("No supported plaintext snapshot exists. Legacy restic repositories are not compatible.");
-        var snapshot = snapshots[0];
-        VerifySnapshot(snapshot, ct);
+        var snapshot = SelectLatestVerifiedSnapshot(location, ct);
         var blobsPath = Path.Combine(snapshot, "Blobs");
         var files = Directory.Exists(blobsPath) ? Directory.EnumerateFiles(blobsPath, "*.bin", SearchOption.TopDirectoryOnly).ToArray() : Array.Empty<string>();
         var created = new List<string>();
@@ -84,6 +80,30 @@ public sealed class BackupService
             throw;
         }
         await Task.CompletedTask;
+    }
+
+    // If the newest backup is incomplete/corrupt, recover from the newest valid
+    // version instead of discarding all older recovery points.
+    internal static string SelectLatestVerifiedSnapshot(string repository, CancellationToken ct)
+    {
+        if (!Directory.Exists(repository)) throw new DirectoryNotFoundException("Backup repository not found.");
+        PathSafety.RejectReparsePoints(repository);
+        var snapshots = Directory.EnumerateDirectories(repository, "snap-*", SearchOption.TopDirectoryOnly)
+            .OrderByDescending(x => Path.GetFileName(x), StringComparer.Ordinal).ToArray();
+        foreach (var snapshot in snapshots)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                VerifySnapshot(snapshot, ct);
+                return snapshot;
+            }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+            {
+                AuditLog.Info("Restore", "A snapshot failed integrity or access checks; trying an older recovery point.");
+            }
+        }
+        throw new InvalidDataException("No valid plaintext snapshot could be verified. Existing data remains unchanged.");
     }
 
     private static string ValidateRepository(string repository)
@@ -133,7 +153,7 @@ public sealed class BackupService
         {
             ct.ThrowIfCancellationRequested();
             if (record is null || !IsSafeDataPath(record.Path) || !listed.Add(record.Path) || record.Length < 0 ||
-                record.Sha256.Length != 64 || !record.Sha256.All(Uri.IsHexDigit))
+                record.Sha256 is null || record.Sha256.Length != 64 || !record.Sha256.All(Uri.IsHexDigit))
                 throw new InvalidDataException("Snapshot contains invalid or duplicate file records.");
             var file = Path.Combine(snapshot, record.Path.Replace('/', Path.DirectorySeparatorChar));
             PathSafety.RejectReparsePoints(file);
