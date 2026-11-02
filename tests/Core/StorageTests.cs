@@ -141,6 +141,22 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
+    public void ChatRenamePersistsAndCannotCrossWorkspaces()
+    {
+        var operations = _store.AddWorkspace("Rename operations");
+        var leadership = _store.AddWorkspace("Rename leadership");
+        var chatId = _store.CreateChat("Original chat", operations);
+        Assert.Throws<InvalidDataException>(() =>
+            _store.RenameChat(chatId, "Unauthorized", leadership));
+        Assert.Throws<ArgumentException>(() => _store.RenameChat(chatId, "", operations));
+        Assert.Throws<ArgumentException>(() => _store.RenameChat(chatId, "Bad\nTitle", operations));
+        _store.RenameChat(chatId, "Renamed operations conversation", operations);
+        using var reopened = new KnowledgeStore();
+        Assert.Equal("Renamed operations conversation", Assert.Single(reopened.Chats(operations)).Title);
+        Assert.Empty(reopened.Chats(leadership));
+    }
+
+    [Fact]
     public void ApprovedLearningPersistsAcrossStoreReopenAndCorrectionsRemainScoped()
     {
         var workspace = _store.AddWorkspace("Persistent learning fixture");
