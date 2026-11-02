@@ -14,6 +14,7 @@ public static class RemoteBackupService
         if(!Directory.Exists(localRepository) || !Directory.EnumerateDirectories(localRepository, "snap-*").Any())
             throw new InvalidDataException("No plaintext snapshots exist. Create a verified local backup first.");
         var rclone=RuntimeBundle.Resolve("rclone.exe");
+        await RequireOneDriveBackendAsync(rclone, remote, ct);
         await RunAsync(rclone,["copy",Path.GetFullPath(localRepository),remote,"--transfers","4","--checkers","8"],ct);
         // Compare both sides byte-for-byte. Remote copies are plaintext, not protected by this app.
         await RunAsync(rclone,["check",Path.GetFullPath(localRepository),remote,"--download","--one-way"],ct);
@@ -30,6 +31,7 @@ public static class RemoteBackupService
         try
         {
             var rclone=RuntimeBundle.Resolve("rclone.exe");
+            await RequireOneDriveBackendAsync(rclone, remote, ct);
             await RunAsync(rclone,["copy",remote,temp,"--transfers","4"],ct);
             await BackupService.RestoreToEmptyVaultAsync(temp,ct);
         }
@@ -42,6 +44,46 @@ public static class RemoteBackupService
            remote.Contains("..",StringComparison.Ordinal) || remote.EndsWith(':') || remote.EndsWith('/'))
            throw new ArgumentException("Choose an existing configured rclone OneDrive remote and a dedicated subfolder, e.g., workonedrive:WIBackups.");
     }
+    internal static bool IsOneDriveConfig(string remoteName, string redactedConfig)
+    {
+        if (redactedConfig.Length > 32768) return false;
+        var lines = redactedConfig.Split('\n');
+        var section = false;
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (line.StartsWith('[') && line.EndsWith(']'))
+            {
+                section = line == "[" + remoteName + "]";
+                continue;
+            }
+            if (section && Regex.IsMatch(line, @"^type\s*=\s*onedrive$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+                return true;
+        }
+        return false;
+    }
+
+    private static async Task RequireOneDriveBackendAsync(string executable, string remote, CancellationToken ct)
+    {
+        var remoteName = remote.Split(':', 2)[0];
+        var info = new ProcessStartInfo(executable)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+        };
+        foreach (var value in new[] { "config", "redacted", remoteName, "--ask-password=false" })
+            info.ArgumentList.Add(value);
+        using var process = new Process { StartInfo = info };
+        if (!process.Start()) throw new InvalidOperationException("Cannot verify OneDrive remote configuration.");
+        using var registration = ct.Register(() => ProcessTermination.RequestStop(process));
+        var outputTask = process.StandardOutput.ReadToEndAsync(ct);
+        var errorTask = process.StandardError.ReadToEndAsync(ct);
+        await ProcessTermination.WaitForExitAsync(process, ct);
+        var redacted = await outputTask;
+        _ = await errorTask; // Never reveal config, remotes, account names, tokens, or error output.
+        if (process.ExitCode != 0 || !IsOneDriveConfig(remoteName, redacted))
+            throw new InvalidOperationException("Configured backup remote must be a direct Microsoft OneDrive backend.");
+    }
+
     private static async Task RunAsync(string executable,IEnumerable<string> args,CancellationToken ct)
     {
         var info=new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
