@@ -46,6 +46,13 @@ jobs:
         run: |
           & dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --no-build --no-restore --logger "console;verbosity=normal" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify plaintext SQLite backup header regression
+        shell: pwsh
+        run: |
+          $source = Get-Content 'WorkIntelligence/Services/BackupService.cs' -Raw
+          if (-not $source.Contains('"SQLite format 3\0"u8')) { throw 'Expected 16-byte SQLite header validation missing.' }
+          if ($source.Contains('"SQLite format 3\\0"u8')) { throw 'Incorrect escaped NUL in SQLite header validation.' }
+          Write-Host 'SQLite header regression source check passed.'
       - name: Dependency security audit
         shell: pwsh
         run: |
