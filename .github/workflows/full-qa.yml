@@ -1,0 +1,26 @@
+name: Work Intelligence consolidated Windows acceptance
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/full-qa.yml'
+permissions:
+  contents: read
+  issues: write
+jobs:
+  source-and-storage:
+    name: Compile, source tests, storage, backup and Linux regression
+    uses: ./.github/workflows/windows-build.yml
+    permissions:
+      contents: read
+      issues: write
+  actual-windows-ui:
+    name: Launch WPF, create, rename and search persisted conversations
+    uses: ./.github/workflows/windows-ui-smoke.yml
+    permissions:
+      contents: read
+  actual-offline-models:
+    name: Run local GGUF chat, restarts, embeddings and vector retrieval
+    uses: ./.github/workflows/live-inference-smoke.yml
+    permissions:
+      contents: read
