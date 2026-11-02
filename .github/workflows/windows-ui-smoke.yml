@@ -1,0 +1,60 @@
+name: Windows WPF UI launch smoke test
+on:
+  push:
+    paths:
+      - '.github/workflows/windows-ui-smoke.yml'
+      - 'WorkIntelligence/App.xaml.cs'
+      - 'WorkIntelligence/MainWindow.xaml'
+      - 'WorkIntelligence/MainWindow.xaml.cs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  launch-ui:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build source-only WPF application
+        shell: pwsh
+        run: |
+          dotnet build WorkIntelligence/WorkIntelligence.csproj -c Release -p:UseAppHost=false -p:SelfContained=false -p:PublishSingleFile=false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Launch the actual WPF workspace window and verify it remains alive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dll = Join-Path $PWD 'WorkIntelligence/bin/Release/net10.0-windows/win-x64/WorkIntelligence.dll'
+          if (-not (Test-Path -LiteralPath $dll)) { throw "Compiled WPF DLL missing: $dll" }
+          $stdout = Join-Path $env:RUNNER_TEMP 'wi-ui-stdout.txt'
+          $stderr = Join-Path $env:RUNNER_TEMP 'wi-ui-stderr.txt'
+          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          try {
+            $seenWindow = $false
+            for ($i=0; $i -lt 60; $i++) {
+              Start-Sleep -Milliseconds 500
+              $process.Refresh()
+              if ($process.HasExited) { throw "WPF process exited during startup with code $($process.ExitCode)." }
+              if ($process.MainWindowTitle -eq 'Work Intelligence AI') { $seenWindow = $true; break }
+            }
+            if (-not $seenWindow) { throw 'WPF process is alive but no Work Intelligence AI window appeared in the Windows session.' }
+            Start-Sleep -Seconds 3
+            $process.Refresh()
+            if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
+            Write-Host 'Real WPF MainWindow launched and remained running for three seconds.'
+          }
+          finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
+            if (Test-Path $stderr) {
+              Get-Content $stderr | Select-Object -Last 20 | ForEach-Object { Write-Host 'WPF stderr: [redacted]' }
+            }
+          }
+      - name: Scope reminder
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host 'UI smoke test is a source DLL launch, not EXE packaging or end-to-end GUI acceptance.'
+          Write-Host 'It does not click controls, exercise model downloads, or validate restore to a second machine.'
