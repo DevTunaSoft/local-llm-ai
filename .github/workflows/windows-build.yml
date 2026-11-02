@@ -91,8 +91,13 @@ jobs:
       - name: Install native test build prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install --yes python3-venv
+          sudo apt-get install --yes python3-venv tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
       - name: Prepare pinned development tools
         run: bash scripts/setup-linux-tests.sh
+      - name: Prepare real OCR tools and synthetic document fixtures
+        run: ../.tools/qa-venv/bin/python scripts/setup-native-ocr-tests.py
       - name: Compile source and execute real storage and recovery regressions
+        env:
+          WI_NATIVE_TEST_ROOT: /tmp/wi-native-ocr-tests
+          WI_REQUIRE_NATIVE_OCR: '1'
         run: bash scripts/validate-source.sh

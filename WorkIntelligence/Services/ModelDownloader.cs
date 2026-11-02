@@ -24,7 +24,7 @@ public static class ModelDownloader
         if (!System.Text.RegularExpressions.Regex.IsMatch(expectedSha256,@"^[0-9a-fA-F]{64}$"))
             throw new ArgumentException("A trusted SHA-256 checksum is required for download verification.");
         LocalPaths.Ensure();
-        var final=Path.Combine(LocalPaths.Models,filename);
+        var final=Path.Combine(WorkspacePreferencesStore.DownloadFolder(),filename);
         var partial=final+".partial";
         using var downloadLock = await FileOperationLock.AcquireAsync("download:" + filename.ToUpperInvariant(), cancellationToken);
         PathSafety.RejectReparsePoints(final);

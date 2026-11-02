@@ -17,8 +17,9 @@ public static class PdfPageOcr
             return IntPtr.Zero;
         });
     }
-    public static string Extract(byte[] pdf, int pageIndex)
+    public static string Extract(byte[] pdf, int pageIndex, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         if (pdf.Length is < 8 or > 25 * 1024 * 1024) throw new InvalidDataException("PDF size exceeds OCR limit.");
         lock (Gate) // PDFium document/render lifecycle is serialized for safety.
         {
@@ -54,7 +55,7 @@ public static class PdfPageOcr
                             if (stride != width * 4) throw new InvalidDataException("PDFium returned unsupported bitmap stride.");
                             var bytes = new byte[checked(stride * height)];
                             Marshal.Copy(FPDFBitmap_GetBuffer(bitmap), bytes, 0, bytes.Length);
-                            try { return OcrService.ExtractImage(ToBmp(bytes, width, height)); }
+                            try { return OcrService.ExtractImage(ToBmp(bytes, width, height), ct); }
                             finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes); }
                         }
                         finally { FPDFBitmap_Destroy(bitmap); }

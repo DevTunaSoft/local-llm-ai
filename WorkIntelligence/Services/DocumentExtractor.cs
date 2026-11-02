@@ -9,14 +9,15 @@ namespace WorkIntelligence.Services;
 
 public static class DocumentExtractor
 {
-    public static string Extract(string path, byte[] bytes)
+    public static string Extract(string path, byte[] bytes, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var extension = Path.GetExtension(path).ToLowerInvariant();
         return extension switch
         {
             ".txt" or ".md" or ".csv" or ".json" or ".xml" or ".log" or ".ps1" or ".cs" or ".sql" or ".yml" or ".yaml" => DecodeText(bytes),
-            ".pdf" => Pdf(bytes),
-            ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tif" or ".tiff" => OcrService.ExtractImage(bytes),
+            ".pdf" => Pdf(bytes, ct),
+            ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tif" or ".tiff" => OcrService.ExtractImage(bytes, ct),
             ".docx" or ".xlsx" or ".pptx" => Office(bytes, extension),
             _ => throw new NotSupportedException($"{extension} is not yet supported. Import an extractable text, PDF, DOCX, XLSX, or PPTX file.")
         };
@@ -42,7 +43,7 @@ public static class DocumentExtractor
         if (text.Contains('\0')) throw new InvalidDataException("Binary file not supported.");
         return text;
     }
-    private static string Pdf(byte[] bytes)
+    private static string Pdf(byte[] bytes, CancellationToken ct)
     {
         using var document = PdfDocument.Open(bytes);
         if (document.NumberOfPages > 1000) throw new InvalidDataException("PDF exceeds 1,000-page safety limit.");
@@ -50,12 +51,13 @@ public static class DocumentExtractor
         var ocrPages = 0;
         foreach (var page in document.GetPages())
         {
+            ct.ThrowIfCancellationRequested();
             var pageText = ContentOrderTextExtractor.GetText(page);
             if (page.NumberOfImages > 0 && (string.IsNullOrWhiteSpace(pageText) || pageText.Trim().Length < 12))
             {
                 // OCR each image-only page, including mixed searchable/scanned PDFs.
                 // Failure aborts ingestion; never claim a partial document was completely indexed.
-                pageText = PdfPageOcr.Extract(bytes, page.Number - 1);
+                pageText = PdfPageOcr.Extract(bytes, page.Number - 1, ct);
                 ocrPages++;
                 if (string.IsNullOrWhiteSpace(pageText))
                     throw new InvalidDataException($"OCR returned no readable text for PDF page {page.Number}.");

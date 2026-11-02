@@ -12,6 +12,8 @@ public partial class App : Application
         try
         {
             var root = StartupOptions.DataRoot(e.Args);
+            if(root is null && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT")))
+                root=StartupSelection.Load();
             if (root is not null) Environment.SetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT", root);
         }
         catch (ArgumentException)
@@ -46,5 +48,9 @@ public partial class App : Application
         var window = new MainWindow();
         MainWindow = window;
         window.Show();
+        if(e.Args.Contains("--setup",StringComparer.OrdinalIgnoreCase) ||
+            (!e.Args.Contains("--skip-setup",StringComparer.OrdinalIgnoreCase) &&
+             !File.Exists(LocalPaths.Database) && !File.Exists(Path.Combine(LocalPaths.Data,WorkspacePreferencesStore.FileName))))
+            window.Dispatcher.InvokeAsync(()=>window.BeginSetup());
     }
 }

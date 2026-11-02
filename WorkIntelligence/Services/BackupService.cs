@@ -25,10 +25,12 @@ public sealed class BackupService
         {
             await Task.Run(() => _store.CreateBackupSnapshot(staging, ct), ct);
             // Persist per-model local configuration with the portable vault snapshot.
-            var modelSettingsPath = Path.Combine(LocalPaths.Data, "model-settings.json");
-            PathSafety.RejectReparsePoints(modelSettingsPath);
-            if (File.Exists(modelSettingsPath))
-                File.Copy(modelSettingsPath, Path.Combine(staging, "model-settings.json"), overwrite: false);
+            foreach (var name in PortableSettings.Files)
+            {
+                var settings=Path.Combine(LocalPaths.Data,name);
+                PathSafety.RejectReparsePoints(settings);
+                if(File.Exists(settings))File.Copy(settings,Path.Combine(staging,name),false);
+            }
             var manifest = BuildManifest(staging, ct);
             var manifestPath = Path.Combine(staging, "manifest.json");
             await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest), ct);
@@ -49,16 +51,18 @@ public sealed class BackupService
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(location), ct);
         using var vaultLock = await FileOperationLock.AcquireAsync("vault-files", ct);
         LegacyEncryptedDataGuard.AssertNoLegacyData();
-        var targetSettings = Path.Combine(LocalPaths.Data, "model-settings.json");
         if (new[] { "", "-wal", "-shm", "-journal" }.Any(suffix => File.Exists(LocalPaths.Database + suffix))
             || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
             throw new InvalidOperationException("Restore requires an empty data directory. Existing data will never be overwritten.");
         if (!Directory.Exists(location)) throw new DirectoryNotFoundException("Backup repository not found.");
         var snapshot = SelectLatestVerifiedSnapshot(location, ct);
-        var savedSettings = Path.Combine(snapshot, "model-settings.json");
-        PathSafety.RejectReparsePoints(targetSettings);
-        if (File.Exists(savedSettings) && File.Exists(targetSettings))
-            throw new InvalidOperationException("Restore refuses to overwrite existing model settings.");
+        foreach(var name in PortableSettings.Files)
+        {
+            var destination=Path.Combine(LocalPaths.Data,name);
+            PathSafety.RejectReparsePoints(destination);
+            if(File.Exists(Path.Combine(snapshot,name)) && File.Exists(destination))
+                throw new InvalidOperationException("Restore refuses to overwrite existing workspace settings.");
+        }
         // Copy and validate away from the live paths. A disk-full/cancelled copy
         // cannot leave a partial live database or attachment behind.
         var staging = Path.Combine(LocalPaths.Root, ".restore-" + Guid.NewGuid().ToString("N"));
@@ -152,7 +156,7 @@ public sealed class BackupService
         return new SnapshotManifest(1, DateTimeOffset.UtcNow.ToString("O"), files);
     }
 
-    private static bool IsSafeDataPath(string? path) => path is "knowledge.db" or "model-settings.json" ||
+    private static bool IsSafeDataPath(string? path) => path == "knowledge.db" || path is not null && PortableSettings.Files.Contains(path) ||
         path is not null && Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
 
     internal static void VerifySnapshot(string snapshot, CancellationToken ct)

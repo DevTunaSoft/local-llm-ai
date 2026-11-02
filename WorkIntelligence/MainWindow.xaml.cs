@@ -29,10 +29,34 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        LocalPaths.Ensure();
         UnlockButton.Content = "Open Local Workspace";
         // Closing is asynchronous: blocking GetResult() on the WPF UI thread can
         // deadlock when a model is starting on the same synchronization context.
+    }
+    public void BeginSetup()=>FirstRunSetup_Click(this,new RoutedEventArgs());
+
+    private void FirstRunSetup_Click(object sender,RoutedEventArgs e)
+    {
+        if(_busy || _closing)return;
+        try
+        {
+            var setup=new SetupWindow{Owner=this};
+            if(setup.ShowDialog()!=true)return;
+            if(setup.RestartDataRoot is string root)
+            {
+                var info=new ProcessStartInfo(Environment.ProcessPath ?? throw new InvalidOperationException("Cannot find application launch path.")){UseShellExecute=false};
+                if(Path.GetFileNameWithoutExtension(info.FileName).Equals("dotnet",StringComparison.OrdinalIgnoreCase))
+                    info.ArgumentList.Add(System.Reflection.Assembly.GetEntryAssembly()?.Location ?? throw new InvalidOperationException("Application DLL path is missing."));
+                info.ArgumentList.Add("--data-root");info.ArgumentList.Add(root);info.ArgumentList.Add("--setup");
+                _=Process.Start(info) ?? throw new InvalidOperationException("Could not restart with the selected data folder.");
+                Close();return;
+            }
+            WorkAuthorizationCheck.IsChecked=true;
+            var preferences=WorkspacePreferencesStore.Load();
+            BackupFolder.Text=preferences.BackupRepository ?? "";
+            StatusText.Text="Setup complete. Open the local workspace to continue.";
+        }
+        catch(Exception ex){AuditLog.Error("FirstRunSetup",ex);MessageBox.Show(ex.Message,"Setup",MessageBoxButton.OK,MessageBoxImage.Warning);}
     }
     protected override async void OnClosing(CancelEventArgs e)
     {
@@ -129,6 +153,8 @@ public partial class MainWindow : Window
         _store=store;
         UnlockPanel.Visibility=Visibility.Collapsed; MainTabs.Visibility=Visibility.Visible;
         HeaderState.Text="  •  Local plaintext workspace";
+        var preferences=WorkspacePreferencesStore.Load();
+        BackupFolder.Text=preferences.BackupRepository ?? BackupFolder.Text;
         RefreshAll();StatusText.Text="Workspace ready. The database and imported files are NOT encrypted.";
         _scanTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMinutes(15)};
         _scanTimer.Tick+=async (_,_)=>

@@ -27,7 +27,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $dll)) { throw "Compiled WPF DLL missing: $dll" }
           $stdout = Join-Path $env:RUNNER_TEMP 'wi-ui-stdout.txt'
           $stderr = Join-Path $env:RUNNER_TEMP 'wi-ui-stderr.txt'
-          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll, '--data-root', $env:WORKINTELLIGENCE_DATA_ROOT) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll, '--data-root', $env:WORKINTELLIGENCE_DATA_ROOT, '--skip-setup') -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           try {
             $seenWindow = $false
             for ($i=0; $i -lt 60; $i++) {
@@ -59,7 +59,39 @@ jobs:
             if (-not $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $refusalCondition)) {
               throw 'Unauthorized workspace opening did not show refusal state.'
             }
-            $toggle.Toggle()
+            $setupCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'First-run Setup')
+            $setupButton = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $setupCondition)
+            if (-not $setupButton) { throw 'First-run setup action is missing.' }
+            ([System.Windows.Automation.InvokePattern]$setupButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            $setup = $null
+            for ($attempt=0; $attempt -lt 30; $attempt++) {
+              Start-Sleep -Milliseconds 300
+              $setup = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Children, $setupCondition)
+              if ($setup) { break }
+            }
+            if (-not $setup) { throw 'Actual setup wizard did not appear.' }
+            $finishCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SetupFinish')
+            $finish = $setup.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $finishCondition)
+            ([System.Windows.Automation.InvokePattern]$finish.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            Start-Sleep -Milliseconds 300
+            $approvalCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SetupAuthorization')
+            $approval = $setup.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $approvalCondition)
+            if (-not $approval) { throw 'Setup did not require explicit authorization before saving.' }
+            $setupToggle = [System.Windows.Automation.TogglePattern]$approval.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+            if ($setupToggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::Off) { throw 'Setup authorization must default to unchecked.' }
+            $setupToggle.Toggle()
+            ([System.Windows.Automation.InvokePattern]$finish.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            for ($attempt=0; $attempt -lt 40; $attempt++) {
+              Start-Sleep -Milliseconds 300
+              if (Test-Path (Join-Path $env:WORKINTELLIGENCE_DATA_ROOT 'Data/workspace-preferences.json')) { break }
+            }
+            $preferences = Get-Content (Join-Path $env:WORKINTELLIGENCE_DATA_ROOT 'Data/workspace-preferences.json') -Raw | ConvertFrom-Json
+            if (-not $preferences.SetupCompleted) { throw 'Actual setup did not persist completion.' }
+            if ($toggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::On) { throw 'Completed setup did not carry explicit consent to the workspace screen.' }
+            Write-Host 'Actual first-run wizard refused missing consent, saved preferences and completed.'
             $invoke.Invoke()
             $chatCondition = [System.Windows.Automation.PropertyCondition]::new(
               [System.Windows.Automation.AutomationElement]::NameProperty, 'AI Chat')

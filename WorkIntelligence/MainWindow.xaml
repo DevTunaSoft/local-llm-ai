@@ -12,6 +12,7 @@
         <TextBlock Text="Open your local work intelligence workspace" FontSize="24" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,10"/>
         <TextBlock Text="All local databases, imported attachments and backups are stored UNENCRYPTED. Use only with organizational authorization." TextWrapping="Wrap" Margin="0,0,0,15" Foreground="#52647A"/>
         <CheckBox x:Name="WorkAuthorizationCheck" Margin="0,0,0,12"><TextBlock TextWrapping="Wrap" Text="I confirm organizational approval for this plaintext work-data environment and will not import restricted patient or employee records."/></CheckBox>
+        <Button Content="First-run Setup" Click="FirstRunSetup_Click" Margin="0,0,0,8"/>
         <Button x:Name="UnlockButton" Content="Open Local Workspace" Height="40" Click="Unlock_Click"/>
         <Separator Margin="0,15"/>
         <TextBlock Text="Restore a previous backup onto this empty computer" TextAlignment="Center"/>

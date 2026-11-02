@@ -12,6 +12,7 @@ on:
       - '.github/workflows/windows-build.yml'
       - '.github/workflows/windows-ui-smoke.yml'
       - '.github/workflows/live-inference-smoke.yml'
+      - '.github/workflows/native-ocr.yml'
 permissions:
   contents: read
   issues: write
@@ -39,5 +40,10 @@ jobs:
   actual-offline-models:
     name: Run local GGUF chat, restarts, embeddings and vector retrieval
     uses: ./.github/workflows/live-inference-smoke.yml
+    permissions:
+      contents: read
+  actual-native-ocr:
+    name: Run real Windows image and mixed-PDF OCR
+    uses: ./.github/workflows/native-ocr.yml
     permissions:
       contents: read

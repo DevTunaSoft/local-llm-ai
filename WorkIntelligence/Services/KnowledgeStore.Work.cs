@@ -181,7 +181,7 @@ public sealed partial class KnowledgeStore
                         // older revision advertised as current evidence.
                         if ((file.Attributes & FileAttributes.ReparsePoint) != 0 || !ApprovedExtensions.Contains(file.Extension) ||
                             file.Length is <= 0 or > 25 * 1024 * 1024) { skipped++; continue; }
-                        var result = await Task.Run(() => Import(path), ct);
+                        var result = await Task.Run(() => Import(path, ct), ct);
                         seen.Add(canonical);
                         AssignDocument(result.DocumentId, folder.WorkspaceId);
                         if (result.Imported) imported++; else skipped++;

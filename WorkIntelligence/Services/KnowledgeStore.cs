@@ -221,17 +221,20 @@ public sealed partial class KnowledgeStore : IDisposable
         }
     }
 
-    public ImportResult Import(string path)
+    public ImportResult Import(string path, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var full = Path.GetFullPath(path);
+        PathSafety.RejectReparsePoints(full);
         var fi = new FileInfo(full);
         if (!fi.Exists || fi.Length is <= 0 or > 25 * 1024 * 1024) throw new InvalidDataException("File missing, empty, or exceeds 25 MiB import limit.");
         var input = File.ReadAllBytes(full);
         try
         {
             var hash = Convert.ToHexString(SHA256.HashData(input));
-            var extracted = DocumentExtractor.Extract(full, input);
+            var extracted = DocumentExtractor.Extract(full, input, ct);
             if (string.IsNullOrWhiteSpace(extracted)) throw new InvalidDataException("Document contains no extractable text; scanned/image-only documents require OCR.");
+            ct.ThrowIfCancellationRequested();
             var chunks = Chunk(extracted).ToArray();
             lock (_writeGate)
             {
