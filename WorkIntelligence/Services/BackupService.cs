@@ -150,7 +150,7 @@ public sealed class BackupService
             throw new InvalidDataException("Snapshot contains unexpected or unverified files.");
         using var db = File.OpenRead(Path.Combine(snapshot, "knowledge.db"));
         Span<byte> header = stackalloc byte[16];
-        if (db.Read(header) != 16 || !header.SequenceEqual("SQLite format 3\\0"u8))
+        if (db.Read(header) != 16 || !header.SequenceEqual("SQLite format 3\0"u8))
             throw new InvalidDataException("Snapshot database is not standard SQLite.");
     }
 }
