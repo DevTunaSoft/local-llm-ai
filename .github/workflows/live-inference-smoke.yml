@@ -85,6 +85,13 @@ jobs:
           $env:WI_REQUIRE_LIVE_EMBEDDING = '1'
           dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~RealEmbeddingWorkerReturnsNormalizedDistinctVectors' --logger 'console;verbosity=normal'
           if ($LASTEXITCODE -ne 0) { throw 'Real local embedding integration test failed.' }
+      - name: Verify current publisher catalogs without downloading production weights
+        shell: pwsh
+        env:
+          WI_REQUIRE_LIVE_CATALOG: '1'
+        run: |
+          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~PrimaryPublisherCatalogsProvideImmutableTrustedGgufArtifacts' --logger 'console;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw 'Primary publisher catalog verification failed.' }
       - name: Record what this test does not prove
         if: always()
         shell: pwsh

@@ -86,6 +86,8 @@ public sealed record GgufMetadata(string Architecture,uint Version,ulong TensorC
             }
             if(string.IsNullOrWhiteSpace(architecture)||architecture.Any(x=>!char.IsAsciiLetterOrDigit(x)&&x!='_'&&x!='-'))
                 throw new InvalidDataException("GGUF architecture is missing or malformed.");
+            if(numbers.GetValueOrDefault("split.count",1UL)>1)
+                throw new InvalidDataException("Split GGUF sets require a verified manifest for every shard. Select a single-file merged GGUF in this build.");
             var alignment=numbers.GetValueOrDefault("general.alignment",32UL);
             if(alignment is <1 or >4096 || (alignment&(alignment-1))!=0)throw new InvalidDataException("GGUF alignment is invalid.");
             var names=new HashSet<string>(StringComparer.Ordinal);var offsets=new List<ulong>();

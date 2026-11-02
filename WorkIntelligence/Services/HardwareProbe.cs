@@ -35,7 +35,7 @@ public static class HardwareProbe
         return checked((ulong)Math.Ceiling(modelBytes * 1.10) + overhead);
     }
 
-    public static void ValidateModelMemory(string gguf,int context=4096,int? memoryLimitMiB=null)
+    public static void ValidateModelMemory(string gguf,int context=4096,int? memoryLimitMiB=null,string? projector=null)
     {
         var metadata=GgufMetadata.Read(gguf);
         var size = new FileInfo(gguf).Length;
@@ -45,6 +45,11 @@ public static class HardwareProbe
         // agents even when they had ample memory to run them. Keep the larger
         // buffer for real models, but scale down for sub-1-GiB fixtures.
         var estimated = checked(EstimateModelBytes(size)+metadata.EstimateCacheBytes(context));
+        if(projector is not null)
+        {
+            PathSafety.RejectReparsePoints(projector);
+            estimated=checked(estimated+(ulong)Math.Ceiling(new FileInfo(projector).Length*1.10)+512UL*1024*1024);
+        }
         if(memoryLimitMiB is int limit && estimated>(ulong)limit*1024*1024)
             throw new InvalidOperationException("Estimated model and context memory exceed your configured model budget. Reduce context, increase the approved budget or choose a smaller model.");
         if (estimated + spare > available)

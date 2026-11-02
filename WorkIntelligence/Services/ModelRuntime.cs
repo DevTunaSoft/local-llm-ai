@@ -9,10 +9,14 @@ using System.Text.Json;
 namespace WorkIntelligence.Services;
 
 public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8, int MaxTokens = 1024, double Temperature = 0.7,
-    int StartupTimeoutSeconds = 900, int ResponseTimeoutSeconds = 600, int? MemoryLimitMiB = null)
+    int StartupTimeoutSeconds = 900, int ResponseTimeoutSeconds = 600, int? MemoryLimitMiB = null, string? VisionProjectorPath = null, string? VisionProjectorSha256 = null)
 {
     public void Validate()
     {
+        if((VisionProjectorPath is null)!=(VisionProjectorSha256 is null) ||
+            VisionProjectorPath is not null && !Path.IsPathFullyQualified(VisionProjectorPath) ||
+            VisionProjectorSha256 is not null && (VisionProjectorSha256.Length!=64 || !VisionProjectorSha256.All(Uri.IsHexDigit)))
+            throw new ArgumentException("Vision requires an absolute local projector path and its trusted SHA-256.");
         if (MemoryLimitMiB is <256 or >1048576) throw new ArgumentOutOfRangeException(nameof(MemoryLimitMiB));
         if (StartupTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(StartupTimeoutSeconds));
         if (ResponseTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(ResponseTimeoutSeconds));
@@ -30,6 +34,7 @@ public sealed class ModelRuntime : IAsyncDisposable
     private HttpClient? _client;
     private string? _apiKey;
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
+    public bool SupportsVision=>IsRunning && _options.VisionProjectorPath is not null;
     public string? ActiveModel { get; private set; }
     public bool IsRunning => _process is { HasExited: false };
     public ulong ResidentBytes
@@ -54,7 +59,14 @@ public sealed class ModelRuntime : IAsyncDisposable
         if (!File.Exists(ggufPath)) throw new FileNotFoundException("Model file missing.");
         if (string.IsNullOrWhiteSpace(expectedSha256) || expectedSha256.Length != 64 || !expectedSha256.All(Uri.IsHexDigit))
             throw new ArgumentException("Expected SHA-256 must be 64 hexadecimal characters.", nameof(expectedSha256));
-        HardwareProbe.ValidateModelMemory(ggufPath,options.ContextSize,options.MemoryLimitMiB);
+        HardwareProbe.ValidateModelMemory(ggufPath,options.ContextSize,options.MemoryLimitMiB,options.VisionProjectorPath);
+        if(options.VisionProjectorPath is string projector)
+        {
+            _=GgufMetadata.Read(projector,cancellationToken);
+            await using var projectorBytes=File.OpenRead(projector);
+            var hash=Convert.ToHexString(await SHA256.HashDataAsync(projectorBytes,cancellationToken));
+            if(!hash.Equals(options.VisionProjectorSha256,StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Vision projector changed since verification; reselect a trusted projector.");
+        }
         await using (var verifyStream = File.OpenRead(ggufPath))
         {
             var header = new byte[4];
@@ -76,6 +88,8 @@ public sealed class ModelRuntime : IAsyncDisposable
         };
         foreach (var arg in new[] { "--model", ggufPath, "--host", "127.0.0.1", "--port", port.ToString(),
             "--ctx-size", options.ContextSize.ToString(System.Globalization.CultureInfo.InvariantCulture), "--threads", options.Threads.ToString(System.Globalization.CultureInfo.InvariantCulture), "--n-gpu-layers", "0", "--no-webui", "--alias", "work-intelligence-local", "--cors-origins", "localhost" }) start.ArgumentList.Add(arg);
+        if(options.VisionProjectorPath is string visionProjector)
+            foreach(var arg in new[]{"--mmproj",visionProjector,"--no-mmproj-offload"})start.ArgumentList.Add(arg);
         start.Environment["LLAMA_API_KEY"] = _apiKey;
         _process = new Process { StartInfo = start, EnableRaisingEvents = true };
         if (!_process.Start()) throw new InvalidOperationException("Failed to start local AI engine.");
@@ -125,22 +139,28 @@ public sealed class ModelRuntime : IAsyncDisposable
     }
 
     public async IAsyncEnumerable<string> StreamAsync(IReadOnlyList<(string role,string content)> messages,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024, VisionAttachment? image = null)
     {
+        if(image is not null && !SupportsVision)throw new InvalidOperationException("Load a compatible model with a verified vision projector before sending an image.");
         if (_client is null || !IsRunning) throw new InvalidOperationException("Select and load a local model first.");
-        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens))
+        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens,image))
             yield return fragment;
     }
 
     internal static async IAsyncEnumerable<string> StreamResponseAsync(HttpClient client, ModelRuntimeOptions options,
         IReadOnlyList<(string role, string content)> messages,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024, VisionAttachment? image = null)
     {
         options.Validate();
         using var responseTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         responseTimeout.CancelAfter(TimeSpan.FromSeconds(options.ResponseTimeoutSeconds));
         var token = responseTimeout.Token;
-        var messageList = messages.Select(x => new { role = x.role, content = x.content });
+        var lastUser=-1;
+        for(var i=0;i<messages.Count;i++)if(messages[i].role=="user")lastUser=i;
+        if(image is not null && lastUser<0)throw new ArgumentException("An image requires a user message.");
+        var messageList=messages.Select((x,index)=>new{role=x.role,content=image is not null && index==lastUser
+            ? (object)new object[]{new{type="text",text=x.content},new{type="image_url",image_url=new{url=image.DataUrl}}}
+            : x.content});
         var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? options.MaxTokens : maxTokens, 32, options.MaxTokens), temperature = options.Temperature });
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         { Content = new StringContent(payload, Encoding.UTF8, "application/json") };

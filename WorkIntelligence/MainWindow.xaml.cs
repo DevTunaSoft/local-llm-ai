@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     private readonly ModelRuntime _runtime = new();
     private readonly EmbeddingRuntime _embeddings = new();
     private long _chatId;
+    private VisionAttachment? _pendingImage;
     private long SelectedWorkspaceId => (WorkspaceList.SelectedItem as WorkspaceRecord)?.Id ?? 1;
     private CancellationTokenSource? _responseCts;
     private CancellationTokenSource? _modelLoadCts;
@@ -30,6 +31,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         UnlockButton.Content = "Open Local Workspace";
+        CatalogPublisherBox.ItemsSource=ModelCatalog.Publishers;CatalogPublisherBox.SelectedIndex=0;
         // Closing is asynchronous: blocking GetResult() on the WPF UI thread can
         // deadlock when a model is starting on the same synchronization context.
     }
@@ -288,7 +290,9 @@ public partial class MainWindow : Window
             if(!int.TryParse(ModelMemoryInput.Text,out var parsedMemory))throw new ArgumentException("Memory budget must be an integer MiB value or blank.");
             memory=parsedMemory;
         }
-        var options = new ModelRuntimeOptions(context, threads, tokens, temperature, startupTimeout, responseTimeout,memory);
+        var options = new ModelRuntimeOptions(context, threads, tokens, temperature, startupTimeout, responseTimeout,memory,
+            string.IsNullOrWhiteSpace(VisionProjectorInput.Text)?null:VisionProjectorInput.Text,
+            string.IsNullOrWhiteSpace(VisionProjectorShaInput.Text)?null:VisionProjectorShaInput.Text);
         options.Validate();
         return options;
     }
@@ -305,6 +309,7 @@ public partial class MainWindow : Window
             ModelStartupTimeoutInput.Text = options.StartupTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelResponseTimeoutInput.Text = options.ResponseTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelMemoryInput.Text=options.MemoryLimitMiB?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+            VisionProjectorInput.Text=options.VisionProjectorPath ?? "";VisionProjectorShaInput.Text=options.VisionProjectorSha256 ?? "";
         }
         catch (Exception ex)
         {
@@ -312,6 +317,30 @@ public partial class MainWindow : Window
             StatusText.Text = "Could not read saved model settings: " + ex.Message;
         }
     }
+    private async void ChooseProjector_Click(object sender,RoutedEventArgs e)=>await RunUiAsync(async()=>
+    {
+        var picker=new OpenFileDialog{Title="Choose trusted vision projector GGUF for the selected model",Filter="GGUF projector|*.gguf"};
+        if(picker.ShowDialog()!=true)return;
+        var file=picker.FileName;
+        var hash=await Task.Run(()=>
+        {
+            _=GgufMetadata.Read(file,_shutdownCts.Token);
+            using var input=File.OpenRead(file);return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(input));
+        },_shutdownCts.Token);
+        VisionProjectorInput.Text=file;VisionProjectorShaInput.Text=hash;
+        StatusText.Text="Projector verified locally. Save model settings and reload the compatible model to enable vision.";
+    });
+    private void ClearProjector_Click(object sender,RoutedEventArgs e){VisionProjectorInput.Clear();VisionProjectorShaInput.Clear();}
+    private void AttachVisionImage_Click(object sender,RoutedEventArgs e)
+    {
+        if(_busy || _closing || _store is null)return;
+        if(MessageBox.Show("Select only an organization-approved work image. It is sent only to your local model for this response and is not retained as a source copy. Do not include restricted records.","Authorized local image",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
+        var picker=new OpenFileDialog{Title="Select authorized local PNG/JPEG",Filter="Raster image|*.png;*.jpg;*.jpeg"};
+        if(picker.ShowDialog()!=true)return;
+        try{_pendingImage=VisionAttachment.FromFile(picker.FileName);VisionImageStatus.Text="Image: "+_pendingImage.Name;}
+        catch(Exception ex){AuditLog.Error("VisionImage",ex);MessageBox.Show(ex.Message);}
+    }
+    private void ClearVisionImage_Click(object sender,RoutedEventArgs e){if(_busy)return;_pendingImage=null;VisionImageStatus.Text="";}
     private void SaveModelSettings_Click(object sender,RoutedEventArgs e)
     {
         if (ChatModelBox.SelectedItem is not ModelRecord model)
@@ -352,6 +381,7 @@ public partial class MainWindow : Window
         if(_store is null)throw new InvalidOperationException("Workspace is not opened.");
         var input=ChatInput.Text.Trim();
         if(input.Length==0)return;
+        var attachment=_pendingImage;
         var routing=ModelRouter.Load();
         var routingExplanation="";
         if(!routing.Enabled && !_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
@@ -378,7 +408,7 @@ public partial class MainWindow : Window
             var selectedModel=ChatModelBox.SelectedItem as ModelRecord;
             var manualOverride=ManualModelOverride.IsChecked==true;
             var decision=await Task.Run(()=>ModelRouter.Choose(routing,_store.Models(),input,
-                selectedModel,manualOverride,reclaimable),_responseCts.Token);
+                selectedModel,manualOverride,reclaimable,requiresVision:attachment is not null),_responseCts.Token);
             routingExplanation=decision.Reason;
             if(!_runtime.IsRunning || !string.Equals(_runtime.ActiveModel,decision.Model.Path,StringComparison.OrdinalIgnoreCase))
             {
@@ -388,7 +418,9 @@ public partial class MainWindow : Window
             ChatModelBox.SelectedItem=(ChatModelBox.ItemsSource as IEnumerable<ModelRecord>)?.FirstOrDefault(x=>x.Id==decision.Model.Id);
         }
             if(!_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
-            _store.AddMessage(chatId,"user",input,workspaceId);
+            if(attachment is not null && !_runtime.SupportsVision)throw new InvalidOperationException("Configure and load a compatible model/projector pair before sending the selected image.");
+            _store.AddMessage(chatId,"user",input+(attachment is null?"":$"\n[Image supplied for this response only: {attachment.Name}; SHA-256 {attachment.Sha256}. Reattach the image to inspect it again.]"),workspaceId);
+            if(attachment is not null){_pendingImage=null;VisionImageStatus.Text="";}
             if (MemoryIntent.TryExtract(input, out var proposedText))
             {
                 var queued = _store.QueueMemoryIfNew(proposedText,"Conversation #"+chatId,workspaceId);
@@ -444,7 +476,7 @@ public partial class MainWindow : Window
             }
             history.Insert(0,("system",system.ToString()));
             ChatHistory.AppendText($"\n\nASSISTANT: ");ChatHistory.ScrollToEnd();
-            await foreach(var fragment in _runtime.StreamAsync(history,_responseCts.Token))
+            await foreach(var fragment in _runtime.StreamAsync(history,_responseCts.Token,image:attachment))
             {
                 answer.Append(fragment);ChatHistory.AppendText(fragment);ChatHistory.ScrollToEnd();
             }
@@ -570,6 +602,22 @@ public partial class MainWindow : Window
     {
         if(_store is null || ModelList.SelectedItem is not ModelRecord m)return;
         _store.DeleteModelRecord(m.Id);RefreshAll();StatusText.Text="Removed model registry entry; original model file remains unchanged.";
+    }
+    private async void FetchCatalog_Click(object sender,RoutedEventArgs e)=>await RunUiAsync(async()=>
+    {
+        if(CatalogPublisherBox.SelectedItem is not CatalogPublisher publisher)throw new InvalidOperationException("Choose a publisher first.");
+        StatusText.Text="Reading publisher metadata and immutable file hashes. No work content is sent.";
+        var models=await ModelCatalog.FetchAsync(publisher.Repository,_shutdownCts.Token);
+        CatalogModelList.ItemsSource=models;
+        CatalogDetails.Text=$"{models.Count} single-file GGUF artifacts from {publisher.Repository}. Review the publisher's model card and license before downloading.";
+        StatusText.Text="Publisher catalog loaded; no model weights were downloaded.";
+    });
+    private void UseCatalog_Click(object sender,RoutedEventArgs e)
+    {
+        if(CatalogModelList.SelectedItem is not CatalogModel model){MessageBox.Show("Choose a catalog file first.");return;}
+        ModelUrl.Text=model.DownloadUrl;ModelFilename.Text=model.LocalFileName;ModelSha.Text=model.Sha256;
+        CatalogDetails.Text=$"Publisher: {model.Repository}; commit {model.Revision}; license: {model.License ?? "review publisher card"}; bytes: {model.Bytes}. SHA-256: {model.Sha256}";
+        StatusText.Text="Catalog entry selected. Download remains an explicit action and verifies the publisher file hash.";
     }
     private void SaveRouting_Click(object sender,RoutedEventArgs e)
     {

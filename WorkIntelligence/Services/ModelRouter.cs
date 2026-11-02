@@ -42,7 +42,7 @@ public static class ModelRouter
         return WorkModelTask.General;
     }
     public static RoutingDecision Choose(RoutingPreferences preferences,IReadOnlyList<ModelRecord> models,string prompt,
-        ModelRecord? selected,bool manualOverride,ulong availableBytes,WorkModelTask? requestedTask=null)
+        ModelRecord? selected,bool manualOverride,ulong availableBytes,WorkModelTask? requestedTask=null,bool requiresVision=false)
     {
         Validate(preferences);
         var task=requestedTask ?? Classify(prompt);
@@ -54,8 +54,10 @@ public static class ModelRouter
                 var metadata=GgufMetadata.Read(model.Path);
                 var options=ModelSettingsStore.Load(model.Sha256);
                 var needed=checked(HardwareProbe.EstimateModelBytes(new FileInfo(model.Path).Length)+metadata.EstimateCacheBytes(options.ContextSize));
+                if(options.VisionProjectorPath is string projector)
+                {PathSafety.RejectReparsePoints(projector);needed=checked(needed+(ulong)Math.Ceiling(new FileInfo(projector).Length*1.10)+512UL*1024*1024);}
                 var withinUserBudget=options.MemoryLimitMiB is null || needed<=(ulong)options.MemoryLimitMiB.Value*1024*1024;
-                candidates.Add(new(model,needed,withinUserBudget));
+                candidates.Add(new(model,needed,withinUserBudget && (!requiresVision || options.VisionProjectorPath is not null)));
             }
             catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException or ArgumentException or OverflowException)
             {candidates.Add(new(model,ulong.MaxValue,false));}
