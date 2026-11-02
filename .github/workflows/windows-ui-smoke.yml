@@ -83,6 +83,30 @@ jobs:
             }
             if (-not $conversationCreated) { throw 'New Chat did not show its success status in the real UI.' }
             Write-Host 'Actual New Chat button executed and showed conversation-created status.'
+            $titleCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'ChatTitleInput')
+            $titleBox = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $titleCondition)
+            if (-not $titleBox) { throw 'Rename title field is not accessible in the UI.' }
+            $titleValue = [System.Windows.Automation.ValuePattern]$titleBox.GetCurrentPattern(
+              [System.Windows.Automation.ValuePattern]::Pattern)
+            $titleValue.SetValue('Renamed CI chat')
+            $renameCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Rename Chat')
+            $renameButton = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $renameCondition)
+            if (-not $renameButton) { throw 'Rename Chat button is missing.' }
+            $renamePattern = [System.Windows.Automation.InvokePattern]$renameButton.GetCurrentPattern(
+              [System.Windows.Automation.InvokePattern]::Pattern)
+            $renamePattern.Invoke()
+            $renamedCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Conversation renamed and saved.')
+            $renamed = $false
+            for ($m=0; $m -lt 30; $m++) {
+              Start-Sleep -Milliseconds 500
+              $result = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $renamedCondition)
+              if ($result) { $renamed = $true; break }
+            }
+            if (-not $renamed) { throw 'Rename Chat click did not persist the conversation title.' }
+            Write-Host 'Actual Rename Chat UI successfully updated the conversation title.'
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
@@ -107,7 +131,7 @@ jobs:
           if len(databases) != 1:
               raise RuntimeError(f"Expected one local SQLite database, found {len(databases)}")
           with sqlite3.connect(f"file:{databases[0].as_posix()}?mode=ro", uri=True) as connection:
-              chats = connection.execute("SELECT title FROM chats WHERE title LIKE 'Work Chat %'").fetchall()
+              chats = connection.execute("SELECT title FROM chats WHERE title = 'Renamed CI chat'").fetchall()
               if len(chats) != 1:
                   raise RuntimeError(f"New Chat UI did not persist exactly one conversation: {len(chats)}")
               result = connection.execute("PRAGMA integrity_check").fetchone()
