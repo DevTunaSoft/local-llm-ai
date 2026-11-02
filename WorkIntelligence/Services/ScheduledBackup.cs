@@ -82,13 +82,10 @@ public static class ScheduledBackup
                 throw new InvalidDataException("Scheduled backup completion timestamp is invalid.");
             last = parsed;
         }
-        if (!IsOverdue(last, DateTimeOffset.UtcNow)) return false;
+        if (!BackupRetention.IsOverdue(last, DateTimeOffset.UtcNow)) return false;
         await RunJobAsync(ct);
         return true;
     }
-
-    internal static bool IsOverdue(DateTimeOffset? lastSuccess, DateTimeOffset now)
-        => lastSuccess is null || now - lastSuccess.Value >= TimeSpan.FromHours(25);
 
     private static async Task RunTaskSchedulerAsync(IEnumerable<string> args, CancellationToken ct)
     {
