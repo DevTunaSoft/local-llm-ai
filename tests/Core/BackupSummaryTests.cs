@@ -1,21 +1,65 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using WorkIntelligence.Services;
 using Xunit;
 
 namespace WorkIntelligence.Tests;
 
-public sealed class BackupSummaryTests
+public sealed class BackupManifestTests
 {
-    [Fact]
-    public void VerificationUsesTheExactCreatedSnapshot()
+    private static string PrepareSnapshot(string root)
     {
-        var id = new string('a', 64);
-        Assert.Equal(id, BackupService.ReadSnapshotId("{\"message_type\":\"status\"}\n{\"message_type\":\"summary\",\"snapshot_id\":\"" + id + "\"}\n"));
+        Directory.CreateDirectory(root);
+        var database = Path.Combine(root, "knowledge.db");
+        File.WriteAllBytes(database, "SQLite format 3\0"u8.ToArray());
+        var fileHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(database)));
+        var manifest = new
+        {
+            Version = 1,
+            CreatedAt = DateTimeOffset.UtcNow.ToString("O"),
+            Files = new[] { new { Path = "knowledge.db", Length = new FileInfo(database).Length, Sha256 = fileHash } }
+        };
+        File.WriteAllText(Path.Combine(root, "manifest.json"), JsonSerializer.Serialize(manifest));
+        return database;
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("{\"message_type\":\"summary\"}")]
-    [InlineData("{\"message_type\":\"summary\",\"snapshot_id\":\"short\"}")]
-    public void NoSnapshotMustNotBePresentedAsAVerifiedBackup(string output)
-        => Assert.Throws<InvalidDataException>(() => BackupService.ReadSnapshotId(output));
+    [Fact]
+    public void ManifestVerifiesKnownPlaintextSnapshot()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "wi-manifest-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            PrepareSnapshot(root);
+            BackupService.VerifySnapshot(root, CancellationToken.None);
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ManifestRejectsModifiedBytesEvenIfFileLengthIsUnchanged()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "wi-manifest-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var db = PrepareSnapshot(root);
+            var bytes = File.ReadAllBytes(db);
+            bytes[0] ^= 1;
+            File.WriteAllBytes(db, bytes);
+            Assert.Throws<InvalidDataException>(() => BackupService.VerifySnapshot(root, CancellationToken.None));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ManifestRejectsUnlistedFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "wi-manifest-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            PrepareSnapshot(root);
+            File.WriteAllText(Path.Combine(root, "unexpected.txt"), "Synthetic unrelated content");
+            Assert.Throws<InvalidDataException>(() => BackupService.VerifySnapshot(root, CancellationToken.None));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
 }
