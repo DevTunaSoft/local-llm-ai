@@ -32,6 +32,29 @@ public sealed class LiveEmbeddingTests
         Assert.InRange(first.Sum(x => (double)x * x), 0.99, 1.01);
         Assert.True(first.Zip(second).Any(pair => Math.Abs(pair.First - pair.Second) > 0.000001f),
             "Different inputs unexpectedly received identical embedding vectors.");
+        // Index genuinely generated embeddings into the production SQLite vector
+        // store and verify that semantic retrieval survives reopening the store.
+        var workspace = 0L;
+        var docId = 0L;
+        using (var store = new KnowledgeStore())
+        {
+            workspace = store.AddWorkspace("Live vector integration");
+            var file = Path.Combine(LocalPaths.Root, "real-embedding-fixture.txt");
+            File.WriteAllText(file, "Synthetic vehicle telemetry uses geofence entry and departure records.");
+            var imported = store.Import(file);
+            docId = imported.DocumentId;
+            store.AssignDocument(docId, workspace);
+            Assert.True(await store.IndexSemanticAsync(worker, timeout.Token) >= 1);
+        }
+        using (var reopened = new KnowledgeStore())
+        {
+            var hits = await reopened.SearchHybridAsync("vehicle geofence telemetry", worker,
+                cancellationToken: timeout.Token, workspaceId: workspace);
+            Assert.Contains(hits, hit => hit.DocumentId == docId);
+            var isolated = reopened.AddWorkspace("Other isolated workstream");
+            Assert.Empty(await reopened.SearchHybridAsync("vehicle geofence telemetry", worker,
+                cancellationToken: timeout.Token, workspaceId: isolated));
+        }
         await worker.StopAsync();
         Assert.False(worker.IsRunning);
         Assert.Null(worker.ModelKey);
