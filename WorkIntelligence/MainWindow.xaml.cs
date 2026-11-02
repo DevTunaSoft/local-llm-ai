@@ -609,7 +609,7 @@ public partial class MainWindow : Window
     {
         var selected=ModelList.SelectedItem as ModelRecord ?? throw new InvalidOperationException("Select a model first.");
         StatusText.Text="Benchmarking selected model; this may take time on CPU...";
-        await _runtime.StartAsync(selected.Path,selected.Sha256,_shutdownCts.Token);
+        await _runtime.StartAsync(selected.Path,selected.Sha256,ModelSettingsStore.Load(selected.Sha256),_shutdownCts.Token);
         var timer=Stopwatch.StartNew();var characters=0;
         using var timeout=CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
         timeout.CancelAfter(TimeSpan.FromMinutes(12));
@@ -632,7 +632,7 @@ public partial class MainWindow : Window
         foreach(var model in new[]{first,second})
         {
             StatusText.Text="Comparing model: "+model.DisplayName;
-            await _runtime.StartAsync(model.Path,model.Sha256,_shutdownCts.Token);
+            await _runtime.StartAsync(model.Path,model.Sha256,ModelSettingsStore.Load(model.Sha256),_shutdownCts.Token);
             using var timeout=CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
             timeout.CancelAfter(TimeSpan.FromMinutes(30));
             comparisons.AppendLine("\n--- "+model.DisplayName+" ---");
