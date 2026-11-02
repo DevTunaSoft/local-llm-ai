@@ -532,6 +532,22 @@ public sealed partial class KnowledgeStore : IDisposable
         cmd.Parameters.AddWithValue("$d", DateTimeOffset.UtcNow.ToString("O"));
         return (long)(cmd.ExecuteScalar() ?? 0L);
     }
+    public void RenameChat(long chatId, string title, long workspaceId)
+    {
+        title = title?.Trim() ?? throw new ArgumentNullException(nameof(title));
+        if (title.Length is < 1 or > 120 || title.Any(char.IsControl))
+            throw new ArgumentException("Chat title must be 1–120 printable characters.", nameof(title));
+        using var con = Connect();
+        RequireWorkspace(con, workspaceId);
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = "UPDATE chats SET title=$t WHERE id=$id AND workspace_id=$w";
+        cmd.Parameters.AddWithValue("$t", title);
+        cmd.Parameters.AddWithValue("$id", chatId);
+        cmd.Parameters.AddWithValue("$w", workspaceId);
+        if (cmd.ExecuteNonQuery() != 1)
+            throw new InvalidDataException("Conversation not found in the selected workspace.");
+    }
+
     public List<ChatRecord> Chats(long? workspaceId = null)
     {
         using var con = Connect(); using var cmd = con.CreateCommand();
