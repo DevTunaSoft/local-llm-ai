@@ -137,6 +137,25 @@ public partial class MainWindow : Window
             });
         };
         _scanTimer.Start();
+        // Existing explicitly configured scheduled backups can catch up when
+        // the UI is opened after sleep/logout. Do not block WPF startup.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                if (await ScheduledBackup.CatchUpIfOverdueAsync(_shutdownCts.Token) && !_closing)
+                    await Dispatcher.InvokeAsync(() => StatusText.Text =
+                        "Missed scheduled plaintext backup caught up and verified.");
+            }
+            catch (OperationCanceledException) when (_shutdownCts.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
+                AuditLog.Error("BackupCatchUp", ex);
+                if (!_closing)
+                    await Dispatcher.InvokeAsync(() => StatusText.Text =
+                        "Scheduled backup catch-up failed. Review local diagnostics.");
+            }
+        });
     });
     private async void Restore_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
