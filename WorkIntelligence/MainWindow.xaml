@@ -29,11 +29,24 @@
             <ListBox x:Name="ChatList" DisplayMemberPath="Title" SelectionChanged="ChatList_SelectionChanged"/>
           </DockPanel>
           <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,6">
-              <TextBlock Text="Model:" VerticalAlignment="Center"/>
-              <ComboBox x:Name="ChatModelBox" Width="300" DisplayMemberPath="DisplayName" Margin="7,0"/>
-              <Button Content="Load Model" Click="LoadModel_Click"/>
-              <Button Content="Stop Model" Click="StopModel_Click"/>
+            <StackPanel Orientation="Vertical" Grid.Row="0" Margin="0,0,0,6">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Model:" VerticalAlignment="Center"/>
+                <ComboBox x:Name="ChatModelBox" Width="300" DisplayMemberPath="DisplayName" Margin="7,0" SelectionChanged="ChatModelBox_SelectionChanged"/>
+                <Button Content="Load Model" Click="LoadModel_Click"/>
+                <Button Content="Stop Model" Click="StopModel_Click"/>
+              </StackPanel>
+              <WrapPanel Margin="0,5,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Context:" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelContextInput" Width="65" Text="4096" Margin="4,0,10,0"/>
+                <TextBlock Text="CPU threads:" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelThreadsInput" Width="45" Text="8" Margin="4,0,10,0"/>
+                <TextBlock Text="Max tokens:" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelMaxTokensInput" Width="65" Text="1024" Margin="4,0,10,0"/>
+                <TextBlock Text="Temperature:" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelTemperatureInput" Width="45" Text="0.7" Margin="4,0,10,0"/>
+                <Button Content="Save Model Settings" Click="SaveModelSettings_Click"/>
+              </WrapPanel>
             </StackPanel>
             <TextBox x:Name="ChatHistory" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14" Background="#FAFCFF"/>
             <TextBox x:Name="ChatInput" Grid.Row="2" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14"/>
