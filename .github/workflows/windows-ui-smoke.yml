@@ -1,11 +1,5 @@
 name: Windows WPF UI launch smoke test
 on:
-  push:
-    paths:
-      - '.github/workflows/windows-ui-smoke.yml'
-      - 'WorkIntelligence/App.xaml.cs'
-      - 'WorkIntelligence/MainWindow.xaml'
-      - 'WorkIntelligence/MainWindow.xaml.cs'
   workflow_dispatch:
   workflow_call:
 permissions:
