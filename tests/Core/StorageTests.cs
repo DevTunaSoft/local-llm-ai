@@ -113,6 +113,28 @@ public sealed class StorageTests : IDisposable
     }
 
     [Fact]
+    public void ApprovedLearningPersistsAcrossStoreReopenAndCorrectionsRemainScoped()
+    {
+        var workspace = _store.AddWorkspace("Persistent learning fixture");
+        var original = _store.AddMemory("Synthetic dispatch rotation is Monday", "approved fixture", workspace);
+        using (var reopened = new KnowledgeStore())
+        {
+            Assert.Contains(reopened.SearchMemories("dispatch rotation Monday", workspaceId: workspace), x => x.Id == original);
+            var correction = reopened.ProposeMemory("Synthetic dispatch rotation is Tuesday", "approved correction", original, workspace);
+            reopened.ResolveMemoryProposal(correction, true);
+        }
+        using (var reopenedAgain = new KnowledgeStore())
+        {
+            var active = reopenedAgain.SearchMemories("dispatch rotation", workspaceId: workspace);
+            Assert.Single(active);
+            Assert.Contains("Tuesday", active[0].Text);
+            Assert.DoesNotContain(active, x => x.Id == original);
+            Assert.Empty(reopenedAgain.SearchMemories("dispatch rotation", workspaceId: 1));
+            Assert.Contains(reopenedAgain.MemoryHistory(workspaceId: workspace), x => x.Id == original && !x.Active);
+        }
+    }
+
+    [Fact]
     public void MemoryProposalsRequireApprovalAndCannotBeApprovedTwice()
     {
         var id = _store.ProposeMemory("Synthetic pending procedure", "fixture");
