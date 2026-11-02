@@ -8,8 +8,20 @@ using System.Text.Json;
 
 namespace WorkIntelligence.Services;
 
+public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8, int MaxTokens = 1024, double Temperature = 0.7)
+{
+    public void Validate()
+    {
+        if (ContextSize < 512 || ContextSize > 131072) throw new ArgumentOutOfRangeException(nameof(ContextSize));
+        if (Threads < 1 || Threads > 256) throw new ArgumentOutOfRangeException(nameof(Threads));
+        if (MaxTokens < 32 || MaxTokens > 32768) throw new ArgumentOutOfRangeException(nameof(MaxTokens));
+        if (!double.IsFinite(Temperature) || Temperature < 0 || Temperature > 2) throw new ArgumentOutOfRangeException(nameof(Temperature));
+    }
+}
+
 public sealed class ModelRuntime : IAsyncDisposable
 {
+    private ModelRuntimeOptions _options = new();
     private Process? _process;
     private HttpClient? _client;
     private string? _apiKey;
@@ -17,12 +29,18 @@ public sealed class ModelRuntime : IAsyncDisposable
     public string? ActiveModel { get; private set; }
     public bool IsRunning => _process is { HasExited: false };
 
-    public async Task StartAsync(string ggufPath, string expectedSha256, CancellationToken cancellationToken)
+    public Task StartAsync(string ggufPath, string expectedSha256, CancellationToken cancellationToken)
+        => StartAsync(ggufPath, expectedSha256, new ModelRuntimeOptions(), cancellationToken);
+
+    public async Task StartAsync(string ggufPath, string expectedSha256, ModelRuntimeOptions options, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
         await _lifecycle.WaitAsync(cancellationToken);
         try
         {
         await StopCoreAsync();
+        _options = options;
         if (!File.Exists(ggufPath)) throw new FileNotFoundException("Model file missing.");
         HardwareProbe.ValidateModelMemory(ggufPath);
         await using (var verifyStream = File.OpenRead(ggufPath))
@@ -41,7 +59,7 @@ public sealed class ModelRuntime : IAsyncDisposable
             WorkingDirectory = Path.GetDirectoryName(runtime)!
         };
         foreach (var arg in new[] { "--model", ggufPath, "--host", "127.0.0.1", "--port", port.ToString(),
-            "--ctx-size", "4096", "--threads", "8", "--n-gpu-layers", "0", "--no-webui", "--alias", "work-intelligence-local", "--cors-origins", "localhost" }) start.ArgumentList.Add(arg);
+            "--ctx-size", options.ContextSize.ToString(System.Globalization.CultureInfo.InvariantCulture), "--threads", options.Threads.ToString(System.Globalization.CultureInfo.InvariantCulture), "--n-gpu-layers", "0", "--no-webui", "--alias", "work-intelligence-local", "--cors-origins", "localhost" }) start.ArgumentList.Add(arg);
         start.Environment["LLAMA_API_KEY"] = _apiKey;
         _process = new Process { StartInfo = start, EnableRaisingEvents = true };
         if (!_process.Start()) throw new InvalidOperationException("Failed to start local AI engine.");
@@ -90,7 +108,7 @@ public sealed class ModelRuntime : IAsyncDisposable
     {
         if (_client is null || !IsRunning) throw new InvalidOperationException("Select and load a local model first.");
         var messageList = messages.Select(x => new { role = x.role, content = x.content });
-        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens, 32, 2048) });
+        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? _options.MaxTokens : maxTokens, 32, _options.MaxTokens), temperature = _options.Temperature });
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
         using var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
