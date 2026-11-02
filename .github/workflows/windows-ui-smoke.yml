@@ -27,7 +27,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $dll)) { throw "Compiled WPF DLL missing: $dll" }
           $stdout = Join-Path $env:RUNNER_TEMP 'wi-ui-stdout.txt'
           $stderr = Join-Path $env:RUNNER_TEMP 'wi-ui-stderr.txt'
-          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll, '--data-root', $env:WORKINTELLIGENCE_DATA_ROOT) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           try {
             $seenWindow = $false
             for ($i=0; $i -lt 60; $i++) {
