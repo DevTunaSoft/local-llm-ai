@@ -98,6 +98,21 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task PortableSnapshotRestoresPerModelRuntimeSettings()
+    {
+        const string hash = "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD";
+        await SeedBackup();
+        using (var store = new KnowledgeStore())
+        {
+            ModelSettingsStore.Save(hash, new ModelRuntimeOptions(8192, 6, 768, 0.2));
+            await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+        }
+        Directory.Delete(LocalPaths.Root, true);
+        await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+        Assert.Equal(new ModelRuntimeOptions(8192, 6, 768, 0.2), ModelSettingsStore.Load(hash));
+    }
+
+    [Fact]
     public async Task RestoreRefusesToOverwriteLiveData()
     {
         await SeedBackup();
