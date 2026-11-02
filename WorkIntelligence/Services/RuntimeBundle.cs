@@ -11,6 +11,32 @@ public static class RuntimeBundle
         if (string.IsNullOrWhiteSpace(exeName) || exeName is "." or ".." ||
             exeName.IndexOfAny(['/', '\\', ':']) >= 0)
             throw new ArgumentException("Choose a single bundled component filename.", nameof(exeName));
+        // Source-development mode: explicitly opt in to a locally installed, hash-pinned
+        // native runtime. Release builds continue to require the embedded verified bundle.
+        var developmentDirectory = Environment.GetEnvironmentVariable("WI_DEV_RUNTIME_DIR");
+        if (!string.IsNullOrWhiteSpace(developmentDirectory))
+        {
+            var directory = Path.GetFullPath(developmentDirectory);
+            PathSafety.RejectReparsePoints(directory);
+            var executable = Path.Combine(directory, exeName);
+            PathSafety.RejectReparsePoints(executable);
+            var manifest = Path.Combine(directory, "SHA256SUMS.txt");
+            PathSafety.RejectReparsePoints(manifest);
+            if (!File.Exists(manifest) || !File.Exists(executable))
+                throw new FileNotFoundException("Development runtime or SHA256SUMS.txt is missing.");
+            var matches = File.ReadLines(manifest)
+                .Select(line => line.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .Where(parts => parts.Length == 2 &&
+                    string.Equals(parts[1].TrimStart('*'), exeName, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (matches.Length != 1 || matches[0][0].Length != 64 ||
+                !matches[0][0].All(Uri.IsHexDigit))
+                throw new InvalidDataException("Development runtime requires exactly one SHA-256 entry per component.");
+            using var input = File.OpenRead(executable);
+            if (!Convert.ToHexString(SHA256.HashData(input)).Equals(matches[0][0], StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Development runtime component SHA-256 mismatch.");
+            return executable;
+        }
         var assembly = Assembly.GetExecutingAssembly();
         var names = assembly.GetManifestResourceNames();
         if (!names.Contains("WorkIntelligence.runtime.zip") || !names.Contains("WorkIntelligence.runtime.sha256"))
