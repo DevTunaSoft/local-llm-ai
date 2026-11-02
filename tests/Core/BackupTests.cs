@@ -36,7 +36,7 @@ public sealed class BackupTests : IDisposable
         var databaseHeader = new byte[16];
         using (var database = File.OpenRead(Path.Combine(snapshot, "knowledge.db")))
             Assert.Equal(databaseHeader.Length, database.Read(databaseHeader, 0, databaseHeader.Length));
-        Assert.Equal("SQLite format 3\0"u8.ToArray(), databaseHeader);
+        Assert.Equal(new byte[] { 83, 81, 76, 105, 116, 101, 32, 102, 111, 114, 109, 97, 116, 32, 51, 0 }, databaseHeader);
         Directory.Delete(LocalPaths.Root, true);
         await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
         using var store = new KnowledgeStore();
