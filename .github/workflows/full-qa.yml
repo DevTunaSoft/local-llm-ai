@@ -7,6 +7,8 @@ on:
       - 'WorkIntelligence/**'
       - 'tests/**'
       - 'scripts/**'
+      - 'docs/handoff/requirements.json'
+      - 'docs/handoff/requirement-evidence.json'
       - '.github/workflows/windows-build.yml'
       - '.github/workflows/windows-ui-smoke.yml'
       - '.github/workflows/live-inference-smoke.yml'
@@ -14,6 +16,13 @@ permissions:
   contents: read
   issues: write
 jobs:
+  requirement-traceability:
+    name: Validate all 106 requirements and acceptance evidence records
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Verify requirement IDs, coverage, and evidence integrity
+        run: python3 scripts/verify-requirements.py
   source-and-storage:
     name: Compile, source tests, storage, backup and Linux regression
     uses: ./.github/workflows/windows-build.yml
