@@ -56,6 +56,29 @@ public sealed class LiveInferenceTests
             new[] { (role: "user", content: "Reply with the word AGAIN.") }, timeout.Token, maxTokens: 48))
             repeated.Add(token);
         Assert.False(string.IsNullOrWhiteSpace(string.Concat(repeated)), "Restarted model returned an empty completion.");
+        // Persist the actual model output and an explicitly approved learning item,
+        // reopen the production SQLite store, and verify workspace-scoped recall.
+        var actualCompletion = string.Concat(repeated);
+        long workspace;
+        long chat;
+        using (var store = new KnowledgeStore())
+        {
+            workspace = store.AddWorkspace("Real inference integration workspace");
+            chat = store.CreateChat("GGUF live inference", workspace);
+            store.AddMessage(chat, "user", "Reply with the word AGAIN.", workspace);
+            store.AddMessage(chat, "assistant", actualCompletion, workspace);
+            var proposal = store.ProposeMemory("Synthetic inference fixture approved", "live test approval", workspaceId: workspace);
+            Assert.Empty(store.Memories(workspace));
+            store.ResolveMemoryProposal(proposal, true);
+        }
+        using (var reopened = new KnowledgeStore())
+        {
+            var messages = reopened.Messages(chat, workspace);
+            Assert.Equal(2, messages.Count);
+            Assert.Equal(actualCompletion, messages[1].Content);
+            Assert.Contains(reopened.Memories(workspace), m => m.Text == "Synthetic inference fixture approved");
+            Assert.Empty(reopened.Memories(1));
+        }
         await runtime.StopAsync();
         Assert.False(runtime.IsRunning);
         Assert.Null(runtime.ActiveModel);
