@@ -184,13 +184,61 @@ public partial class MainWindow : Window
         File.WriteAllText(save.FileName,System.Text.Json.JsonSerializer.Serialize(_store.Memories(SelectedWorkspaceId),new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
         StatusText.Text="Memory records exported to the selected location (plaintext).";
     }
+    private ModelRuntimeOptions ReadModelSettings()
+    {
+        if (!int.TryParse(ModelContextInput.Text, out var context) ||
+            !int.TryParse(ModelThreadsInput.Text, out var threads) ||
+            !int.TryParse(ModelMaxTokensInput.Text, out var tokens) ||
+            !double.TryParse(ModelTemperatureInput.Text, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var temperature))
+            throw new ArgumentException("Model settings require integer context/threads/tokens and an invariant decimal temperature.");
+        var options = new ModelRuntimeOptions(context, threads, tokens, temperature);
+        options.Validate();
+        return options;
+    }
+    private void ChatModelBox_SelectionChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if (ChatModelBox.SelectedItem is not ModelRecord model) return;
+        try
+        {
+            var options = ModelSettingsStore.Load(model.Sha256);
+            ModelContextInput.Text = options.ContextSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelThreadsInput.Text = options.Threads.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelMaxTokensInput.Text = options.MaxTokens.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelTemperatureInput.Text = options.Temperature.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex)
+        {
+            AuditLog.Error("ModelSettings", ex);
+            StatusText.Text = "Could not read saved model settings: " + ex.Message;
+        }
+    }
+    private void SaveModelSettings_Click(object sender,RoutedEventArgs e)
+    {
+        if (ChatModelBox.SelectedItem is not ModelRecord model)
+        {
+            StatusText.Text = "Choose an imported model before saving settings.";
+            return;
+        }
+        try
+        {
+            ModelSettingsStore.Save(model.Sha256, ReadModelSettings());
+            StatusText.Text = "Validated settings saved for this GGUF model. Reload the model to apply changes.";
+        }
+        catch (Exception ex)
+        {
+            AuditLog.Error("ModelSettings", ex);
+            StatusText.Text = "Invalid settings: " + ex.Message;
+        }
+    }
+
     private async void LoadModel_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {
         var model=(ChatModelBox.SelectedItem ?? ModelList.SelectedItem) as ModelRecord;
         if(model is null)throw new ArgumentException("Select an imported model first.");
         StatusText.Text="Loading model (may take several minutes)...";
         _modelLoadCts=CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
-        try { await _runtime.StartAsync(model.Path,model.Sha256,_modelLoadCts.Token); }
+        try { var options = ReadModelSettings(); ModelSettingsStore.Save(model.Sha256, options); await _runtime.StartAsync(model.Path,model.Sha256,options,_modelLoadCts.Token); }
         finally { _modelLoadCts.Dispose(); _modelLoadCts=null; }
         StatusText.Text="Model ready: " + model.DisplayName;
     });
