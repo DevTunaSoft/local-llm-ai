@@ -217,6 +217,11 @@ jobs:
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
             Write-Host 'Real WPF MainWindow launched and remained running for three seconds.'
           }
+          catch {
+            $safeMessage = $_.Exception.Message -replace '[\r\n]+', ' '
+            Write-Host "::error::WPF acceptance failure: $safeMessage"
+            throw
+          }
           finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
             if (Test-Path $stderr) {

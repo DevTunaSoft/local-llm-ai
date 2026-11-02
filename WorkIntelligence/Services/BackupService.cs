@@ -67,40 +67,25 @@ public sealed class BackupService
         // cannot leave a partial live database or attachment behind.
         var staging = Path.Combine(LocalPaths.Root, ".restore-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
-        var created = new List<string>();
         try
         {
             foreach (var file in EnumerateSnapshotFiles(snapshot))
             {
                 ct.ThrowIfCancellationRequested();
-                var target = Path.Combine(staging, Path.GetRelativePath(snapshot, file));
+                var target=Path.Combine(staging,Path.GetRelativePath(snapshot,file));
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                File.Copy(file, target, false);
+                File.Copy(file,target,false);
             }
-            VerifySnapshot(staging, ct);
-            // Promote the database last: the app must never open a restored DB
-            // whose referenced attachments have not yet been installed.
-            foreach (var file in EnumerateSnapshotFiles(staging)
-                .Where(x => Path.GetFileName(x) != "manifest.json")
-                .OrderBy(x => Path.GetFileName(x) == "knowledge.db" ? 1 : 0))
-            {
-                ct.ThrowIfCancellationRequested();
-                var destination = Path.Combine(LocalPaths.Data, Path.GetRelativePath(staging, file));
-                PathSafety.RejectReparsePoints(destination);
-                File.Move(file, destination, false);
-                created.Add(destination);
-            }
-            AuditLog.Info("Restore", "Verified plaintext snapshot restored into an empty data directory.");
+            VerifySnapshot(staging,ct);
+            RestoreTransaction.Promote(staging,ct);
+            AuditLog.Info("Restore","Verified plaintext snapshot promoted as one recoverable data directory.");
         }
-        catch
+        finally
         {
-            foreach (var createdFile in created.AsEnumerable().Reverse())
-            {
-                try { File.Delete(createdFile); } catch (Exception e) { AuditLog.Error("RestoreRollback", e); }
-            }
-            throw;
+            // A published transaction retains its verified staging payload for
+            // recovery after I/O failure or process termination.
+            if(Directory.Exists(staging) && !File.Exists(RestoreTransaction.JournalPath))Directory.Delete(staging,true);
         }
-        finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
     }
 
     // If the newest backup is incomplete/corrupt, recover from the newest valid

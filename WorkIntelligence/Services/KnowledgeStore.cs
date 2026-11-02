@@ -695,6 +695,7 @@ public sealed partial class KnowledgeStore : IDisposable
     public ModelRecord ImportModel(string path)
     {
         var full=Path.GetFullPath(path);
+        _=GgufMetadata.Read(full);
         using var stream=File.OpenRead(full);
         if (stream.Length < 1024) throw new InvalidDataException("Model file is unexpectedly small.");
         Span<byte> header=stackalloc byte[4]; stream.ReadExactly(header);

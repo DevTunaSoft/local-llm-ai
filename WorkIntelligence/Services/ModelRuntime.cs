@@ -9,10 +9,11 @@ using System.Text.Json;
 namespace WorkIntelligence.Services;
 
 public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8, int MaxTokens = 1024, double Temperature = 0.7,
-    int StartupTimeoutSeconds = 900, int ResponseTimeoutSeconds = 600)
+    int StartupTimeoutSeconds = 900, int ResponseTimeoutSeconds = 600, int? MemoryLimitMiB = null)
 {
     public void Validate()
     {
+        if (MemoryLimitMiB is <256 or >1048576) throw new ArgumentOutOfRangeException(nameof(MemoryLimitMiB));
         if (StartupTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(StartupTimeoutSeconds));
         if (ResponseTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(ResponseTimeoutSeconds));
         if (ContextSize < 512 || ContextSize > 131072) throw new ArgumentOutOfRangeException(nameof(ContextSize));
@@ -31,6 +32,11 @@ public sealed class ModelRuntime : IAsyncDisposable
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
     public string? ActiveModel { get; private set; }
     public bool IsRunning => _process is { HasExited: false };
+    public ulong ResidentBytes
+    {
+        get{try{return _process is {HasExited:false} ? (ulong)Math.Max(0,_process.WorkingSet64) : 0;}
+            catch(Exception ex) when(ex is InvalidOperationException or System.ComponentModel.Win32Exception){return 0;}}
+    }
 
     public Task StartAsync(string ggufPath, string expectedSha256, CancellationToken cancellationToken)
         => StartAsync(ggufPath, expectedSha256, new ModelRuntimeOptions(), cancellationToken);
@@ -48,7 +54,7 @@ public sealed class ModelRuntime : IAsyncDisposable
         if (!File.Exists(ggufPath)) throw new FileNotFoundException("Model file missing.");
         if (string.IsNullOrWhiteSpace(expectedSha256) || expectedSha256.Length != 64 || !expectedSha256.All(Uri.IsHexDigit))
             throw new ArgumentException("Expected SHA-256 must be 64 hexadecimal characters.", nameof(expectedSha256));
-        HardwareProbe.ValidateModelMemory(ggufPath);
+        HardwareProbe.ValidateModelMemory(ggufPath,options.ContextSize,options.MemoryLimitMiB);
         await using (var verifyStream = File.OpenRead(ggufPath))
         {
             var header = new byte[4];

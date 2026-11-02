@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Core/**/*.cs" />
+    <Compile Remove="RestoreCrashHost/**/*.cs" />
     <ProjectReference Include="..\WorkIntelligence\WorkIntelligence.csproj" />
   </ItemGroup>
 </Project>

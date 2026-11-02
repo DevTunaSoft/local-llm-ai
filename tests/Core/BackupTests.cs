@@ -298,6 +298,38 @@ public sealed class BackupTests : IDisposable
         Assert.False(File.Exists(LocalPaths.Database));
     }
 
+    [Theory]
+    [InlineData("journal-created")]
+    [InlineData("original-renamed")]
+    [InlineData("data-renamed")]
+    public async Task AbruptProcessExitDuringPromotionRecoversCompleteSnapshot(string phase)
+    {
+        await SeedBackup();
+        Directory.Delete(LocalPaths.Root,true);
+        var directory=new DirectoryInfo(AppContext.BaseDirectory);
+        while(directory is not null && !File.Exists(Path.Combine(directory.FullName,"WorkIntelligence.slnx")))directory=directory.Parent;
+        Assert.NotNull(directory);
+        var host=Path.Combine(directory.FullName,"tests","RestoreCrashHost","bin","Release","net10.0","RestoreCrashHost.dll");
+        Assert.True(File.Exists(host),"Source-only restore termination helper was not built.");
+        var dotnetRoot=Environment.GetEnvironmentVariable("DOTNET_ROOT");
+        var dotnet=dotnetRoot is null?"dotnet":Path.Combine(dotnetRoot,OperatingSystem.IsWindows()?"dotnet.exe":"dotnet");
+        var info=new System.Diagnostics.ProcessStartInfo(dotnet){UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true};
+        foreach(var arg in new[]{host,_repository,LocalPaths.Root,phase})info.ArgumentList.Add(arg);
+        using var process=System.Diagnostics.Process.Start(info)!;
+        using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var output=process.StandardOutput.ReadToEndAsync(timeout.Token);var errors=process.StandardError.ReadToEndAsync(timeout.Token);
+        await process.WaitForExitAsync(timeout.Token);
+        _=await output;var error=await errors;
+        Assert.True(process.ExitCode==91,"Helper did not reach the injected process-exit point: "+error);
+        Assert.True(File.Exists(RestoreTransaction.JournalPath));
+        using var recovered=new KnowledgeStore(); // normal startup replays the durable transaction
+        Assert.Single(recovered.Search("zebra"));
+        Assert.Single(recovered.Memories());
+        Assert.Equal("Synthetic question",Assert.Single(recovered.Messages(Assert.Single(recovered.Chats()).Id)).Content);
+        Assert.False(File.Exists(RestoreTransaction.JournalPath));
+        Assert.Empty(Directory.GetDirectories(LocalPaths.Root,".restore-*"));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_repository)) Directory.Delete(_repository, true);

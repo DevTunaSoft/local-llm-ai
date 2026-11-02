@@ -35,7 +35,7 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Model:" VerticalAlignment="Center"/>
                 <ComboBox x:Name="ChatModelBox" Width="300" DisplayMemberPath="DisplayName" Margin="7,0" SelectionChanged="ChatModelBox_SelectionChanged"/>
-                <Button Content="Load Model" Click="LoadModel_Click"/>
+                <Button Content="Load Model" Click="LoadModel_Click"/><CheckBox x:Name="ManualModelOverride" Content="Use selected model (manual override)" VerticalAlignment="Center" Margin="8,0"/>
                 <Button Content="Stop Model" Click="StopModel_Click"/>
               </StackPanel>
               <WrapPanel Margin="0,5,0,0" VerticalAlignment="Center">
@@ -51,6 +51,7 @@
                 <TextBox x:Name="ModelStartupTimeoutInput" Width="55" Text="900" Margin="4,0,10,0"/>
                 <TextBlock Text="Response timeout (s):" VerticalAlignment="Center"/>
                 <TextBox x:Name="ModelResponseTimeoutInput" Width="55" Text="600" Margin="4,0,10,0"/>
+                <TextBlock Text="Startup budget (MiB, optional):" VerticalAlignment="Center"/><TextBox x:Name="ModelMemoryInput" Width="65" Margin="4,0,10,0"/>
                 <Button Content="Save Model Settings" Click="SaveModelSettings_Click"/>
               </WrapPanel>
             </StackPanel>
@@ -85,7 +86,7 @@
           <TextBox Grid.Row="3" x:Name="ModelUrl" ToolTip="HTTPS URL under huggingface.co"/>
           <TextBox Grid.Row="4" x:Name="ModelFilename" ToolTip="Destination filename ending in .gguf"/>
           <TextBox Grid.Row="5" x:Name="ModelSha" ToolTip="Expected SHA-256 from a trusted source"/>
-          <StackPanel Grid.Row="6" Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/></StackPanel>
+          <StackPanel Grid.Row="6" Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/><GroupBox Header="Optional local model routing" Margin="0,15,0,0"><StackPanel Margin="8"><CheckBox x:Name="AutoRoutingEnabled" Content="Choose a model by task and available memory"/><WrapPanel Margin="0,8"><TextBlock Text="General:"/><ComboBox x:Name="RouteGeneralBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Analysis:"/><ComboBox x:Name="RouteAnalysisBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Code:"/><ComboBox x:Name="RouteCodeBox" Width="180" DisplayMemberPath="DisplayName"/></WrapPanel><Button Content="Save Routing Preferences" Click="SaveRouting_Click" HorizontalAlignment="Left"/><TextBlock Text="Keyword rules select Code, Analysis or General. Missing/oversized preferences fall back to a fitting model. The chat override uses your selected model. All inference remains local." TextWrapping="Wrap"/></StackPanel></GroupBox></StackPanel>
         </Grid>
       </TabItem>
       <TabItem Header="Workspaces &amp; Projects">

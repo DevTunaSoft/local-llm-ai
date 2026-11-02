@@ -8,6 +8,9 @@ jobs:
   windows-native-ocr:
     runs-on: windows-2025
     timeout-minutes: 55
+    concurrency:
+      group: native-ocr-${{ github.repository }}-77da1ac
+      cancel-in-progress: false
     env:
       VCPKG_DISABLE_METRICS: '1'
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/../wi-native-cache

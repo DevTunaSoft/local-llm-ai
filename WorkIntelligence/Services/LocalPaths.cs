@@ -29,6 +29,7 @@ public static class LocalPaths
             Environment.GetEnvironmentVariable("OneDriveCommercial"),
             Environment.GetEnvironmentVariable("OneDriveConsumer")
         });
+        RestoreTransaction.RecoverIfPending();
         LegacyEncryptedDataGuard.AssertNoLegacyData();
         foreach (var path in new[] { Root, Data, Models, Blobs, Runtime, Logs })
         {

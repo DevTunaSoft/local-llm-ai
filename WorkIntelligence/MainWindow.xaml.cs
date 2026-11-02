@@ -119,6 +119,12 @@ public partial class MainWindow : Window
         var modelList = _store.Models();
         ModelList.ItemsSource = modelList;
         ChatModelBox.ItemsSource = modelList;
+        var routing=ModelRouter.Load();
+        AutoRoutingEnabled.IsChecked=routing.Enabled;
+        RouteGeneralBox.ItemsSource=modelList;RouteAnalysisBox.ItemsSource=modelList;RouteCodeBox.ItemsSource=modelList;
+        RouteGeneralBox.SelectedItem=modelList.FirstOrDefault(x=>x.Sha256.Equals(routing.GeneralModelSha,StringComparison.OrdinalIgnoreCase));
+        RouteAnalysisBox.SelectedItem=modelList.FirstOrDefault(x=>x.Sha256.Equals(routing.AnalysisModelSha,StringComparison.OrdinalIgnoreCase));
+        RouteCodeBox.SelectedItem=modelList.FirstOrDefault(x=>x.Sha256.Equals(routing.CodeModelSha,StringComparison.OrdinalIgnoreCase));
         if (selectedModelId is long id)
         {
             ChatModelBox.SelectedItem = modelList.FirstOrDefault(m => m.Id == id);
@@ -273,7 +279,13 @@ public partial class MainWindow : Window
             !double.TryParse(ModelTemperatureInput.Text, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var temperature))
             throw new ArgumentException("Model settings require integer context/threads/tokens and an invariant decimal temperature.");
-        var options = new ModelRuntimeOptions(context, threads, tokens, temperature, startupTimeout, responseTimeout);
+        int? memory=null;
+        if(!string.IsNullOrWhiteSpace(ModelMemoryInput.Text))
+        {
+            if(!int.TryParse(ModelMemoryInput.Text,out var parsedMemory))throw new ArgumentException("Memory budget must be an integer MiB value or blank.");
+            memory=parsedMemory;
+        }
+        var options = new ModelRuntimeOptions(context, threads, tokens, temperature, startupTimeout, responseTimeout,memory);
         options.Validate();
         return options;
     }
@@ -289,6 +301,7 @@ public partial class MainWindow : Window
             ModelTemperatureInput.Text = options.Temperature.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelStartupTimeoutInput.Text = options.StartupTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ModelResponseTimeoutInput.Text = options.ResponseTimeoutSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ModelMemoryInput.Text=options.MemoryLimitMiB?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
         }
         catch (Exception ex)
         {
@@ -334,9 +347,11 @@ public partial class MainWindow : Window
     private async void Send_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
     {
         if(_store is null)throw new InvalidOperationException("Workspace is not opened.");
-        if(!_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
         var input=ChatInput.Text.Trim();
         if(input.Length==0)return;
+        var routing=ModelRouter.Load();
+        var routingExplanation="";
+        if(!routing.Enabled && !_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
         if(input.StartsWith("correction:",StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("To correct an existing memory, select it in Approved Memories and use Propose Correction. A chat correction is not automatically an approved policy change.");
         if(_chatId==0)_chatId=_store.CreateChat(input[..Math.Min(55,input.Length)], SelectedWorkspaceId);
@@ -353,6 +368,23 @@ public partial class MainWindow : Window
         WorkspaceList.IsEnabled = false;
         try
         {
+        if(routing.Enabled)
+        {
+            var memory=HardwareProbe.GetPhysicalMemory();
+            var reclaimable=Math.Min(memory.total,checked(memory.available+_runtime.ResidentBytes));
+            var selectedModel=ChatModelBox.SelectedItem as ModelRecord;
+            var manualOverride=ManualModelOverride.IsChecked==true;
+            var decision=await Task.Run(()=>ModelRouter.Choose(routing,_store.Models(),input,
+                selectedModel,manualOverride,reclaimable),_responseCts.Token);
+            routingExplanation=decision.Reason;
+            if(!_runtime.IsRunning || !string.Equals(_runtime.ActiveModel,decision.Model.Path,StringComparison.OrdinalIgnoreCase))
+            {
+                StatusText.Text=decision.Reason+" Loading selected model...";
+                await _runtime.StartAsync(decision.Model.Path,decision.Model.Sha256,ModelSettingsStore.Load(decision.Model.Sha256),_responseCts.Token);
+            }
+            ChatModelBox.SelectedItem=(ChatModelBox.ItemsSource as IEnumerable<ModelRecord>)?.FirstOrDefault(x=>x.Id==decision.Model.Id);
+        }
+            if(!_runtime.IsRunning)throw new InvalidOperationException("Select and load a model before sending a message.");
             _store.AddMessage(chatId,"user",input,workspaceId);
             if (MemoryIntent.TryExtract(input, out var proposedText))
             {
@@ -417,6 +449,7 @@ public partial class MainWindow : Window
             StatusText.Text = semanticFallback
                 ? "Response completed using keyword search only; semantic retrieval failed. Review diagnostics and citations."
                 : "Response completed locally; review cited source material before relying on decisions.";
+            if(routingExplanation.Length>0)StatusText.Text+=" "+routingExplanation;
         }
         finally
         {
@@ -534,6 +567,16 @@ public partial class MainWindow : Window
     {
         if(_store is null || ModelList.SelectedItem is not ModelRecord m)return;
         _store.DeleteModelRecord(m.Id);RefreshAll();StatusText.Text="Removed model registry entry; original model file remains unchanged.";
+    }
+    private void SaveRouting_Click(object sender,RoutedEventArgs e)
+    {
+        try
+        {
+            ModelRouter.Save(new(AutoRoutingEnabled.IsChecked==true,(RouteGeneralBox.SelectedItem as ModelRecord)?.Sha256,
+                (RouteAnalysisBox.SelectedItem as ModelRecord)?.Sha256,(RouteCodeBox.SelectedItem as ModelRecord)?.Sha256));
+            StatusText.Text="Local routing preferences saved. Use the chat override for manual model selection.";
+        }
+        catch(Exception ex){AuditLog.Error("ModelRouting",ex);MessageBox.Show(ex.Message);}
     }
     private async void DownloadModel_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async()=>
     {

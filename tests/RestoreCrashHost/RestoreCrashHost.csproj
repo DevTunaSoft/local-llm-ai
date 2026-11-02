@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><UseAppHost>false</UseAppHost><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../WorkIntelligence/Services/*.cs" Exclude="../../WorkIntelligence/Services/ScheduledBackup.cs" Link="Services/%(Filename)%(Extension)"/>
+    <Compile Include="../../WorkIntelligence/Models/*.cs" Link="Models/%(Filename)%(Extension)"/>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14"/>
+    <PackageReference Include="PdfPig" Version="0.1.13"/>
+  </ItemGroup>
+</Project>
