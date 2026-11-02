@@ -100,7 +100,7 @@ public sealed class BackupTests : IDisposable
     [Fact]
     public async Task PortableSnapshotRestoresPerModelRuntimeSettings()
     {
-        const string hash = new string('D', 64);
+        var hash = new string('D', 64);
         await SeedBackup();
         using (var store = new KnowledgeStore())
         {
