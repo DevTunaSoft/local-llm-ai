@@ -33,6 +33,45 @@ jobs:
           if (-not $asset) { throw 'No native Windows x64 CPU llama.cpp release asset found.' }
           $zip = Join-Path $env:RUNNER_TEMP 'llama-cpu.zip'
           Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip -MaximumRedirection 8
+          if ($asset.digest -notmatch '^sha256:[0-9a-fA-F]{64} = Join-Path $env:RUNNER_TEMP 'llama-cpu-unpacked'
+          Expand-Archive -LiteralPath $zip -DestinationPath $unpacked
+          $server = Get-ChildItem -LiteralPath $unpacked -Filter 'llama-server.exe' -Recurse -File | Select-Object -First 1
+          if (-not $server) { throw 'Downloaded native runtime lacks llama-server.exe.' }
+          $runtime = $server.DirectoryName
+          $digest = (Get-FileHash -LiteralPath $server.FullName -Algorithm SHA256).Hash
+          "$digest  llama-server.exe" | Set-Content -LiteralPath (Join-Path $runtime 'SHA256SUMS.txt') -Encoding ascii
+          "WI_CI_RUNTIME_DIR=$runtime" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Native llama.cpp test source: $($release.tag_name)"
+      - name: Download small real instruction-tuned GGUF
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $model = Join-Path $env:RUNNER_TEMP 'SmolLM2-135M-Instruct-Q4_K_M.gguf'
+          $url = 'https://huggingface.co/lmstudio-community/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf?download=true'
+          Invoke-WebRequest -Uri $url -OutFile $model -MaximumRedirection 10
+          $file = Get-Item -LiteralPath $model
+          if ($file.Length -lt 50000000 -or $file.Length -gt 250000000) { throw 'Downloaded test model size is implausible.' }
+          $stream = [System.IO.File]::OpenRead($model)
+          try {
+            $header = New-Object byte[] 4
+            if ($stream.Read($header,0,4) -ne 4 -or [System.Text.Encoding]::ASCII.GetString($header) -ne 'GGUF') { throw 'Test model GGUF header missing.' }
+          } finally { $stream.Dispose() }
+          "WI_CI_MODEL=$model" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Small GGUF test fixture: $($file.Length) bytes"
+      - name: Run real local llama-server inference and verify shutdown
+        shell: pwsh
+        run: |
+          & ./scripts/test-live-inference.ps1 -ModelPath $env:WI_CI_MODEL -RuntimeDirectory $env:WI_CI_RUNTIME_DIR
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Record what this test does not prove
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host 'Smoke test uses a disposable small GGUF and official native CPU release.'
+          Write-Host 'It does not validate GPT-OSS 20B, production native bundle, WPF UI, or clean-machine installation.'
+) { throw 'Release asset has no trusted SHA-256 digest.' }
+          $downloadHash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
+          if ($downloadHash -ine $asset.digest.Substring(7)) { throw 'Native release archive checksum mismatch.' }
           $unpacked = Join-Path $env:RUNNER_TEMP 'llama-cpu-unpacked'
           Expand-Archive -LiteralPath $zip -DestinationPath $unpacked
           $server = Get-ChildItem -LiteralPath $unpacked -Filter 'llama-server.exe' -Recurse -File | Select-Object -First 1
