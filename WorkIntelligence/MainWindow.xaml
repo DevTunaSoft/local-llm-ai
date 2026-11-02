@@ -109,6 +109,8 @@
           <TextBlock Text="Configured rclone OneDrive remote folder (e.g., workonedrive:WIBackups)" Margin="0,12,0,0"/>
           <TextBox x:Name="RemoteBackupText" Height="28"/>
           <Button Content="Sync + Byte-Verify Plaintext OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
+          <TextBlock Text="Optional local snapshot retention: leave blank to keep all. Enter 2 or more to preserve at least that many verified backups. Corrupt snapshots are never deleted automatically." TextWrapping="Wrap" Margin="0,12,0,3"/>
+          <TextBox x:Name="BackupKeepCountInput" Width="90" HorizontalAlignment="Left" MaxLength="5" ToolTip="Optional number of newest verified snapshots to preserve; blank keeps all"/>
           <TextBlock Text="Optional daily backup (2 AM). Schedule and copied data contain no application-layer encryption." TextWrapping="Wrap" Margin="0,15,0,0"/>
           <StackPanel Orientation="Horizontal"><Button Content="Enable Daily Backup (2 AM)" Click="ScheduleBackup_Click"/><Button Content="Disable Daily Backup" Click="RemoveScheduledBackup_Click"/></StackPanel>
           <TextBlock Text="Scheduled jobs run only while this Windows user is signed in. OneDrive access requires a separately configured authorized rclone remote; actual Windows/remote validation is pending." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
