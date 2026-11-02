@@ -66,6 +66,23 @@ jobs:
           } else {
             Write-Host 'SOURCE BUILD ONLY: no native llama/OCR/rclone bundle; not a user-ready release.'
           }
+      - name: Publish self-contained Windows x64 build candidate
+        shell: pwsh
+        run: |
+          & dotnet publish WorkIntelligence/WorkIntelligence.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o "$env:RUNNER_TEMP/wi-publish" 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/wi-windows-build.log" -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $exe = Join-Path $env:RUNNER_TEMP 'wi-publish/WorkIntelligence.exe'
+          if (!(Test-Path $exe)) { throw 'Windows executable missing after publish' }
+          $signature = Get-AuthenticodeSignature $exe
+          Write-Host "Candidate built: $exe; signing status: $($signature.Status)"
+          Write-Host 'NOT A PRODUCTION RELEASE: native AI/OCR runtime and desktop acceptance are not verified.'
+      - name: Upload Windows build candidate for acceptance testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: WorkIntelligence-win-x64-UNVERIFIED
+          path: ${{ runner.temp }}/wi-publish/
+          if-no-files-found: error
+          retention-days: 7
       - name: Report filtered Windows failure diagnostics
         if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         shell: pwsh
