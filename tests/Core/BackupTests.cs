@@ -139,6 +139,21 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task PreCancelledBackupDoesNotPublishOrOverwriteRecoveryPoints()
+    {
+        await SeedBackup();
+        using var store = new KnowledgeStore();
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        var before = Directory.GetDirectories(_repository, "snap-*");
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            new BackupService(store).BackupAsync(_repository, cancelled.Token));
+        var after = Directory.GetDirectories(_repository, "snap-*");
+        Assert.Equal(before.OrderBy(x => x), after.OrderBy(x => x));
+        Assert.Empty(Directory.GetDirectories(_repository, ".pending-*"));
+    }
+
+    [Fact]
     public async Task RestoreRefusesToOverwriteLiveData()
     {
         await SeedBackup();
