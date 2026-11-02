@@ -536,7 +536,15 @@ public partial class MainWindow : Window
         if(_store is null)throw new InvalidOperationException("Open workspace first.");
         if(MessageBox.Show("Scheduled backups and any OneDrive copies will contain UNENCRYPTED data. Confirm organizational approval before enabling.",
             "Plaintext scheduled backup",MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes)return;
-        await ScheduledBackup.ConfigureAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token);
+        int? keep = null;
+        if (!string.IsNullOrWhiteSpace(BackupKeepCountInput.Text))
+        {
+            if (!int.TryParse(BackupKeepCountInput.Text.Trim(), out var parsedKeep) ||
+                parsedKeep is < 2 or > 10000)
+                throw new ArgumentException("Backup retention requires a number from 2 to 10000. Leave blank to disable pruning.");
+            keep = parsedKeep;
+        }
+        await ScheduledBackup.ConfigureAsync(BackupFolder.Text.Trim(),RemoteBackupText.Text.Trim(),_shutdownCts.Token,keep);
         StatusText.Text="Daily 2 AM backup scheduled while your Windows user is signed in. Remote verification runs if configured.";
     });
     private async void RemoveScheduledBackup_Click(object sender,RoutedEventArgs e) => await RunUiAsync(async () =>
