@@ -155,7 +155,22 @@ public partial class MainWindow : Window
     }
     private void ChatList_SelectionChanged(object sender,SelectionChangedEventArgs e)
     {
-        if(ChatList.SelectedItem is ChatRecord c) { _chatId=c.Id;ShowChat(); }
+        if(ChatList.SelectedItem is ChatRecord c) { _chatId=c.Id;ChatTitleInput.Text=c.Title;ShowChat(); }
+    }
+    private void RenameChat_Click(object sender,RoutedEventArgs e)
+    {
+        if (_busy || _closing || _store is null || ChatList.SelectedItem is not ChatRecord selected) return;
+        try
+        {
+            _store.RenameChat(selected.Id, ChatTitleInput.Text, SelectedWorkspaceId);
+            RefreshWorkspaceChats();
+            StatusText.Text = "Conversation renamed and saved.";
+        }
+        catch (Exception ex)
+        {
+            AuditLog.Error("RenameChat", ex);
+            StatusText.Text = "Cannot rename conversation: " + ex.Message;
+        }
     }
     private void DeleteChat_Click(object sender,RoutedEventArgs e)
     {
