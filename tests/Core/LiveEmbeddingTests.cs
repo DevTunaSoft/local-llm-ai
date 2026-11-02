@@ -48,7 +48,11 @@ public sealed class LiveEmbeddingTests
         }
         using (var reopened = new KnowledgeStore())
         {
-            var hits = await reopened.SearchHybridAsync("vehicle geofence telemetry", worker,
+            // No keyword overlap: this hit must come from the persisted vector,
+            // not merely SQLite full-text search.
+            const string semanticOnlyQuery = "GPS perimeter crossing notifications";
+            Assert.Empty(reopened.Search(semanticOnlyQuery, workspaceId: workspace));
+            var hits = await reopened.SearchHybridAsync(semanticOnlyQuery, worker,
                 cancellationToken: timeout.Token, workspaceId: workspace);
             Assert.Contains(hits, hit => hit.DocumentId == docId);
             var isolated = reopened.AddWorkspace("Other isolated workstream");
