@@ -41,6 +41,28 @@ jobs:
               if ($process.MainWindowTitle -eq 'Work Intelligence AI') { $seenWindow = $true; break }
             }
             if (-not $seenWindow) { throw 'WPF process is alive but no Work Intelligence AI window appeared in the Windows session.' }
+            Add-Type -AssemblyName UIAutomationClient
+            Add-Type -AssemblyName UIAutomationTypes
+            $window = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
+            $condition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Open Local Workspace')
+            $button = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+            if (-not $button) { throw 'Actual Open Local Workspace button is not discoverable through Windows UI Automation.' }
+            $invoke = [System.Windows.Automation.InvokePattern]$button.GetCurrentPattern(
+              [System.Windows.Automation.InvokePattern]::Pattern)
+            $invoke.Invoke()
+            $chatCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'AI Chat')
+            $workspaceOpened = $false
+            for ($j=0; $j -lt 40; $j++) {
+              Start-Sleep -Milliseconds 500
+              $tab = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $chatCondition)
+              if ($tab -and -not $tab.Current.IsOffscreen) { $workspaceOpened = $true; break }
+              $process.Refresh()
+              if ($process.HasExited) { throw 'App exited while opening local workspace.' }
+            }
+            if (-not $workspaceOpened) { throw 'Local workspace failed to show AI Chat after Open Local Workspace was invoked.' }
+            Write-Host 'Windows UI Automation opened a synthetic local workspace and found the AI Chat tab.'
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
@@ -57,4 +79,4 @@ jobs:
         shell: pwsh
         run: |
           Write-Host 'UI smoke test is a source DLL launch, not EXE packaging or end-to-end GUI acceptance.'
-          Write-Host 'It does not click controls, exercise model downloads, or validate restore to a second machine.'
+          Write-Host 'It clicks the local workspace control, but does not exercise model downloads, chat generation, or second-machine restore.'
