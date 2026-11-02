@@ -527,7 +527,7 @@ public partial class MainWindow : Window
         try
         {
             var rclone = RuntimeBundle.Resolve("rclone.exe");
-            Process.Start(new ProcessStartInfo(rclone, "config")
+            _ = Process.Start(new ProcessStartInfo(rclone, "config")
             {
                 UseShellExecute = true,
                 WorkingDirectory = Path.GetDirectoryName(rclone)!
