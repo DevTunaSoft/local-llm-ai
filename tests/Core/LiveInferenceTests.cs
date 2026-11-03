@@ -43,6 +43,10 @@ public sealed class LiveInferenceTests
             tokens.Add(token);
         }
         Assert.False(string.IsNullOrWhiteSpace(string.Concat(tokens)), "Real model returned an empty completion.");
+        Assert.NotNull(runtime.LastMetrics?.Usage);
+        Assert.True(runtime.LastMetrics.Usage.CompletionTokens>0,"Native server did not report real completion token usage.");
+        Assert.True(runtime.LastMetrics.EndToEndTokensPerSecond>0);
+        Assert.True(runtime.LastMetrics.PeakResidentBytes>0);
         await runtime.StopAsync();
         Assert.False(runtime.IsRunning);
         Assert.Null(runtime.ActiveModel);

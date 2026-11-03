@@ -29,6 +29,9 @@ shutil.copy2(pdfium, runtime / 'pdfium.dll')
 if os.name == 'nt':
     for library in Path(tesseract).parent.glob('*.dll'):
         shutil.copy2(library, runtime / library.name)
+rclone = os.environ.get('WI_RCLONE_SOURCE')
+if rclone:
+    shutil.copy2(rclone, runtime / 'rclone.exe')
 entries = [f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.relative_to(runtime).as_posix()}'
            for p in sorted(runtime.rglob('*')) if p.is_file() and p.name != 'SHA256SUMS.txt']
 (runtime / 'SHA256SUMS.txt').write_text('\n'.join(entries) + '\n')

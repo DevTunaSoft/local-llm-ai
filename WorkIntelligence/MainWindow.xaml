@@ -82,7 +82,7 @@
       <TabItem Header="Model Manager">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="190"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
           <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import GGUF" Click="ImportModel_Click"/><Button Content="Benchmark Selected" Click="BenchmarkModel_Click"/><Button Content="Compare Two Models" Click="CompareModels_Click"/><Button Content="Load Selected" Click="LoadModel_Click"/><Button Content="Remove from Library" Click="RemoveModel_Click"/></StackPanel>
-          <ListBox x:Name="ModelList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionChanged="ModelList_SelectionChanged"/>
+          <ListBox x:Name="ModelList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionMode="Extended" SelectionChanged="ModelList_SelectionChanged"/>
           <TextBlock Grid.Row="2" Text="Verified model download (trusted SHA-256 required)" FontWeight="Bold" Margin="3,10,3,3"/>
           <TextBox Grid.Row="3" x:Name="ModelUrl" ToolTip="HTTPS URL under huggingface.co"/>
           <TextBox Grid.Row="4" x:Name="ModelFilename" ToolTip="Destination filename ending in .gguf"/>

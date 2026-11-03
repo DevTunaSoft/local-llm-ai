@@ -57,8 +57,15 @@ public sealed class LiveCatalogTests
     {
         foreach(var publisher in ModelCatalog.Publishers)
         {
-            var models=await ModelCatalog.FetchAsync(publisher.Repository,CancellationToken.None);
-            Assert.NotEmpty(models);Assert.All(models,x=>{Assert.Equal(40,x.Revision.Length);Assert.Equal(64,x.Sha256.Length);Assert.True(x.Bytes>1024);});
+            try
+            {
+                var models=await ModelCatalog.FetchAsync(publisher.Repository,CancellationToken.None);
+                Assert.NotEmpty(models);Assert.All(models,x=>{Assert.Equal(40,x.Revision.Length);Assert.Equal(64,x.Sha256.Length);Assert.True(x.Bytes>1024);});
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"::error::Publisher catalog {publisher.Repository}: {ex.GetType().Name}: {ex.Message.Replace('\n',' ')}");throw;
+            }
         }
     }
 }

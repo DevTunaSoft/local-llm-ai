@@ -34,12 +34,20 @@ public sealed class ModelRuntime : IAsyncDisposable
     private HttpClient? _client;
     private string? _apiKey;
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
+    public InferenceMetrics? LastMetrics {get;private set;}
+    public double? LastLoadMilliseconds {get;private set;}
+    public ulong PeakResidentBytes {get;private set;}
     public bool SupportsVision=>IsRunning && _options.VisionProjectorPath is not null;
     public string? ActiveModel { get; private set; }
     public bool IsRunning => _process is { HasExited: false };
     public ulong ResidentBytes
     {
-        get{try{return _process is {HasExited:false} ? (ulong)Math.Max(0,_process.WorkingSet64) : 0;}
+        get{try
+            {
+                if(_process is not {HasExited:false})return 0;
+                _process.Refresh();PeakResidentBytes=Math.Max(PeakResidentBytes,(ulong)Math.Max(0,_process.PeakWorkingSet64));
+                return (ulong)Math.Max(0,_process.WorkingSet64);
+            }
             catch(Exception ex) when(ex is InvalidOperationException or System.ComponentModel.Win32Exception){return 0;}}
     }
 
@@ -92,6 +100,7 @@ public sealed class ModelRuntime : IAsyncDisposable
             foreach(var arg in new[]{"--mmproj",visionProjector,"--no-mmproj-offload"})start.ArgumentList.Add(arg);
         start.Environment["LLAMA_API_KEY"] = _apiKey;
         _process = new Process { StartInfo = start, EnableRaisingEvents = true };
+        var loadTimer=Stopwatch.StartNew();
         if (!_process.Start()) throw new InvalidOperationException("Failed to start local AI engine.");
         _process.OutputDataReceived += (_, e) => { if (e.Data is not null) AuditLog.Info("llama-stdout", "Native AI runtime emitted a diagnostic line (content redacted)."); };
         _process.ErrorDataReceived += (_, e) => { if (e.Data is not null) AuditLog.Info("llama-stderr", "Native AI runtime emitted a diagnostic line (content redacted)."); };
@@ -113,7 +122,8 @@ public sealed class ModelRuntime : IAsyncDisposable
                     using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(startupTimeout.Token);
                     requestTimeout.CancelAfter(TimeSpan.FromSeconds(2));
                     using var response = await _client.GetAsync("health", requestTimeout.Token);
-                    if (response.IsSuccessStatusCode) { ActiveModel = ggufPath; return; }
+                    _=ResidentBytes;
+                    if (response.IsSuccessStatusCode) { ActiveModel = ggufPath;LastLoadMilliseconds=loadTimer.Elapsed.TotalMilliseconds;return; }
                 }
                 catch (HttpRequestException) { }
                 catch (OperationCanceledException) when (!startupTimeout.IsCancellationRequested) { }
@@ -143,13 +153,15 @@ public sealed class ModelRuntime : IAsyncDisposable
     {
         if(image is not null && !SupportsVision)throw new InvalidOperationException("Load a compatible model with a verified vision projector before sending an image.");
         if (_client is null || !IsRunning) throw new InvalidOperationException("Select and load a local model first.");
-        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens,image))
-            yield return fragment;
+        LastMetrics=null;CompletionUsage? usage=null;var timer=Stopwatch.StartNew();
+        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens,image,value=>usage=value))
+        {_=ResidentBytes;yield return fragment;}
+        _=ResidentBytes;timer.Stop();LastMetrics=new(usage,timer.Elapsed.TotalMilliseconds,LastLoadMilliseconds,PeakResidentBytes);
     }
 
     internal static async IAsyncEnumerable<string> StreamResponseAsync(HttpClient client, ModelRuntimeOptions options,
         IReadOnlyList<(string role, string content)> messages,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024, VisionAttachment? image = null)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024, VisionAttachment? image = null,Action<CompletionUsage>? usageReceived=null)
     {
         options.Validate();
         using var responseTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -161,7 +173,7 @@ public sealed class ModelRuntime : IAsyncDisposable
         var messageList=messages.Select((x,index)=>new{role=x.role,content=image is not null && index==lastUser
             ? (object)new object[]{new{type="text",text=x.content},new{type="image_url",image_url=new{url=image.DataUrl}}}
             : x.content});
-        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? options.MaxTokens : maxTokens, 32, options.MaxTokens), temperature = options.Temperature });
+        var payload = JsonSerializer.Serialize(new { model = "work-intelligence-local", stream = true, stream_options=new{include_usage=true}, messages = messageList, max_tokens = Math.Clamp(maxTokens == 1024 ? options.MaxTokens : maxTokens, 32, options.MaxTokens), temperature = options.Temperature });
         using var request = new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions")
         { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
         HttpResponseMessage response;
@@ -173,7 +185,7 @@ public sealed class ModelRuntime : IAsyncDisposable
             response.EnsureSuccessStatusCode();
             await using var stream = await response.Content.ReadAsStreamAsync(token);
             using var reader = new StreamReader(stream);
-            await using var fragments = CompletionStream.ReadAsync(reader, token).GetAsyncEnumerator(token);
+            await using var fragments = CompletionStream.ReadAsync(reader, token,usageReceived).GetAsyncEnumerator(token);
             while (true)
             {
                 bool next;
@@ -195,7 +207,7 @@ public sealed class ModelRuntime : IAsyncDisposable
 
     private async Task StopCoreAsync()
     {
-        _client?.Dispose(); _client=null; _apiKey=null; ActiveModel=null;
+        _client?.Dispose(); _client=null; _apiKey=null; ActiveModel=null;LastMetrics=null;LastLoadMilliseconds=null;PeakResidentBytes=0;
         if (_process is not null)
         {
             await ProcessTermination.StopAsync(_process);

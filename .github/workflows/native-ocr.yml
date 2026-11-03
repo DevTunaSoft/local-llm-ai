@@ -42,7 +42,13 @@ jobs:
           $env:VCPKG_ROOT = $source
           & (Join-Path $source 'bootstrap-vcpkg.bat') -disableMetrics
           if ($LASTEXITCODE -ne 0) { throw 'vcpkg bootstrap failed.' }
-          & (Join-Path $source 'vcpkg.exe') install tesseract:x64-windows --disable-metrics
+          & (Join-Path $source 'vcpkg.exe') install tesseract:x64-windows --disable-metrics 2>&1 | ForEach-Object {
+            Write-Host $_
+            if ($_ -match '^Installing [0-9]+/|^Building |error:') {
+              $safe = ([string]$_) -replace 'https?://\S+', '[url]'
+              Write-Host "::notice::Native dependency build: $safe"
+            }
+          }
           if ($LASTEXITCODE -ne 0) { throw 'Pinned native OCR build failed.' }
           $tool = Join-Path $source 'installed/x64-windows/tools/tesseract/tesseract.exe'
           if (-not (Test-Path $tool)) { throw 'Source build produced no Tesseract tool.' }
@@ -62,6 +68,12 @@ jobs:
           $trained = Join-Path $env:RUNNER_TEMP 'eng.traineddata'
           Invoke-WebRequest 'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata' -OutFile $trained
           if ((Get-FileHash $trained -Algorithm SHA256).Hash -ine '7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2') { throw 'OCR data checksum mismatch.' }
+          $rcloneZip = Join-Path $env:RUNNER_TEMP 'rclone-win.zip'
+          Invoke-WebRequest 'https://github.com/rclone/rclone/releases/download/v1.75.2/rclone-v1.75.2-windows-amd64.zip' -OutFile $rcloneZip
+          if ((Get-FileHash $rcloneZip -Algorithm SHA256).Hash -ine '8a9db2bad1dc79a65b3348fd857069598e2aab7cf4d118b77b1df23055aff818') { throw 'Rclone archive checksum mismatch.' }
+          $rcloneRoot = Join-Path $env:RUNNER_TEMP 'wi-rclone'
+          Expand-Archive $rcloneZip -DestinationPath $rcloneRoot
+          $env:WI_RCLONE_SOURCE = (Get-ChildItem $rcloneRoot -Recurse -File -Filter 'rclone.exe' | Select-Object -First 1).FullName
           $env:WI_TESSDATA_SOURCE = $trained
           $env:WI_NATIVE_TEST_ROOT = Join-Path $env:RUNNER_TEMP 'wi-native-ocr'
           python scripts/setup-native-ocr-tests.py
@@ -72,5 +84,5 @@ jobs:
         env:
           WI_REQUIRE_NATIVE_OCR: '1'
         run: |
-          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~NativeOcrTests' --logger 'console;verbosity=normal'
+          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~NativeOcrTests|FullyQualifiedName~NativeBackupToolTests' --logger 'console;verbosity=normal'
           if ($LASTEXITCODE -ne 0) { throw 'Real native Windows OCR acceptance failed.' }

@@ -95,7 +95,11 @@ jobs:
       - name: Prepare pinned development tools
         run: bash scripts/setup-linux-tests.sh
       - name: Prepare real OCR tools and synthetic document fixtures
-        run: ../.tools/qa-venv/bin/python scripts/setup-native-ocr-tests.py
+        run: |
+          curl -fsSL https://github.com/rclone/rclone/releases/download/v1.75.2/rclone-v1.75.2-linux-amd64.zip -o /tmp/wi-rclone.zip
+          echo '349ac8fba6ff65d6247043f1750cdcb518ec5d500ef91463a10d37c0ccdf3702  /tmp/wi-rclone.zip' | sha256sum -c -
+          unzip -q /tmp/wi-rclone.zip -d /tmp/wi-rclone
+          WI_RCLONE_SOURCE=/tmp/wi-rclone/rclone-v1.75.2-linux-amd64/rclone ../.tools/qa-venv/bin/python scripts/setup-native-ocr-tests.py
       - name: Compile source and execute real storage and recovery regressions
         env:
           WI_NATIVE_TEST_ROOT: /tmp/wi-native-ocr-tests
