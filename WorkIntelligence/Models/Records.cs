@@ -1,6 +1,8 @@
 namespace WorkIntelligence.Models;
 
-public sealed record DocumentRecord(long Id, string Name, string OriginalPath, string Hash, int Version, DateTimeOffset ImportedAt, bool Active);
+public sealed record DocumentRecord(long Id, string Name, string OriginalPath, string Hash, int Version, DateTimeOffset ImportedAt, bool Active)
+{public string DisplayName=>$"{Name} — D{Id}, v{Version} — {(Active?"current":"archived")}";}
+
 public sealed record ChunkHit(long DocumentId, string Name, int Version, int Ordinal, string Content, double Rank);
 public sealed record MemoryRecord(long Id, string Text, string Source, DateTimeOffset CreatedAt);
 public sealed record ChatRecord(long Id, string Title, DateTimeOffset CreatedAt);

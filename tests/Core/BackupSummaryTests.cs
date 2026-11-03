@@ -16,8 +16,7 @@ public sealed class BackupManifestTests
         {
             connection.Open();
             using var command = connection.CreateCommand();
-            command.CommandText = "CREATE TABLE fixture(id INTEGER PRIMARY KEY, content TEXT); INSERT INTO fixture VALUES(1,'synthetic');";
-            command.ExecuteNonQuery();
+            KnowledgeStore.InitializeSchema(connection);
         }
         var fileHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(database)));
         var manifest = new

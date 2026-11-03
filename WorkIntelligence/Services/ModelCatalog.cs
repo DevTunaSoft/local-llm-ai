@@ -17,7 +17,7 @@ public static class ModelCatalog
 {
     public static IReadOnlyList<CatalogPublisher> Publishers {get;} = [
         new("ggml-org/gpt-oss-20b-GGUF","GPT-OSS 20B — ggml-org engine-maintainer GGUF conversion; inspect upstream license"),
-        new("Qwen/Qwen3.5-27B-GGUF","Qwen3.5 27B — Qwen publisher GGUF repository; inspect upstream license")];
+        new("unsloth/Qwen3.5-27B-GGUF","Qwen3.5 27B — Unsloth GGUF conversion of the Qwen model; review converter provenance and upstream license")];
     public static async Task<IReadOnlyList<CatalogModel>> FetchAsync(string repository,CancellationToken ct)
     {
         using var client=new HttpClient(new HttpClientHandler{AllowAutoRedirect=false}){Timeout=TimeSpan.FromSeconds(60)};

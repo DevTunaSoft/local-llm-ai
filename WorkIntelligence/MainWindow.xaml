@@ -58,14 +58,14 @@
             </StackPanel>
             <TextBox x:Name="ChatHistory" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14" Background="#FAFCFF"/>
             <TextBox x:Name="ChatInput" Grid.Row="2" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14"/>
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Attach Vision Image" Click="AttachVisionImage_Click"/><Button Content="Clear Image" Click="ClearVisionImage_Click"/><TextBlock x:Name="VisionImageStatus" MaxWidth="220" TextWrapping="Wrap"/><Button x:Name="SendButton" Content="Send" Width="100" Click="Send_Click"/><Button Content="Stop Response" Click="StopResponse_Click"/></StackPanel>
+            <WrapPanel Grid.Row="3" HorizontalAlignment="Right"><Button Content="Attach Vision Image" Click="AttachVisionImage_Click"/><Button Content="Clear Image" Click="ClearVisionImage_Click"/><TextBlock x:Name="VisionImageStatus" MaxWidth="220" TextWrapping="Wrap"/><Button x:Name="SendButton" Content="Send" Width="100" Click="Send_Click"/><Button Content="Stop Response" Click="StopResponse_Click"/><TextBox x:Name="CitationLookupInput" Width="110" ToolTip="Stable source citation, e.g. D12-V2-S3"/><Button Content="Check Citation" Click="CheckCitation_Click"/></WrapPanel>
           </Grid>
         </Grid>
       </TabItem>
       <TabItem Header="Knowledge Library">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="180"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Compare Two Selected" Click="CompareDocuments_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></StackPanel>
-          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="Name" SelectionMode="Extended"/>
+          <WrapPanel Grid.Row="0"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Compare Two Selected" Click="CompareDocuments_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></WrapPanel>
+          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionMode="Extended"/>
           <TextBlock Grid.Row="2" Text="Search locally indexed document text" FontWeight="SemiBold" Margin="3,12,3,2"/>
           <DockPanel Grid.Row="3"><Button DockPanel.Dock="Right" Content="Search" Click="SearchDocs_Click"/><TextBox x:Name="SearchInput"/></DockPanel>
           <TextBox x:Name="SearchResults" Grid.Row="4" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
@@ -73,7 +73,7 @@
       </TabItem>
       <TabItem Header="Approved Memories">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <TextBlock Grid.Row="0" Text="Only memories you explicitly approve here are stored. Do not enter restricted or patient data." Margin="3,5" TextWrapping="Wrap"/>
+          <TextBlock Grid.Row="0" Text="Only memories you explicitly approve here are stored. Use Policy Review for rules with authority/effective dates. Free-form notes are not verified company policy. Do not enter restricted or patient data." Margin="3,5" TextWrapping="Wrap"/>
           <ListBox x:Name="MemoryList" Grid.Row="1" DisplayMemberPath="Text"/>
           <TextBox x:Name="MemoryInput" Grid.Row="2" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
           <StackPanel Grid.Row="3" Orientation="Horizontal"><Button Content="Review Proposals" Click="ReviewProposals_Click"/><Button Content="Approve and Save Memory" Click="AddMemory_Click"/><Button Content="Propose Correction to Selected" Click="ProposeCorrection_Click"/><Button Content="Memory History" Click="MemoryHistory_Click"/><Button Content="Delete Selected Memory" Click="DeleteMemory_Click"/><Button Content="Export Memories" Click="ExportMemories_Click"/></StackPanel>
@@ -93,7 +93,7 @@
       <TabItem Header="Workspaces &amp; Projects">
         <Grid Margin="12">
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><TextBox x:Name="WorkspaceNameInput" MinWidth="270" ToolTip="New workspace name"/><Button Content="Create Workspace" Click="CreateWorkspace_Click"/><Button Content="Assign Selected Library Document" Click="AssignDocument_Click"/></StackPanel>
+          <StackPanel Grid.Row="0" Orientation="Horizontal"><TextBox x:Name="WorkspaceNameInput" MinWidth="270" ToolTip="New workspace name"/><Button Content="Create Workspace" Click="CreateWorkspace_Click"/><TextBlock Text="Share with:" VerticalAlignment="Center"/><ComboBox x:Name="AssignmentWorkspaceBox" Width="150" DisplayMemberPath="Name"/><Button Content="Share Selected Library Document" Click="AssignDocument_Click"/></StackPanel>
           <ListBox Grid.Row="1" x:Name="WorkspaceList" DisplayMemberPath="Name" SelectionChanged="WorkspaceChanged_Click"/>
           <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Save Selected Task" Click="SaveTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
           <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title" SelectionChanged="TaskList_SelectionChanged"/>
@@ -148,6 +148,15 @@
           <StackPanel Grid.Row="6"><TextBlock Text="Reason for this revision / decision rationale"/><TextBox x:Name="WorkReasonInput" MaxLength="2000"/><WrapPanel><Button Content="New Record" Click="NewWorkRecord_Click"/><Button Content="Save Record" Click="SaveWorkRecord_Click"/><Button Content="Revision History" Click="WorkHistory_Click"/></WrapPanel></StackPanel>
         </Grid>
       </TabItem>
+      <TabItem Header="Policy Review"><Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="140"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <TextBlock Text="Review policy topics, source authority and effective dates in the selected workspace. Authority is assigned by you; it does not verify organizational approval. Conflicting date ranges require explicit review." TextWrapping="Wrap"/>
+        <ListBox x:Name="PolicyList" Grid.Row="1" DisplayMemberPath="DisplayName"/>
+        <WrapPanel Grid.Row="2"><TextBlock Text="Topic:"/><TextBox x:Name="PolicyTopicInput" Width="220" MaxLength="120"/><TextBlock Text="Authority:"/><ComboBox x:Name="PolicyAuthorityBox" Width="180"/></WrapPanel>
+        <WrapPanel Grid.Row="3"><TextBlock Text="Effective from:"/><DatePicker x:Name="PolicyFromInput" Width="140"/><TextBlock Text="Ends before (optional):"/><DatePicker x:Name="PolicyUntilInput" Width="140"/></WrapPanel>
+        <DockPanel Grid.Row="4"><TextBlock Text="Approved source reference:"/><TextBox x:Name="PolicySourceInput" MaxLength="500"/></DockPanel>
+        <TextBox x:Name="PolicyTextInput" Grid.Row="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxLength="8000"/>
+        <StackPanel Grid.Row="6"><TextBlock Text="Reason for approval or replacement:"/><TextBox x:Name="PolicyReasonInput" MaxLength="2000"/><WrapPanel><Button Content="Review and Approve Policy" Click="ApprovePolicy_Click"/><Button Content="View Policy History" Click="PolicyHistory_Click"/></WrapPanel></StackPanel>
+      </Grid></TabItem>
     </TabControl>
     <TextBlock x:Name="StatusText" Grid.Row="2" Text="Workspace closed" Margin="2,10,0,0" FontSize="12" Foreground="#52647A"/>
   </Grid>

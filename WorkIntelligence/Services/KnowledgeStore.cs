@@ -46,12 +46,16 @@ public sealed partial class KnowledgeStore : IDisposable
 
     private void Initialize()
     {
-        using var connection = Connect();
+        using var connection=Connect();InitializeSchema(connection);
+    }
+    internal static void InitializeSchema(SqliteConnection connection)
+    {
+        ApplicationSchema.Verify(connection,allowEmpty:true);
         using (var check = connection.CreateCommand())
         {
             check.CommandText = "PRAGMA user_version";
             var version = Convert.ToInt32(check.ExecuteScalar());
-            if (version > 7)
+            if (version > 8)
                 throw new InvalidDataException($"Vault database schema {version} is newer than this application supports. Refusing to modify it.");
         }
         using var cmd = connection.CreateCommand();
@@ -205,6 +209,22 @@ public sealed partial class KnowledgeStore : IDisposable
                 tx.Commit();
             }
         }
+        using(var current=connection.CreateCommand())
+        {
+            current.CommandText="PRAGMA user_version";
+            if(Convert.ToInt32(current.ExecuteScalar())<8)
+            {
+                using var tx=connection.BeginTransaction();using var policyUpgrade=connection.CreateCommand();policyUpgrade.Transaction=tx;
+                policyUpgrade.CommandText="""
+                    CREATE TABLE memory_policies(memory_id INTEGER PRIMARY KEY REFERENCES memories(id) ON DELETE CASCADE,
+                      topic TEXT NOT NULL,authority INTEGER NOT NULL,effective_from TEXT NOT NULL,effective_until TEXT,
+                      closed_on TEXT,approval_reason TEXT NOT NULL,approved_at TEXT NOT NULL);
+                    CREATE INDEX ix_memory_policies_topic ON memory_policies(topic,effective_from);
+                    PRAGMA user_version=8;
+                    """;
+                policyUpgrade.ExecuteNonQuery();tx.Commit();
+            }
+        }
         using var verify = connection.CreateCommand();
         verify.CommandText = "SELECT count(*) FROM sqlite_master";
         _ = verify.ExecuteScalar();
@@ -313,10 +333,11 @@ public sealed partial class KnowledgeStore : IDisposable
         }
         finally { CryptographicOperations.ZeroMemory(input); }
     }
-    public List<DocumentRecord> Documents()
+    public List<DocumentRecord> Documents(long? workspaceId = null)
     {
         using var con = Connect(); using var cmd = con.CreateCommand();
-        cmd.CommandText = "SELECT id,name,original_path,sha256,version,imported_at,active FROM documents ORDER BY imported_at DESC";
+        cmd.CommandText = "SELECT d.id,d.name,d.original_path,d.sha256,d.version,d.imported_at,d.active FROM documents d WHERE ($workspace IS NULL OR EXISTS(SELECT 1 FROM workspace_documents wd WHERE wd.document_id=d.id AND wd.workspace_id=$workspace)) ORDER BY d.imported_at DESC";
+        cmd.Parameters.AddWithValue("$workspace",workspaceId is long id?id:DBNull.Value);
         using var r = cmd.ExecuteReader();
         var output = new List<DocumentRecord>();
         while (r.Read()) output.Add(new(r.GetInt64(0),r.GetString(1),r.GetString(2),r.GetString(3),r.GetInt32(4),DateTimeOffset.Parse(r.GetString(5)),r.GetInt64(6)==1));
@@ -339,7 +360,7 @@ public sealed partial class KnowledgeStore : IDisposable
     public List<ChunkHit> Search(string query, int limit = 8, long? workspaceId = null)
     {
         if (string.IsNullOrWhiteSpace(query)) return [];
-        var tokens = Regex.Matches(query, @"[\p{L}\p{N}_]{2,40}").Select(m => m.Value.ToLowerInvariant()).Distinct().Take(12).ToArray();
+        var tokens = Regex.Matches(query, @"[\p{L}\p{N}_]{2,40}").Select(m => m.Value.ToLowerInvariant()).Where(x=>!MemoryStopWords.Contains(x)).Distinct().Take(12).ToArray();
         if (tokens.Length == 0) return [];
         var fts = string.Join(" OR ", tokens.Select(s => $"\"{s}\""));
         using var con = Connect(); using var cmd = con.CreateCommand();
@@ -501,10 +522,16 @@ public sealed partial class KnowledgeStore : IDisposable
         return text;
     }
 
-    public List<MemoryRecord> Memories(long? workspaceId = null)
+    public List<MemoryRecord> Memories(long? workspaceId = null,DateOnly? asOf = null)
     {
         using var con = Connect(); using var cmd = con.CreateCommand();
-        cmd.CommandText = "SELECT id,content,source,created_at FROM memories WHERE approved=1 AND ($w IS NULL OR workspace_id=$w) ORDER BY id DESC";
+        cmd.CommandText = """
+            SELECT m.id,m.content,m.source,m.created_at FROM memories m LEFT JOIN memory_policies p ON p.memory_id=m.id
+            WHERE m.approved=1 AND ($w IS NULL OR m.workspace_id=$w)
+              AND (p.memory_id IS NULL OR (p.effective_from<=$day AND (p.effective_until IS NULL OR p.effective_until>$day) AND (p.closed_on IS NULL OR p.closed_on>$day)))
+            ORDER BY m.id DESC
+            """;
+        cmd.Parameters.AddWithValue("$day",(asOf ?? DateOnly.FromDateTime(DateTime.Today)).ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture));
         cmd.Parameters.AddWithValue("$w", workspaceId is long id ? id : DBNull.Value);
         using var r = cmd.ExecuteReader(); var records = new List<MemoryRecord>();
         while (r.Read()) records.Add(new(r.GetInt64(0),r.GetString(1),r.GetString(2),DateTimeOffset.Parse(r.GetString(3))));
@@ -513,7 +540,7 @@ public sealed partial class KnowledgeStore : IDisposable
 
     /// <summary>Retrieve only query-relevant approved knowledge. Superseded memories
     /// remain in audit history, but can never appear in generation context.</summary>
-    public List<MemoryRecord> SearchMemories(string query, int limit = 8, long? workspaceId = null)
+    public List<MemoryRecord> SearchMemories(string query, int limit = 8, long? workspaceId = null,DateOnly? asOf = null)
     {
         if (string.IsNullOrWhiteSpace(query)) return [];
         var terms = Regex.Matches(query, @"[\p{L}\p{N}_]{2,40}")
@@ -525,10 +552,12 @@ public sealed partial class KnowledgeStore : IDisposable
         using var con = Connect(); using var cmd = con.CreateCommand();
         cmd.CommandText = """
             SELECT m.id,m.content,m.source,m.created_at
-            FROM memories_fts JOIN memories m ON m.id=memories_fts.rowid
+            FROM memories_fts JOIN memories m ON m.id=memories_fts.rowid LEFT JOIN memory_policies p ON p.memory_id=m.id
             WHERE memories_fts MATCH $q AND m.approved=1 AND ($w IS NULL OR m.workspace_id=$w)
-            ORDER BY rank, m.id DESC LIMIT $n
+              AND (p.memory_id IS NULL OR (p.effective_from<=$day AND (p.effective_until IS NULL OR p.effective_until>$day) AND (p.closed_on IS NULL OR p.closed_on>$day)))
+            ORDER BY COALESCE(p.authority,-1) DESC, rank, m.id DESC LIMIT $n
             """;
+        cmd.Parameters.AddWithValue("$day",(asOf ?? DateOnly.FromDateTime(DateTime.Today)).ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture));
         cmd.Parameters.AddWithValue("$q", fts);
         cmd.Parameters.AddWithValue("$w", workspaceId is long id ? id : DBNull.Value);
         cmd.Parameters.AddWithValue("$n", Math.Clamp(limit,1,20));
@@ -544,7 +573,13 @@ public sealed partial class KnowledgeStore : IDisposable
     public List<MemoryHistoryRecord> MemoryHistory(int limit = 100, long? workspaceId = null)
     {
         using var con = Connect(); using var cmd = con.CreateCommand();
-        cmd.CommandText = "SELECT id,content,source,created_at,approved,superseded_by FROM memories WHERE ($w IS NULL OR workspace_id=$w) ORDER BY id DESC LIMIT $n";
+        cmd.CommandText = """
+            SELECT m.id,m.content,m.source,m.created_at,
+              CASE WHEN m.approved=1 AND (p.memory_id IS NULL OR (p.effective_from<=$day AND (p.effective_until IS NULL OR p.effective_until>$day) AND (p.closed_on IS NULL OR p.closed_on>$day))) THEN 1 ELSE 0 END,
+              m.superseded_by FROM memories m LEFT JOIN memory_policies p ON p.memory_id=m.id
+            WHERE ($w IS NULL OR m.workspace_id=$w) ORDER BY m.id DESC LIMIT $n
+            """;
+        cmd.Parameters.AddWithValue("$day",DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture));
         cmd.Parameters.AddWithValue("$w", workspaceId is long id ? id : DBNull.Value);
         cmd.Parameters.AddWithValue("$n", Math.Clamp(limit,1,500));
         using var r = cmd.ExecuteReader(); var list = new List<MemoryHistoryRecord>();

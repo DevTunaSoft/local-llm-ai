@@ -22,7 +22,7 @@ public sealed record ModelRuntimeOptions(int ContextSize = 4096, int Threads = 8
         if (ResponseTimeoutSeconds is < 1 or > 86400) throw new ArgumentOutOfRangeException(nameof(ResponseTimeoutSeconds));
         if (ContextSize < 512 || ContextSize > 131072) throw new ArgumentOutOfRangeException(nameof(ContextSize));
         if (Threads < 1 || Threads > 256) throw new ArgumentOutOfRangeException(nameof(Threads));
-        if (MaxTokens < 32 || MaxTokens > 32768) throw new ArgumentOutOfRangeException(nameof(MaxTokens));
+        if (MaxTokens < 32 || MaxTokens > 32768 || MaxTokens+64>ContextSize) throw new ArgumentOutOfRangeException(nameof(MaxTokens));
         if (!double.IsFinite(Temperature) || Temperature < 0 || Temperature > 2) throw new ArgumentOutOfRangeException(nameof(Temperature));
     }
 }
@@ -152,11 +152,14 @@ public sealed class ModelRuntime : IAsyncDisposable
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken, int maxTokens = 1024, VisionAttachment? image = null)
     {
         if(image is not null && !SupportsVision)throw new InvalidOperationException("Load a compatible model with a verified vision projector before sending an image.");
-        if (_client is null || !IsRunning) throw new InvalidOperationException("Select and load a local model first.");
-        LastMetrics=null;CompletionUsage? usage=null;var timer=Stopwatch.StartNew();
-        await foreach (var fragment in StreamResponseAsync(_client, _options, messages, cancellationToken, maxTokens,image,value=>usage=value))
+        if (_client is null || !IsRunning || ActiveModel is null) throw new InvalidOperationException("Select and load a local model first.");
+        LastMetrics=null;
+        var effectiveTokens=Math.Clamp(maxTokens==1024?_options.MaxTokens:maxTokens,32,_options.MaxTokens);
+        var prepared=image is null?await ContextWindow.FitAsync(_client,messages,_options.ContextSize,effectiveTokens,cancellationToken):messages;
+        CompletionUsage? usage=null;var timer=Stopwatch.StartNew();
+        await foreach (var fragment in StreamResponseAsync(_client, _options, prepared, cancellationToken, maxTokens,image,value=>usage=value))
         {_=ResidentBytes;yield return fragment;}
-        _=ResidentBytes;timer.Stop();LastMetrics=new(usage,timer.Elapsed.TotalMilliseconds,LastLoadMilliseconds,PeakResidentBytes);
+        _=ResidentBytes;timer.Stop();LastMetrics=new(usage,timer.Elapsed.TotalMilliseconds,LastLoadMilliseconds,PeakResidentBytes,messages.Count-prepared.Count);
     }
 
     internal static async IAsyncEnumerable<string> StreamResponseAsync(HttpClient client, ModelRuntimeOptions options,

@@ -196,6 +196,7 @@ public sealed class BackupService
             using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
                 { DataSource = Path.Combine(snapshot, "knowledge.db"), Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
             connection.Open();
+            ApplicationSchema.Verify(connection);
             using var command = connection.CreateCommand();
             using var cancellation = ct.Register(() => command.Cancel());
             command.CommandText = "PRAGMA integrity_check";

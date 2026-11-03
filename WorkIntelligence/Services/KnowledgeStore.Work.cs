@@ -42,6 +42,25 @@ public sealed partial class KnowledgeStore
             cmd.ExecuteNonQuery();
         }
     }
+    public void RemoveDocumentFromWorkspace(long documentId,long workspaceId)
+    {
+        lock(_writeGate)
+        {
+            using var fileLock=FileOperationLock.Acquire("vault-files");
+            using var con=Connect();using var tx=con.BeginTransaction();using var cmd=con.CreateCommand();cmd.Transaction=tx;
+            cmd.CommandText="DELETE FROM workspace_documents WHERE document_id=$id AND workspace_id=$w";
+            cmd.Parameters.AddWithValue("$id",documentId);cmd.Parameters.AddWithValue("$w",workspaceId);
+            if(cmd.ExecuteNonQuery()!=1)throw new InvalidDataException("Document is not assigned to the current workspace.");
+            cmd.CommandText="DELETE FROM documents WHERE id=$id AND NOT EXISTS(SELECT 1 FROM workspace_documents WHERE document_id=$id)";
+            var deleted=cmd.ExecuteNonQuery()==1;tx.Commit();
+            if(deleted)
+            {
+                var blob=Path.Combine(LocalPaths.Blobs,documentId.ToString(System.Globalization.CultureInfo.InvariantCulture)+".bin");
+                PathSafety.RejectReparsePoints(blob);if(File.Exists(blob))File.Delete(blob);
+            }
+        }
+    }
+
     public string ReadAuthorizedDocumentText(long documentId, long workspaceId)
     {
         using var fileLock = FileOperationLock.Acquire("vault-files");
@@ -135,8 +154,15 @@ public sealed partial class KnowledgeStore
         lock(_writeGate)
         {
             using var con=Connect();using var cmd=con.CreateCommand();
+            RequireWorkspace(con,workspaceId);
+            using(var existing=con.CreateCommand())
+            {
+                existing.CommandText="SELECT workspace_id FROM watched_folders WHERE path=$p";existing.Parameters.AddWithValue("$p",full);
+                if(existing.ExecuteScalar() is long prior && prior!=workspaceId)throw new InvalidOperationException("This folder is monitored in another workspace. Reapprove it in that workspace or remove the old monitor first.");
+            }
             cmd.CommandText="INSERT OR IGNORE INTO watched_folders(path,workspace_id) VALUES($p,$w)";
             cmd.Parameters.AddWithValue("$p",full);cmd.Parameters.AddWithValue("$w",workspaceId);cmd.ExecuteNonQuery();
+            FolderAuthorization.Approve(full,workspaceId);
         }
     }
     public void RemoveWatchFolder(long id)
@@ -160,6 +186,7 @@ public sealed partial class KnowledgeStore
             {
                 // A previously approved directory can be replaced while the app is running.
                 PathSafety.RejectReparsePoints(folder.Path);
+                if(!FolderAuthorization.IsApproved(folder.Path,folder.WorkspaceId))throw new UnauthorizedAccessException("Reapprove this watched folder on the current device/user before scanning.");
                 if (!Directory.Exists(folder.Path)) throw new DirectoryNotFoundException();
                 var count = 0;
                 var complete = true;
@@ -292,6 +319,11 @@ public sealed partial class KnowledgeStore
             RequireWorkspace(con,workspaceId);
             if(replacesMemoryId is long replaceId)
             {
+                using(var policy=con.CreateCommand())
+                {
+                    policy.CommandText="SELECT 1 FROM memory_policies WHERE memory_id=$id";policy.Parameters.AddWithValue("$id",replaceId);
+                    if(policy.ExecuteScalar() is not null)throw new InvalidOperationException("Revise dated policies in Policy Review to preserve authority, conflict review and effective dates.");
+                }
                 using var verify=con.CreateCommand();
                 verify.CommandText="SELECT content FROM memories WHERE id=$id AND approved=1 AND workspace_id=$w";
                 verify.Parameters.AddWithValue("$id",replaceId);

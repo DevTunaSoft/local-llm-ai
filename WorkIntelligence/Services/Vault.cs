@@ -8,6 +8,7 @@ internal static class LegacyEncryptedDataGuard
         var data=Path.Combine(root ?? LocalPaths.Root,"Data");
         var blobs=Path.Combine(data,"Blobs");
         var database=Path.Combine(data,"knowledge.db");
+        foreach(var path in new[]{data,blobs,database,Path.Combine(data,"vault.json")})PathSafety.RejectReparsePoints(path);
         if (File.Exists(Path.Combine(data,"vault.json")))
             throw new InvalidOperationException("A legacy encrypted vault was detected. Its original files have not been changed. Export and migrate it using the older application before using the unencrypted edition.");
         if (Directory.Exists(blobs) && Directory.EnumerateFiles(blobs, "*.enc").Any())

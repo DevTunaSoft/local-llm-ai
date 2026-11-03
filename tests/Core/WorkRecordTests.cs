@@ -85,7 +85,7 @@ public sealed class WorkRecordTests : IDisposable
         {
             connection.Open();
             using var cmd=connection.CreateCommand();
-            cmd.CommandText="DROP TRIGGER work_records_ai; DROP TRIGGER work_records_ad; DROP TRIGGER work_records_au; DROP TABLE work_records_fts; DROP TABLE work_record_revisions; DROP TABLE work_records; PRAGMA user_version=6";
+            cmd.CommandText="DROP TABLE IF EXISTS memory_policies; DROP TRIGGER work_records_ai; DROP TRIGGER work_records_ad; DROP TRIGGER work_records_au; DROP TABLE work_records_fts; DROP TABLE work_record_revisions; DROP TABLE work_records; PRAGMA user_version=6";
             cmd.ExecuteNonQuery();
         }
         using var upgraded = new KnowledgeStore();
