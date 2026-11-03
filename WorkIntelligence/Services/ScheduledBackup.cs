@@ -6,13 +6,12 @@ namespace WorkIntelligence.Services;
 /// <summary>Unencrypted backup settings and unattended user-session snapshots. No secrets stored by this app.</summary>
 public static class ScheduledBackup
 {
-    private sealed record Settings(string Repository, string? OneDriveRemote, int? KeepNewestSnapshots = null);
     private const string TaskName = "WorkIntelligence-UserDailyBackup";
     private static string SuccessPath => Path.Combine(LocalPaths.Data, "scheduled-backup-last-success.txt");
     private static string SettingsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.json");
     private static string LegacySecretsPath => Path.Combine(LocalPaths.Data, "scheduled-backup.dpapi");
 
-    public static async Task ConfigureAsync(string repository, string? remote, CancellationToken ct, int? keepNewestSnapshots = null)
+    public static async Task ConfigureAsync(string repository, string? remote, CancellationToken ct, int? keepNewestSnapshots = null, CalendarRetention? calendar = null)
     {
         LocalPaths.Ensure();
         LegacyEncryptedDataGuard.AssertNoLegacyData();
@@ -27,16 +26,21 @@ public static class ScheduledBackup
             throw new ArgumentOutOfRangeException(nameof(keepNewestSnapshots), "Keep at least two recovery snapshots.");
         // Validate backup destination with same rules as interactive backups before persisting settings.
         if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Backup folder required.");
-        var config = new Settings(Path.GetFullPath(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim(), keepNewestSnapshots);
+        var config = new BackupJobSettings(BackupService.ValidateRepository(repository), string.IsNullOrWhiteSpace(remote) ? null : remote.Trim(), keepNewestSnapshots,calendar);
+        calendar?.Validate();
+        var sid=System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value ?? throw new InvalidOperationException("Windows user identity is unavailable.");
+        var first=DateTime.Today.AddHours(2);if(first<=DateTime.Now)first=first.AddDays(1);
+        var definition=ScheduledTaskDefinition.Build(executable,System.Reflection.Assembly.GetEntryAssembly()?.Location,LocalPaths.Root,sid,first);
+        var taskFile=SettingsPath+"."+Guid.NewGuid().ToString("N")+".xml";
         var temp = SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(config), ct);
-            await RunTaskSchedulerAsync(["/Create", "/F", "/SC", "DAILY", "/ST", "02:00",
-                "/TN", TaskName, "/TR", $"\"{executable}\" --scheduled-backup", "/IT"], ct);
+            await File.WriteAllTextAsync(taskFile,definition,System.Text.Encoding.Unicode,ct);
+            await RunTaskSchedulerAsync(["/Create","/F","/TN",TaskName,"/XML",taskFile],ct);
             File.Move(temp, SettingsPath, true);
         }
-        finally { if (File.Exists(temp)) File.Delete(temp); }
+        finally { if (File.Exists(temp)) File.Delete(temp);if(File.Exists(taskFile))File.Delete(taskFile); }
     }
 
     public static async Task RemoveAsync(CancellationToken ct)
@@ -50,14 +54,9 @@ public static class ScheduledBackup
     {
         if (!File.Exists(SettingsPath)) throw new InvalidOperationException("No scheduled backup configured.");
         if (new FileInfo(SettingsPath).Length > 8192) throw new InvalidDataException("Scheduled backup settings too large.");
-        var settings = JsonSerializer.Deserialize<Settings>(await File.ReadAllTextAsync(SettingsPath, ct))
+        var settings = JsonSerializer.Deserialize<BackupJobSettings>(await File.ReadAllTextAsync(SettingsPath, ct))
             ?? throw new InvalidDataException("Scheduled backup settings missing.");
-        using var store = new KnowledgeStore();
-        await new BackupService(store).BackupAsync(settings.Repository, ct);
-        if (!string.IsNullOrWhiteSpace(settings.OneDriveRemote))
-            await RemoteBackupService.SyncAndVerifyAsync(settings.Repository, settings.OneDriveRemote, ct);
-        if (settings.KeepNewestSnapshots is int keep)
-            BackupRetention.Prune(settings.Repository, keep, ct);
+        await BackupJobRunner.RunAsync(settings,ct);
         var completed = DateTimeOffset.UtcNow.ToString("O");
         var tempSuccess = SuccessPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try { await File.WriteAllTextAsync(tempSuccess, completed, ct); File.Move(tempSuccess, SuccessPath, true); }
@@ -82,7 +81,10 @@ public static class ScheduledBackup
                 throw new InvalidDataException("Scheduled backup completion timestamp is invalid.");
             last = parsed;
         }
-        if (!BackupRetention.IsOverdue(last, DateTimeOffset.UtcNow)) return false;
+        var health=BackupHealthStore.Load();
+        if(health.LastSuccess is not null)last=health.LastSuccess;
+        if(health.NextRetry is DateTimeOffset retry && retry>DateTimeOffset.UtcNow)return false;
+        if (!BackupRetention.IsOverdue(last, DateTimeOffset.UtcNow) && health.ConsecutiveFailures==0) return false;
         await RunJobAsync(ct);
         return true;
     }

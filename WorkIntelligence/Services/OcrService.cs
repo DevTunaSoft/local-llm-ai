@@ -7,13 +7,14 @@ namespace WorkIntelligence.Services;
 /// stdin/stdout avoid writing the document image or OCR text to temporary plaintext files.</summary>
 public static class OcrService
 {
-    public static string ExtractImage(ReadOnlySpan<byte> image)
+    public static string ExtractImage(ReadOnlySpan<byte> image, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (image.Length is < 8 or > 25 * 1024 * 1024)
             throw new InvalidDataException("OCR image exceeds permitted size or is empty.");
         // Copy is necessary because redirected stdin requires a stream; no local temp image is created.
         var payload = image.ToArray();
-        try { return ExtractCoreAsync(payload, CancellationToken.None).GetAwaiter().GetResult(); }
+        try { return ExtractCoreAsync(payload, cancellationToken).GetAwaiter().GetResult(); }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(payload); }
     }
 

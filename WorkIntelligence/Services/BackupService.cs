@@ -25,10 +25,12 @@ public sealed class BackupService
         {
             await Task.Run(() => _store.CreateBackupSnapshot(staging, ct), ct);
             // Persist per-model local configuration with the portable vault snapshot.
-            var modelSettingsPath = Path.Combine(LocalPaths.Data, "model-settings.json");
-            PathSafety.RejectReparsePoints(modelSettingsPath);
-            if (File.Exists(modelSettingsPath))
-                File.Copy(modelSettingsPath, Path.Combine(staging, "model-settings.json"), overwrite: false);
+            foreach (var name in PortableSettings.Files)
+            {
+                var settings=Path.Combine(LocalPaths.Data,name);
+                PathSafety.RejectReparsePoints(settings);
+                if(File.Exists(settings))File.Copy(settings,Path.Combine(staging,name),false);
+            }
             var manifest = BuildManifest(staging, ct);
             var manifestPath = Path.Combine(staging, "manifest.json");
             await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest), ct);
@@ -46,54 +48,44 @@ public sealed class BackupService
     {
         var location = ValidateRepository(repository);
         LocalPaths.Ensure();
-        LegacyEncryptedDataGuard.AssertNoLegacyData();
-        if (File.Exists(LocalPaths.Database) || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
-            throw new InvalidOperationException("Restore requires an empty data directory. Existing data will never be overwritten.");
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(location), ct);
+        using var vaultLock = await FileOperationLock.AcquireAsync("vault-files", ct);
+        LegacyEncryptedDataGuard.AssertNoLegacyData();
+        if (new[] { "", "-wal", "-shm", "-journal" }.Any(suffix => File.Exists(LocalPaths.Database + suffix))
+            || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
+            throw new InvalidOperationException("Restore requires an empty data directory. Existing data will never be overwritten.");
         if (!Directory.Exists(location)) throw new DirectoryNotFoundException("Backup repository not found.");
-        PathSafety.RejectReparsePoints(location);
         var snapshot = SelectLatestVerifiedSnapshot(location, ct);
-        var blobsPath = Path.Combine(snapshot, "Blobs");
-        var files = Directory.Exists(blobsPath) ? Directory.EnumerateFiles(blobsPath, "*.bin", SearchOption.TopDirectoryOnly).ToArray() : Array.Empty<string>();
-        var created = new List<string>();
+        foreach(var name in PortableSettings.Files)
+        {
+            var destination=Path.Combine(LocalPaths.Data,name);
+            PathSafety.RejectReparsePoints(destination);
+            if(File.Exists(Path.Combine(snapshot,name)) && File.Exists(destination))
+                throw new InvalidOperationException("Restore refuses to overwrite existing workspace settings.");
+        }
+        // Copy and validate away from the live paths. A disk-full/cancelled copy
+        // cannot leave a partial live database or attachment behind.
+        var staging = Path.Combine(LocalPaths.Root, ".restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(staging);
         try
         {
-            foreach (var file in files)
+            foreach (var file in EnumerateSnapshotFiles(snapshot))
             {
                 ct.ThrowIfCancellationRequested();
-                var destination = Path.Combine(LocalPaths.Blobs, Path.GetFileName(file));
-                File.Copy(file, destination, false);
-                created.Add(destination);
+                var target=Path.Combine(staging,Path.GetRelativePath(snapshot,file));
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.Copy(file,target,false);
             }
-            var targetDatabase = LocalPaths.Database;
-            File.Copy(Path.Combine(snapshot, "knowledge.db"), targetDatabase, false);
-            created.Add(targetDatabase);
-            var savedSettings = Path.Combine(snapshot, "model-settings.json");
-            if (File.Exists(savedSettings))
-            {
-                var targetSettings = Path.Combine(LocalPaths.Data, "model-settings.json");
-                if (File.Exists(targetSettings))
-                    throw new InvalidOperationException("Restore refuses to overwrite existing model settings.");
-                File.Copy(savedSettings, targetSettings, false);
-                created.Add(targetSettings);
-            }
-            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-                { DataSource = targetDatabase, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = "PRAGMA integrity_check";
-            if (command.ExecuteScalar()?.ToString() != "ok") throw new InvalidDataException("Restored database failed integrity check.");
-            AuditLog.Info("Restore", "Verified plaintext snapshot restored into an empty data directory.");
+            VerifySnapshot(staging,ct);
+            RestoreTransaction.Promote(staging,ct);
+            AuditLog.Info("Restore","Verified plaintext snapshot promoted as one recoverable data directory.");
         }
-        catch
+        finally
         {
-            foreach (var createdFile in created.AsEnumerable().Reverse())
-            {
-                try { File.Delete(createdFile); } catch (Exception e) { AuditLog.Error("RestoreRollback", e); }
-            }
-            throw;
+            // A published transaction retains its verified staging payload for
+            // recovery after I/O failure or process termination.
+            if(Directory.Exists(staging) && !File.Exists(RestoreTransaction.JournalPath))Directory.Delete(staging,true);
         }
-        await Task.CompletedTask;
     }
 
     // If the newest backup is incomplete/corrupt, recover from the newest valid
@@ -120,7 +112,7 @@ public sealed class BackupService
         throw new InvalidDataException("No valid plaintext snapshot could be verified. Existing data remains unchanged.");
     }
 
-    private static string ValidateRepository(string repository)
+    internal static string ValidateRepository(string repository)
     {
         if (string.IsNullOrWhiteSpace(repository)) throw new ArgumentException("Choose an organization-approved backup directory.");
         var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(repository));
@@ -149,13 +141,23 @@ public sealed class BackupService
         return new SnapshotManifest(1, DateTimeOffset.UtcNow.ToString("O"), files);
     }
 
-    private static bool IsSafeDataPath(string path) => path is "knowledge.db" or "model-settings.json" ||
-        Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
+    private static bool IsSafeDataPath(string? path) => path == "knowledge.db" || path is not null && PortableSettings.Files.Contains(path) ||
+        path is not null && Regex.IsMatch(path, @"^Blobs/[0-9]+\.bin$", RegexOptions.CultureInvariant);
+
+    internal static DateTimeOffset SnapshotTime(string snapshot)
+    {
+        var manifest=JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(Path.Combine(snapshot,"manifest.json")))
+            ?? throw new InvalidDataException("Snapshot manifest is malformed.");
+        if(!DateTimeOffset.TryParse(manifest.CreatedAt,System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,out var created))throw new InvalidDataException("Snapshot time is invalid.");
+        return created;
+    }
 
     internal static void VerifySnapshot(string snapshot, CancellationToken ct)
     {
         PathSafety.RejectReparsePoints(snapshot);
         var manifestPath = Path.Combine(snapshot, "manifest.json");
+        PathSafety.RejectReparsePoints(manifestPath);
         if (!File.Exists(manifestPath) || new FileInfo(manifestPath).Length > 4 * 1024 * 1024)
             throw new InvalidDataException("Snapshot manifest is missing or oversized.");
         var manifest = JsonSerializer.Deserialize<SnapshotManifest>(File.ReadAllText(manifestPath))
@@ -178,13 +180,70 @@ public sealed class BackupService
                 throw new InvalidDataException("Snapshot checksum mismatch.");
         }
         if (!listed.Contains("knowledge.db")) throw new InvalidDataException("Snapshot missing the database.");
-        var found = Directory.EnumerateFiles(snapshot, "*", SearchOption.AllDirectories)
+        var found = EnumerateSnapshotFiles(snapshot)
             .Select(x => Path.GetRelativePath(snapshot, x).Replace('\\', '/')).ToArray();
         if (found.Length != listed.Count + 1 || found.Any(x => x != "manifest.json" && !listed.Contains(x)))
             throw new InvalidDataException("Snapshot contains unexpected or unverified files.");
-        using var db = File.OpenRead(Path.Combine(snapshot, "knowledge.db"));
-        Span<byte> header = stackalloc byte[16];
-        if (db.Read(header) != 16 || !header.SequenceEqual("SQLite format 3\0"u8))
-            throw new InvalidDataException("Snapshot database is not standard SQLite.");
+        using (var db = File.OpenRead(Path.Combine(snapshot, "knowledge.db")))
+        {
+            Span<byte> header = stackalloc byte[16];
+            if (db.Read(header) != 16 || !header.SequenceEqual("SQLite format 3\0"u8))
+                throw new InvalidDataException("Snapshot database is not standard SQLite.");
+        }
+        ct.ThrowIfCancellationRequested();
+        try
+        {
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+                { DataSource = Path.Combine(snapshot, "knowledge.db"), Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString());
+            connection.Open();
+            ApplicationSchema.Verify(connection);
+            using var command = connection.CreateCommand();
+            using var cancellation = ct.Register(() => command.Cancel());
+            command.CommandText = "PRAGMA integrity_check";
+            if (command.ExecuteScalar()?.ToString() != "ok")
+                throw new InvalidDataException("Snapshot database failed integrity check.");
+            command.CommandText = "PRAGMA foreign_key_check";
+            if (command.ExecuteScalar() is not null)
+                throw new InvalidDataException("Snapshot database has broken record references.");
+            command.CommandText = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='documents'";
+            if (Convert.ToInt32(command.ExecuteScalar()) > 0)
+            {
+                command.CommandText = "SELECT id,sha256 FROM documents";
+                using var documents = command.ExecuteReader();
+                var payloads = manifest.Files.ToDictionary(x => x.Path, StringComparer.Ordinal);
+                while (documents.Read())
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var blob = "Blobs/" + documents.GetInt64(0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ".bin";
+                    if (!payloads.TryGetValue(blob, out var payload) || documents.IsDBNull(1) ||
+                        !payload.Sha256.Equals(documents.GetString(1), StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Snapshot attachments do not match the document records.");
+                }
+            }
+        }
+        catch (SqliteException ex)
+        {
+            ct.ThrowIfCancellationRequested();
+            throw new InvalidDataException("Snapshot database could not be verified.", ex);
+        }
+    }
+
+    // Do not recurse through arbitrary snapshot directories (including links).
+    // The format permits only root files and one Blobs directory.
+    private static IEnumerable<string> EnumerateSnapshotFiles(string snapshot)
+    {
+        foreach (var item in Directory.EnumerateFileSystemEntries(snapshot))
+        {
+            PathSafety.RejectReparsePoints(item);
+            if (!Directory.Exists(item)) { yield return item; continue; }
+            if (Path.GetFileName(item) != "Blobs")
+                throw new InvalidDataException("Snapshot contains an unexpected directory.");
+            foreach (var blob in Directory.EnumerateFileSystemEntries(item))
+            {
+                PathSafety.RejectReparsePoints(blob);
+                if (Directory.Exists(blob)) throw new InvalidDataException("Snapshot contains a nested attachment directory.");
+                yield return blob;
+            }
+        }
     }
 }

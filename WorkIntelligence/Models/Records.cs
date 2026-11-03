@@ -1,6 +1,8 @@
 namespace WorkIntelligence.Models;
 
-public sealed record DocumentRecord(long Id, string Name, string OriginalPath, string Hash, int Version, DateTimeOffset ImportedAt, bool Active);
+public sealed record DocumentRecord(long Id, string Name, string OriginalPath, string Hash, int Version, DateTimeOffset ImportedAt, bool Active)
+{public string DisplayName=>$"{Name} — D{Id}, v{Version} — {(Active?"current":"archived")}";}
+
 public sealed record ChunkHit(long DocumentId, string Name, int Version, int Ordinal, string Content, double Rank);
 public sealed record MemoryRecord(long Id, string Text, string Source, DateTimeOffset CreatedAt);
 public sealed record ChatRecord(long Id, string Title, DateTimeOffset CreatedAt);
@@ -14,3 +16,7 @@ public sealed record FolderScanResult(int Imported,int Skipped,int Failed,IReadO
 public sealed record ConversationRecallRecord(long ChatId,long MessageId,string Text);
 public sealed record MemoryProposal(long Id,string Text,string Source,long? ReplacesMemoryId = null);
 public sealed record MemoryHistoryRecord(long Id,string Text,string Source,DateTimeOffset CreatedAt,bool Active,long? SupersededBy);
+
+public sealed record WorkRecord(long Id,long WorkspaceId,string Kind,string Title,string Details,string Owner,
+    string? DueDate,string Status,long? RelatedId,int Revision,string UpdatedAt);
+public sealed record WorkRecordRevision(int Revision,string Reason,string CreatedAt,WorkRecord Record);

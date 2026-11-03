@@ -42,6 +42,51 @@ public sealed partial class KnowledgeStore
             cmd.ExecuteNonQuery();
         }
     }
+    public void RemoveDocumentFromWorkspace(long documentId,long workspaceId)
+    {
+        lock(_writeGate)
+        {
+            using var fileLock=FileOperationLock.Acquire("vault-files");
+            using var con=Connect();using var tx=con.BeginTransaction();using var cmd=con.CreateCommand();cmd.Transaction=tx;
+            cmd.CommandText="DELETE FROM workspace_documents WHERE document_id=$id AND workspace_id=$w";
+            cmd.Parameters.AddWithValue("$id",documentId);cmd.Parameters.AddWithValue("$w",workspaceId);
+            if(cmd.ExecuteNonQuery()!=1)throw new InvalidDataException("Document is not assigned to the current workspace.");
+            cmd.CommandText="DELETE FROM documents WHERE id=$id AND NOT EXISTS(SELECT 1 FROM workspace_documents WHERE document_id=$id)";
+            var deleted=cmd.ExecuteNonQuery()==1;tx.Commit();
+            if(deleted)
+            {
+                var blob=Path.Combine(LocalPaths.Blobs,documentId.ToString(System.Globalization.CultureInfo.InvariantCulture)+".bin");
+                PathSafety.RejectReparsePoints(blob);if(File.Exists(blob))File.Delete(blob);
+            }
+        }
+    }
+
+    public string ReadAuthorizedDocumentText(long documentId, long workspaceId)
+    {
+        using var fileLock = FileOperationLock.Acquire("vault-files");
+        using var con = Connect();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = """
+            SELECT d.name,d.sha256 FROM documents d
+            JOIN workspace_documents wd ON wd.document_id=d.id
+            WHERE d.id=$id AND wd.workspace_id=$w
+            """;
+        cmd.Parameters.AddWithValue("$id", documentId);
+        cmd.Parameters.AddWithValue("$w", workspaceId);
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read()) throw new InvalidDataException("Selected document is not assigned to the current workspace.");
+        var name = reader.GetString(0);
+        var expected = reader.GetString(1);
+        var path = Path.Combine(LocalPaths.Blobs, documentId.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".bin");
+        PathSafety.RejectReparsePoints(path);
+        if (!File.Exists(path) || new FileInfo(path).Length > 25 * 1024 * 1024)
+            throw new InvalidDataException("Stored source document is missing or oversized.");
+        var bytes = File.ReadAllBytes(path);
+        if (!Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).Equals(expected, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("Stored document no longer matches its imported source hash.");
+        return DocumentExtractor.Extract(name, bytes);
+    }
+
     public List<WorkTaskRecord> Tasks(long workspaceId)
     {
         using var con=Connect();using var cmd=con.CreateCommand();
@@ -63,6 +108,24 @@ public sealed partial class KnowledgeStore
             return (long)(cmd.ExecuteScalar()??0L);
         }
     }
+    public void UpdateTask(long taskId, long workspaceId, string title, string details)
+    {
+        title = title.Trim();
+        if (title.Length is < 1 or > 200 || details.Length > 20_000)
+            throw new ArgumentException("Task title/details exceed limits.");
+        lock (_writeGate)
+        {
+            using var con = Connect();
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = "UPDATE work_tasks SET title=$t,details=$d WHERE id=$id AND workspace_id=$w";
+            cmd.Parameters.AddWithValue("$t", title);
+            cmd.Parameters.AddWithValue("$d", details);
+            cmd.Parameters.AddWithValue("$id", taskId);
+            cmd.Parameters.AddWithValue("$w", workspaceId);
+            if (cmd.ExecuteNonQuery() != 1) throw new InvalidDataException("Task is not in the selected workspace.");
+        }
+    }
+
     public void SetTaskStatus(long taskId,string status)
     {
         if(status is not ("Open" or "In Progress" or "Blocked" or "Completed"))throw new ArgumentException("Invalid task status.");
@@ -91,8 +154,15 @@ public sealed partial class KnowledgeStore
         lock(_writeGate)
         {
             using var con=Connect();using var cmd=con.CreateCommand();
+            RequireWorkspace(con,workspaceId);
+            using(var existing=con.CreateCommand())
+            {
+                existing.CommandText="SELECT workspace_id FROM watched_folders WHERE path=$p";existing.Parameters.AddWithValue("$p",full);
+                if(existing.ExecuteScalar() is long prior && prior!=workspaceId)throw new InvalidOperationException("This folder is monitored in another workspace. Reapprove it in that workspace or remove the old monitor first.");
+            }
             cmd.CommandText="INSERT OR IGNORE INTO watched_folders(path,workspace_id) VALUES($p,$w)";
             cmd.Parameters.AddWithValue("$p",full);cmd.Parameters.AddWithValue("$w",workspaceId);cmd.ExecuteNonQuery();
+            FolderAuthorization.Approve(full,workspaceId);
         }
     }
     public void RemoveWatchFolder(long id)
@@ -116,6 +186,7 @@ public sealed partial class KnowledgeStore
             {
                 // A previously approved directory can be replaced while the app is running.
                 PathSafety.RejectReparsePoints(folder.Path);
+                if(!FolderAuthorization.IsApproved(folder.Path,folder.WorkspaceId))throw new UnauthorizedAccessException("Reapprove this watched folder on the current device/user before scanning.");
                 if (!Directory.Exists(folder.Path)) throw new DirectoryNotFoundException();
                 var count = 0;
                 var complete = true;
@@ -137,7 +208,7 @@ public sealed partial class KnowledgeStore
                         // older revision advertised as current evidence.
                         if ((file.Attributes & FileAttributes.ReparsePoint) != 0 || !ApprovedExtensions.Contains(file.Extension) ||
                             file.Length is <= 0 or > 25 * 1024 * 1024) { skipped++; continue; }
-                        var result = await Task.Run(() => Import(path), ct);
+                        var result = await Task.Run(() => Import(path, ct), ct);
                         seen.Add(canonical);
                         AssignDocument(result.DocumentId, folder.WorkspaceId);
                         if (result.Imported) imported++; else skipped++;
@@ -248,6 +319,11 @@ public sealed partial class KnowledgeStore
             RequireWorkspace(con,workspaceId);
             if(replacesMemoryId is long replaceId)
             {
+                using(var policy=con.CreateCommand())
+                {
+                    policy.CommandText="SELECT 1 FROM memory_policies WHERE memory_id=$id";policy.Parameters.AddWithValue("$id",replaceId);
+                    if(policy.ExecuteScalar() is not null)throw new InvalidOperationException("Revise dated policies in Policy Review to preserve authority, conflict review and effective dates.");
+                }
                 using var verify=con.CreateCommand();
                 verify.CommandText="SELECT content FROM memories WHERE id=$id AND approved=1 AND workspace_id=$w";
                 verify.Parameters.AddWithValue("$id",replaceId);

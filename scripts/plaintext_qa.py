@@ -36,21 +36,23 @@ check('No password controls for opening or backups', all(x not in ui for x in ('
 check('Versioned plaintext snapshots with SHA256 validation',all(x in back for x in ('snapshot', 'SHA256.HashData', 'VerifySnapshot', 'manifest.json', 'File.Move' if False else 'Directory.Move')))
 check('Backups do not call restic', 'restic.exe' not in back and 'RESTIC_PASSWORD' not in back)
 check('Scheduled backups store no vault or backup passwords',all(x not in schedule for x in ('ProtectedData.Protect','VaultPassword','BackupPassword')))
-check('Backups never silently overwrite existing database','File.Copy(Path.Combine(snapshot, "knowledge.db"), targetDatabase, false)' in back)
+check('Backups never silently overwrite existing database','RestoreTransaction.Promote(staging,ct)' in back and 'AssertEmptyData(LocalPaths.Data)' in read('WorkIntelligence/Services/RestoreTransaction.cs'))
 check('Remote sync includes downloaded-byte verification','"--download"' in read('WorkIntelligence/Services/RemoteBackupService.cs'))
 # Execute exactly the SQL extracted from source to validate FTS5, workspaces and schema migrations.
 base=re.search(r'cmd.CommandText = """(\s*PRAGMA journal_mode=DELETE;.*?)""";',src,re.S)
 m4=re.search(r'upgrade.CommandText = """(.*?)""";',src,re.S)
 m5=re.search(r'migration.CommandText = """(.*?)""";',src,re.S)
 m6=re.search(r'recallUpgrade.CommandText = """(.*?)""";',src,re.S)
-check('SQL schemas/migrations found in source',all((base,m4,m5,m6)))
-if all((base,m4,m5,m6)):
+m7=re.search(r'workUpgrade.CommandText = """(.*?)""";',src,re.S)
+m8=re.search(r'policyUpgrade.CommandText="""(.*?)""";',src,re.S)
+check('SQL schemas/migrations found in source',all((base,m4,m5,m6,m7,m8)))
+if all((base,m4,m5,m6,m7,m8)):
   with tempfile.TemporaryDirectory() as d:
     path=Path(d)/'knowledge.db'
     db=sqlite3.connect(path)
     db.execute('PRAGMA foreign_keys=ON')
-    for m in (base,m4,m5,m6):db.executescript(m.group(1))
-    check('Schema reaches V6',db.execute('PRAGMA user_version').fetchone()[0]==6)
+    for m in (base,m4,m5,m6,m7,m8):db.executescript(m.group(1))
+    check('Schema reaches V8',db.execute('PRAGMA user_version').fetchone()[0]==8)
     db.execute("INSERT INTO documents(name,original_path,sha256,version,imported_at,active) VALUES('source','/tmp/s','h',1,'now',1)")
     db.execute("INSERT INTO chunks(document_id,ordinal,content) VALUES(1,0,'Synthetic policy dispatch')")
     check('FTS5 searches imported document',db.execute('SELECT count(*) FROM chunks_fts WHERE chunks_fts MATCH ?',('"dispatch"',)).fetchone()[0]==1)

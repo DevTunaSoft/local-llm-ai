@@ -8,7 +8,7 @@ internal static class CompletionStream
     private const int MaximumEventCharacters = 1_048_576;
 
     internal static async IAsyncEnumerable<string> ReadAsync(TextReader reader,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken,Action<CompletionUsage>? usageReceived=null)
     {
         var data = new StringBuilder();
         while (true)
@@ -36,6 +36,24 @@ internal static class CompletionStream
             if (content.Length == 0) continue;
             using var document = JsonDocument.Parse(content);
             var root = document.RootElement;
+            if(root.TryGetProperty("usage",out var usage) && usage.ValueKind==JsonValueKind.Object)
+            {
+                if(!usage.TryGetProperty("prompt_tokens",out var promptNode)||!promptNode.TryGetInt32(out var prompt)||prompt<0 ||
+                    !usage.TryGetProperty("completion_tokens",out var completionNode)||!completionNode.TryGetInt32(out var completion)||completion<0)
+                    throw new InvalidDataException("Local model reported invalid token usage.");
+                double? promptMs=null,generationMs=null;
+                if(root.TryGetProperty("timings",out var timings) && timings.ValueKind==JsonValueKind.Object)
+                {
+                    double? Timing(string key)
+                    {
+                        if(!timings.TryGetProperty(key,out var node))return null;
+                        if(!node.TryGetDouble(out var value)||!double.IsFinite(value)||value<0)throw new InvalidDataException("Local model timing data is invalid.");
+                        return value;
+                    }
+                    promptMs=Timing("prompt_ms");generationMs=Timing("predicted_ms");
+                }
+                usageReceived?.Invoke(new(prompt,completion,promptMs,generationMs));
+            }
             if (root.TryGetProperty("error", out _))
                 throw new InvalidDataException("The local AI engine reported a response error. Any partial answer is incomplete.");
             if (!root.TryGetProperty("choices", out var choices) || choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0)

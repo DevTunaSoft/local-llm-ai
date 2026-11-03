@@ -133,4 +133,17 @@ public sealed class DocumentTests
         }
         finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }
     }
+    [Fact]
+    public void InvalidXmlTextDoesNotReplaceAnExistingWordDocument()
+    {
+        var file = Path.Combine(Path.GetTempPath(), "wi-docx-" + Guid.NewGuid().ToString("N") + ".docx");
+        try
+        {
+            File.WriteAllText(file, "existing report");
+            Assert.Throws<System.Xml.XmlException>(() => DocumentExporter.SaveDocx(file, "Report", "invalid\uD800text"));
+            Assert.Equal("existing report", File.ReadAllText(file));
+        }
+        finally { File.Delete(file); }
+    }
+
 }

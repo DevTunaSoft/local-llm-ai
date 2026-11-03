@@ -11,15 +11,39 @@ public static class RemoteBackupService
     {
         ValidateRemote(remote);
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(localRepository), ct);
-        if(!Directory.Exists(localRepository) || !Directory.EnumerateDirectories(localRepository, "snap-*").Any())
-            throw new InvalidDataException("No plaintext snapshots exist. Create a verified local backup first.");
+        var snapshots = VerifiedUploadSnapshots(localRepository, ct);
         var rclone=RuntimeBundle.Resolve("rclone.exe");
         await RequireOneDriveBackendAsync(rclone, remote, ct);
-        await RunAsync(rclone,["copy",Path.GetFullPath(localRepository),remote,"--transfers","4","--checkers","8"],ct);
-        // Compare both sides byte-for-byte. Remote copies are plaintext, not protected by this app.
-        await RunAsync(rclone,["check",Path.GetFullPath(localRepository),remote,"--download","--one-way"],ct);
+        foreach (var snapshot in snapshots)
+        {
+            var destination = remote + "/" + Path.GetFileName(snapshot);
+            await RunAsync(rclone,["copy",snapshot,destination,"--transfers","4","--checkers","8"],ct);
+            // Never copy repository-level pending files, lock files, or unrelated
+            // data. Old remote recovery points are preserved (copy, never sync).
+            await RunAsync(rclone,["check",snapshot,destination,"--download","--one-way"],ct);
+        }
         AuditLog.Info("OneDrive", "Plaintext remote repository byte-verification completed.");
     }
+    internal static IReadOnlyList<string> VerifiedUploadSnapshots(string repository, CancellationToken ct)
+    {
+        var root = Path.GetFullPath(repository);
+        PathSafety.RejectReparsePoints(root);
+        if (!Directory.Exists(root)) throw new DirectoryNotFoundException("Backup repository not found.");
+        var valid = new List<string>();
+        foreach (var snapshot in Directory.EnumerateDirectories(root, "snap-*", SearchOption.TopDirectoryOnly)
+            .OrderBy(Path.GetFileName, StringComparer.Ordinal))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!Regex.IsMatch(Path.GetFileName(snapshot), @"^snap-[A-Za-z0-9-]+$"))
+                throw new InvalidDataException("Snapshot directory name is unsafe for remote transfer.");
+            try { BackupService.VerifySnapshot(snapshot, ct); valid.Add(snapshot); }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            { AuditLog.Info("OneDrive", "Unverifiable local snapshot excluded from upload; retained for inspection."); }
+        }
+        if (valid.Count == 0) throw new InvalidDataException("No verified plaintext snapshots exist. Create a verified local backup first.");
+        return valid;
+    }
+
     public static async Task RestoreRemoteToEmptyVaultAsync(string remote,CancellationToken ct)
     {
         ValidateRemote(remote);

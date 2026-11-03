@@ -1,2 +1,4 @@
 lxml==6.1.1
 PyYAML==6.0.3
+pypdfium2==5.14.0
+Pillow==13.0.0

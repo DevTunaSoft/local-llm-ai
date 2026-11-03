@@ -10,7 +10,7 @@ public sealed class ModelSettingsTests
     {
         const string first = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         const string second = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
-        var firstOptions = new ModelRuntimeOptions(8192, 6, 768, 0.25);
+        var firstOptions = new ModelRuntimeOptions(8192, 6, 768, 0.25, 1200, 1800);
         ModelSettingsStore.Save(first, firstOptions);
         Assert.Equal(firstOptions, ModelSettingsStore.Load(first.ToLowerInvariant()));
         Assert.Equal(new ModelRuntimeOptions(), ModelSettingsStore.Load(second));

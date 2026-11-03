@@ -12,6 +12,7 @@ on:
       - '.github/workflows/windows-build.yml'
       - '.github/workflows/windows-ui-smoke.yml'
       - '.github/workflows/live-inference-smoke.yml'
+      - '.github/workflows/native-ocr.yml'
 permissions:
   contents: read
   issues: write
@@ -22,7 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Verify requirement IDs, coverage, and evidence integrity
-        run: python3 scripts/verify-requirements.py
+        run: |
+          python3 scripts/verify-requirements.py
+          python3 -m unittest discover -s tests/python
   source-and-storage:
     name: Compile, source tests, storage, backup and Linux regression
     uses: ./.github/workflows/windows-build.yml
@@ -37,5 +40,10 @@ jobs:
   actual-offline-models:
     name: Run local GGUF chat, restarts, embeddings and vector retrieval
     uses: ./.github/workflows/live-inference-smoke.yml
+    permissions:
+      contents: read
+  actual-native-ocr:
+    name: Run real Windows image and mixed-PDF OCR
+    uses: ./.github/workflows/native-ocr.yml
     permissions:
       contents: read

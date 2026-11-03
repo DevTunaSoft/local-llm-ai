@@ -9,8 +9,11 @@ public static class DocumentExporter
 {
     public static void SaveDocx(string file,string title,string body)
     {
-        if(body.Length>2_000_000) throw new InvalidDataException("Document exceeds export limit.");
+        if(title.Length>500 || body.Length>2_000_000) throw new InvalidDataException("Document exceeds export limit.");
+        XmlConvert.VerifyXmlChars(title);
+        XmlConvert.VerifyXmlChars(body);
         var path=Path.GetFullPath(file);
+        PathSafety.RejectReparsePoints(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temp=path+"."+Guid.NewGuid().ToString("N")+".tmp";
         try

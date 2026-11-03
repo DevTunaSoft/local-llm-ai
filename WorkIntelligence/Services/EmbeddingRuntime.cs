@@ -33,7 +33,7 @@ public sealed class EmbeddingRuntime : IAsyncDisposable
             modelStream.Position=0;
             // Hash identifies the exact embedding space; vectors from other models are never mixed.
             var hash = Convert.ToHexString(SHA256.HashData(modelStream));
-            HardwareProbe.ValidateModelMemory(modelFile);
+            HardwareProbe.ValidateModelMemory(modelFile,2048);
             var server = RuntimeBundle.Resolve("llama-server.exe");
             var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start(); var port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();

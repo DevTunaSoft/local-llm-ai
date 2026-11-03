@@ -27,7 +27,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $dll)) { throw "Compiled WPF DLL missing: $dll" }
           $stdout = Join-Path $env:RUNNER_TEMP 'wi-ui-stdout.txt'
           $stderr = Join-Path $env:RUNNER_TEMP 'wi-ui-stderr.txt'
-          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll) -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $process = Start-Process -FilePath 'dotnet' -ArgumentList @($dll, '--data-root', $env:WORKINTELLIGENCE_DATA_ROOT, '--skip-setup') -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
           try {
             $seenWindow = $false
             for ($i=0; $i -lt 60; $i++) {
@@ -59,7 +59,43 @@ jobs:
             if (-not $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $refusalCondition)) {
               throw 'Unauthorized workspace opening did not show refusal state.'
             }
-            $toggle.Toggle()
+            $setupCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'First-run Setup')
+            $setupButton = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $setupCondition)
+            if (-not $setupButton) { throw 'First-run setup action is missing.' }
+            ([System.Windows.Automation.InvokePattern]$setupButton.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            $setupWindowCondition = [System.Windows.Automation.AndCondition]::new(
+              $setupCondition,
+              [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Window),
+              [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ProcessIdProperty, $process.Id))
+            $setup = $null
+            for ($attempt=0; $attempt -lt 30; $attempt++) {
+              Start-Sleep -Milliseconds 300
+              $setup = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $setupWindowCondition)
+              if ($setup) { break }
+            }
+            if (-not $setup) { throw 'Actual setup wizard did not appear.' }
+            $finishCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SetupFinish')
+            $finish = $setup.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $finishCondition)
+            ([System.Windows.Automation.InvokePattern]$finish.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            Start-Sleep -Milliseconds 300
+            $approvalCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::AutomationIdProperty, 'SetupAuthorization')
+            $approval = $setup.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $approvalCondition)
+            if (-not $approval) { throw 'Setup did not require explicit authorization before saving.' }
+            $setupToggle = [System.Windows.Automation.TogglePattern]$approval.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+            if ($setupToggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::Off) { throw 'Setup authorization must default to unchecked.' }
+            $setupToggle.Toggle()
+            ([System.Windows.Automation.InvokePattern]$finish.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            for ($attempt=0; $attempt -lt 40; $attempt++) {
+              Start-Sleep -Milliseconds 300
+              if (Test-Path (Join-Path $env:WORKINTELLIGENCE_DATA_ROOT 'Data/workspace-preferences.json')) { break }
+            }
+            $preferences = Get-Content (Join-Path $env:WORKINTELLIGENCE_DATA_ROOT 'Data/workspace-preferences.json') -Raw | ConvertFrom-Json
+            if (-not $preferences.SetupCompleted) { throw 'Actual setup did not persist completion.' }
+            if ($toggle.Current.ToggleState -ne [System.Windows.Automation.ToggleState]::On) { throw 'Completed setup did not carry explicit consent to the workspace screen.' }
+            Write-Host 'Actual first-run wizard refused missing consent, saved preferences and completed.'
             $invoke.Invoke()
             $chatCondition = [System.Windows.Automation.PropertyCondition]::new(
               [System.Windows.Automation.AutomationElement]::NameProperty, 'AI Chat')
@@ -139,10 +175,56 @@ jobs:
             }
             if (-not $searched) { throw 'Actual chat search did not report completion.' }
             Write-Host 'Actual Search Chats UI successfully executed.'
+            function Find-Control([string]$id) {
+              $condition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::AutomationIdProperty, $id)
+              $control = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+              if (-not $control) { throw "Missing actual WPF control: $id" }
+              return $control
+            }
+            function Set-Text([string]$id, [string]$value) {
+              $control = Find-Control $id
+              ([System.Windows.Automation.ValuePattern]$control.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).SetValue($value)
+            }
+            function Invoke-Named([string]$name) {
+              $condition = [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::NameProperty, $name)
+              $control = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
+              if (-not $control) { throw "Missing actual WPF action: $name" }
+              ([System.Windows.Automation.InvokePattern]$control.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)).Invoke()
+            }
+            $recordTabCondition = [System.Windows.Automation.PropertyCondition]::new(
+              [System.Windows.Automation.AutomationElement]::NameProperty, 'Project Records')
+            $recordTab = $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $recordTabCondition)
+            if (-not $recordTab) { throw 'Project Records tab is missing.' }
+            ([System.Windows.Automation.SelectionItemPattern]$recordTab.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)).Select()
+            Set-Text 'WorkTitleInput' 'Synthetic CI project'
+            Set-Text 'WorkDetailsInput' 'Original synthetic project details'
+            Set-Text 'WorkOwnerInput' 'Synthetic CI owner'
+            Invoke-Named 'Save Record'
+            Start-Sleep -Milliseconds 500
+            Set-Text 'WorkDetailsInput' 'Updated synthetic resolution'
+            Set-Text 'WorkReasonInput' 'Synthetic reviewed revision'
+            Invoke-Named 'Save Record'
+            Start-Sleep -Milliseconds 500
+            Invoke-Named 'Revision History'
+            Start-Sleep -Milliseconds 500
+            $draft = Find-Control 'DocumentDraftInput'
+            $history = ([System.Windows.Automation.ValuePattern]$draft.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)).Current.Value
+            foreach ($expected in @('Revision 1', 'Original synthetic project details', 'Revision 2', 'Updated synthetic resolution', 'Synthetic reviewed revision', 'Synthetic CI owner')) {
+              if (-not $history.Contains($expected)) { throw "Work record UI did not preserve history field: $expected" }
+            }
+            Write-Host 'Actual project-record creation, owner, revision, and full history display verified.'
+
             Start-Sleep -Seconds 3
             $process.Refresh()
             if ($process.HasExited) { throw 'WPF process crashed after its window appeared.' }
             Write-Host 'Real WPF MainWindow launched and remained running for three seconds.'
+          }
+          catch {
+            $safeMessage = $_.Exception.Message -replace '[\r\n]+', ' '
+            Write-Host "::error::WPF acceptance failure: $safeMessage"
+            throw
           }
           finally {
             if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }

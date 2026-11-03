@@ -8,6 +8,7 @@ root=Path(__file__).resolve().parent.parent
 source=(root/'WorkIntelligence/Services/KnowledgeStore.cs').read_text()
 work=(root/'WorkIntelligence/Services/KnowledgeStore.Work.cs').read_text()
 ui=(root/'WorkIntelligence/MainWindow.xaml.cs').read_text()
+prompt=(root/'WorkIntelligence/Services/GroundingPrompt.cs').read_text()
 checks=[]
 def check(name, condition):
     checks.append(bool(condition));print(('PASS' if condition else 'FAIL')+' | '+name)
@@ -19,6 +20,8 @@ base=extract(source,r'cmd.CommandText = """(\s*PRAGMA journal_mode=DELETE;.*?)""
 m4=extract(source,r'upgrade.CommandText = """(.*?)""";')
 m5=extract(source,r'migration.CommandText = """(.*?)""";')
 m6=extract(source,r'recallUpgrade.CommandText = """(.*?)""";')
+m7=extract(source,r'workUpgrade.CommandText = """(.*?)""";')
+m8=extract(source,r'policyUpgrade.CommandText="""(.*?)""";')
 with tempfile.TemporaryDirectory() as folder:
     c=sqlite3.connect(str(Path(folder)/'schema.db'))
     c.execute('PRAGMA foreign_keys=ON')
@@ -37,6 +40,10 @@ with tempfile.TemporaryDirectory() as folder:
     check('V5 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==5)
     c.executescript(m6)
     check('V6 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==6)
+    c.executescript(m7)
+    check('V7 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==7)
+    c.executescript(m8)
+    check('V8 migration reaches correct version',c.execute('PRAGMA user_version').fetchone()[0]==8)
     check('Legacy memories retained in General',c.execute('SELECT content,workspace_id FROM memories').fetchone()==('Legacy procedure',1))
     check('Legacy chats retained in General',c.execute('SELECT title,workspace_id FROM chats').fetchone()==('Legacy Chat',1))
     c.execute("INSERT INTO chats(title,created_at,workspace_id) VALUES('Other chat','now',1)")
@@ -71,7 +78,7 @@ with tempfile.TemporaryDirectory() as folder:
     check('Real C# lexical query supports explicit all-scope legacy API',len(c.execute(search,{'query':'"rotary"','workspace':None,'limit':10}).fetchall())==1)
     memory_search=extract(source,r'public List<MemoryRecord> SearchMemories\(.*?cmd.CommandText = """(.*?)""";')
     assert 'memories_fts' in memory_search
-    query_args={'q':'"rotary"','n':10,'w':2}
+    query_args={'q':'"rotary"','n':10,'w':2,'day':'2026-11-03'}
     check('Approved FTS memory retrieved within workspace',len(c.execute(memory_search,query_args).fetchall())==1)
     query_args['w']=3
     check('Approved FTS memory excluded from other workspace',c.execute(memory_search,query_args).fetchall()==[])
@@ -88,15 +95,15 @@ with tempfile.TemporaryDirectory() as folder:
     # Verify a newly created schema can be re-opened without executing migrations a second time.
     c.close()
     with sqlite3.connect(str(Path(folder)/'schema.db')) as reopened:
-        check('Reopen preserves V6 version',reopened.execute('PRAGMA user_version').fetchone()[0]==6)
+        check('Reopen preserves V8 version',reopened.execute('PRAGMA user_version').fetchone()[0]==8)
 check('C# memory proposals require explicit approval', 'ResolveMemoryProposal(long id,bool approve)' in work and 'if(approve)' in work)
 check('C# memory replacement checks workspace', 'approved=1 AND workspace_id=$w' in work)
 check('C# memory corrections remain atomic', 'using var tx=con.BeginTransaction()' in work and 'tx.Commit();' in work)
-check('C# prompt boundaries and capped excerpts exist', 'BEGIN UNTRUSTED RETRIEVED EVIDENCE' in ui and 'Math.Min(1100,references[i].Content.Length)' in ui)
+check('C# prompt boundaries and capped excerpts exist', 'BEGIN UNTRUSTED RETRIEVED EVIDENCE' in prompt and 'Math.Min(1100,reference.Content.Length)' in prompt)
 check('Model output cannot directly write memory', '_store.QueueMemoryIfNew(proposedText' in ui and '_runtime.StreamAsync' in ui)
 check('Workspace list rebinding does not accidentally reset active chat', '_refreshingWorkspaceItems = true;' in ui and 'if (_busy || _refreshingWorkspaceItems) return;' in ui)
 check('Repeated conversational learning is idempotent', 'QueueMemoryIfNew' in work and 'if (check.ExecuteScalar() is not null) return false;' in work)
 check('Deleted watched documents retired after complete scan', 'RetireMissingWatchedDocuments(folder.Path, seen, ct)' in work and 'if (complete)' in work)
-check('Older messages explicitly untrusted', 'BEGIN PRIOR CONVERSATION CONTEXT (unverified' in ui)
+check('Older messages explicitly untrusted', 'BEGIN PRIOR CONVERSATION CONTEXT (unverified' in prompt)
 print('LEARNING SQL + SOURCE QA:',sum(checks),'/',len(checks))
 sys.exit(0 if all(checks) else 1)

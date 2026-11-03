@@ -2,6 +2,10 @@ namespace WorkIntelligence.Services;
 
 public static class LocalPaths
 {
+    // Delay environment capture until the first actual use, after CLI startup
+    // options have been applied. Avoid beforefieldinit eager initialization.
+    static LocalPaths() { }
+
     public static readonly string Root = Path.GetFullPath(
         Environment.GetEnvironmentVariable("WORKINTELLIGENCE_DATA_ROOT") ??
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WorkIntelligence"));
@@ -25,6 +29,7 @@ public static class LocalPaths
             Environment.GetEnvironmentVariable("OneDriveCommercial"),
             Environment.GetEnvironmentVariable("OneDriveConsumer")
         });
+        RestoreTransaction.RecoverIfPending();
         LegacyEncryptedDataGuard.AssertNoLegacyData();
         foreach (var path in new[] { Root, Data, Models, Blobs, Runtime, Logs })
         {

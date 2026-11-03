@@ -6,7 +6,7 @@ namespace WorkIntelligence.Tests;
 /// <summary>Real native local embeddings smoke test; requires an actual GGUF and runtime.</summary>
 public sealed class LiveEmbeddingTests
 {
-    [Fact]
+    [LiveModelFact("WI_LIVE_EMBEDDING_GGUF", "WI_REQUIRE_LIVE_EMBEDDING")]
     public async Task RealEmbeddingWorkerReturnsNormalizedDistinctVectors()
     {
         var model = Environment.GetEnvironmentVariable("WI_LIVE_EMBEDDING_GGUF");

@@ -1,0 +1,24 @@
+PASS | Valid XML: WorkIntelligence/WorkIntelligence.csproj
+PASS | Valid XML: tests/WorkIntelligence.Tests.csproj
+PASS | Valid XML: tests/Core/WorkIntelligence.Core.Tests.csproj
+PASS | Valid XML: WorkIntelligence/App.xaml
+PASS | Valid XML: WorkIntelligence/MainWindow.xaml
+PASS | Valid XML: WorkIntelligence.slnx
+PASS | Valid workflow YAML
+PASS | Standard bundled SQLite provider
+PASS | No SQLCipher initialization remains
+PASS | KnowledgeStore does not set database passwords
+PASS | Imported attachments are raw bytes
+PASS | Legacy encrypted data is refused without overwriting
+PASS | No password controls for opening or backups
+PASS | Versioned plaintext snapshots with SHA256 validation
+PASS | Backups do not call restic
+PASS | Scheduled backups store no vault or backup passwords
+PASS | Backups never silently overwrite existing database
+PASS | Remote sync includes downloaded-byte verification
+PASS | SQL schemas/migrations found in source
+PASS | Schema reaches V7
+PASS | FTS5 searches imported document
+PASS | Deletion cascades to vector records
+PASS | Database header is openly readable
+PLAINTEXT SOURCE/SQLITE CHECKS: 23 / 23

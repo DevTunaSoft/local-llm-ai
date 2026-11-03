@@ -12,6 +12,7 @@
         <TextBlock Text="Open your local work intelligence workspace" FontSize="24" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,10"/>
         <TextBlock Text="All local databases, imported attachments and backups are stored UNENCRYPTED. Use only with organizational authorization." TextWrapping="Wrap" Margin="0,0,0,15" Foreground="#52647A"/>
         <CheckBox x:Name="WorkAuthorizationCheck" Margin="0,0,0,12"><TextBlock TextWrapping="Wrap" Text="I confirm organizational approval for this plaintext work-data environment and will not import restricted patient or employee records."/></CheckBox>
+        <Button Content="First-run Setup" Click="FirstRunSetup_Click" Margin="0,0,0,8"/>
         <Button x:Name="UnlockButton" Content="Open Local Workspace" Height="40" Click="Unlock_Click"/>
         <Separator Margin="0,15"/>
         <TextBlock Text="Restore a previous backup onto this empty computer" TextAlignment="Center"/>
@@ -31,12 +32,12 @@
           </DockPanel>
           <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel Orientation="Vertical" Grid.Row="0" Margin="0,0,0,6">
-              <StackPanel Orientation="Horizontal">
+              <WrapPanel>
                 <TextBlock Text="Model:" VerticalAlignment="Center"/>
                 <ComboBox x:Name="ChatModelBox" Width="300" DisplayMemberPath="DisplayName" Margin="7,0" SelectionChanged="ChatModelBox_SelectionChanged"/>
-                <Button Content="Load Model" Click="LoadModel_Click"/>
+                <Button Content="Load Model" Click="LoadModel_Click"/><CheckBox x:Name="ManualModelOverride" Content="Use selected model (manual override)" VerticalAlignment="Center" Margin="8,0"/>
                 <Button Content="Stop Model" Click="StopModel_Click"/>
-              </StackPanel>
+              </WrapPanel>
               <WrapPanel Margin="0,5,0,0" VerticalAlignment="Center">
                 <TextBlock Text="Context:" VerticalAlignment="Center"/>
                 <TextBox x:Name="ModelContextInput" Width="65" Text="4096" Margin="4,0,10,0"/>
@@ -46,19 +47,25 @@
                 <TextBox x:Name="ModelMaxTokensInput" Width="65" Text="1024" Margin="4,0,10,0"/>
                 <TextBlock Text="Temperature:" VerticalAlignment="Center"/>
                 <TextBox x:Name="ModelTemperatureInput" Width="45" Text="0.7" Margin="4,0,10,0"/>
+                <TextBlock Text="Load timeout (s):" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelStartupTimeoutInput" Width="55" Text="900" Margin="4,0,10,0"/>
+                <TextBlock Text="Response timeout (s):" VerticalAlignment="Center"/>
+                <TextBox x:Name="ModelResponseTimeoutInput" Width="55" Text="600" Margin="4,0,10,0"/>
+                <TextBlock Text="Startup budget (MiB, optional):" VerticalAlignment="Center"/><TextBox x:Name="ModelMemoryInput" Width="65" Margin="4,0,10,0"/>
+                <Button Content="Choose Vision Projector" Click="ChooseProjector_Click"/><TextBox x:Name="VisionProjectorInput" Width="180" IsReadOnly="True" ToolTip="Hash-verified local vision projector for this model"/><TextBox x:Name="VisionProjectorShaInput" Visibility="Collapsed"/><Button Content="Clear Projector" Click="ClearProjector_Click"/>
                 <Button Content="Save Model Settings" Click="SaveModelSettings_Click"/>
               </WrapPanel>
             </StackPanel>
             <TextBox x:Name="ChatHistory" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14" Background="#FAFCFF"/>
             <TextBox x:Name="ChatInput" Grid.Row="2" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontSize="14"/>
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"><Button x:Name="SendButton" Content="Send" Width="100" Click="Send_Click"/><Button Content="Stop Response" Click="StopResponse_Click"/></StackPanel>
+            <WrapPanel Grid.Row="3" HorizontalAlignment="Right"><Button Content="Attach Vision Image" Click="AttachVisionImage_Click"/><Button Content="Clear Image" Click="ClearVisionImage_Click"/><TextBlock x:Name="VisionImageStatus" MaxWidth="220" TextWrapping="Wrap"/><Button x:Name="SendButton" Content="Send" Width="100" Click="Send_Click"/><Button Content="Stop Response" Click="StopResponse_Click"/><TextBox x:Name="CitationLookupInput" Width="110" ToolTip="Stable source citation, e.g. D12-V2-S3"/><Button Content="Check Citation" Click="CheckCitation_Click"/></WrapPanel>
           </Grid>
         </Grid>
       </TabItem>
       <TabItem Header="Knowledge Library">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="180"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></StackPanel>
-          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="Name"/>
+          <WrapPanel Grid.Row="0"><Button Content="Import Documents" Click="ImportDocs_Click"/><Button Content="Compare Two Selected" Click="CompareDocuments_Click"/><Button Content="Load Semantic Model" Click="StartSemantic_Click"/><Button Content="Build Semantic Index" Click="ReindexSemantic_Click"/><Button Content="Delete Selected Version" Click="DeleteDoc_Click"/><Button Content="Refresh" Click="Refresh_Click"/><Button Content="Approve Folder for Monitoring" Click="AddWatchFolder_Click"/><Button Content="Scan Approved Folders" Click="ScanFolders_Click"/></WrapPanel>
+          <ListBox x:Name="DocumentList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionMode="Extended"/>
           <TextBlock Grid.Row="2" Text="Search locally indexed document text" FontWeight="SemiBold" Margin="3,12,3,2"/>
           <DockPanel Grid.Row="3"><Button DockPanel.Dock="Right" Content="Search" Click="SearchDocs_Click"/><TextBox x:Name="SearchInput"/></DockPanel>
           <TextBox x:Name="SearchResults" Grid.Row="4" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
@@ -66,7 +73,7 @@
       </TabItem>
       <TabItem Header="Approved Memories">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <TextBlock Grid.Row="0" Text="Only memories you explicitly approve here are stored. Do not enter restricted or patient data." Margin="3,5" TextWrapping="Wrap"/>
+          <TextBlock Grid.Row="0" Text="Only memories you explicitly approve here are stored. Use Policy Review for rules with authority/effective dates. Free-form notes are not verified company policy. Do not enter restricted or patient data." Margin="3,5" TextWrapping="Wrap"/>
           <ListBox x:Name="MemoryList" Grid.Row="1" DisplayMemberPath="Text"/>
           <TextBox x:Name="MemoryInput" Grid.Row="2" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
           <StackPanel Grid.Row="3" Orientation="Horizontal"><Button Content="Review Proposals" Click="ReviewProposals_Click"/><Button Content="Approve and Save Memory" Click="AddMemory_Click"/><Button Content="Propose Correction to Selected" Click="ProposeCorrection_Click"/><Button Content="Memory History" Click="MemoryHistory_Click"/><Button Content="Delete Selected Memory" Click="DeleteMemory_Click"/><Button Content="Export Memories" Click="ExportMemories_Click"/></StackPanel>
@@ -75,34 +82,34 @@
       <TabItem Header="Model Manager">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="190"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
           <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Import GGUF" Click="ImportModel_Click"/><Button Content="Benchmark Selected" Click="BenchmarkModel_Click"/><Button Content="Compare Two Models" Click="CompareModels_Click"/><Button Content="Load Selected" Click="LoadModel_Click"/><Button Content="Remove from Library" Click="RemoveModel_Click"/></StackPanel>
-          <ListBox x:Name="ModelList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionChanged="ModelList_SelectionChanged"/>
+          <ListBox x:Name="ModelList" Grid.Row="1" DisplayMemberPath="DisplayName" SelectionMode="Extended" SelectionChanged="ModelList_SelectionChanged"/>
           <TextBlock Grid.Row="2" Text="Verified model download (trusted SHA-256 required)" FontWeight="Bold" Margin="3,10,3,3"/>
           <TextBox Grid.Row="3" x:Name="ModelUrl" ToolTip="HTTPS URL under huggingface.co"/>
           <TextBox Grid.Row="4" x:Name="ModelFilename" ToolTip="Destination filename ending in .gguf"/>
           <TextBox Grid.Row="5" x:Name="ModelSha" ToolTip="Expected SHA-256 from a trusted source"/>
-          <StackPanel Grid.Row="6" Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/></StackPanel>
+          <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto"><StackPanel Orientation="Vertical"><Button Content="Download and Verify Model" HorizontalAlignment="Left" Click="DownloadModel_Click"/><TextBlock Text="Download occurs only on explicit request. Model weights are not embedded in the EXE." Foreground="#52647A"/><GroupBox Header="Publisher model catalog" Margin="0,12"><StackPanel Margin="8"><TextBlock Text="Explicit metadata lookup only; weights download after you select an entry and press Download." TextWrapping="Wrap"/><ComboBox x:Name="CatalogPublisherBox" DisplayMemberPath="Description"/><Button Content="Fetch Publisher Catalog" Click="FetchCatalog_Click" HorizontalAlignment="Left"/><ListBox x:Name="CatalogModelList" Height="100" DisplayMemberPath="DisplayName"/><Button Content="Use Selected Catalog Entry" Click="UseCatalog_Click" HorizontalAlignment="Left"/><TextBlock x:Name="CatalogDetails" TextWrapping="Wrap"/></StackPanel></GroupBox><GroupBox Header="Optional local model routing" Margin="0,15,0,0"><StackPanel Margin="8"><CheckBox x:Name="AutoRoutingEnabled" Content="Choose a model by task and available memory"/><WrapPanel Margin="0,8"><TextBlock Text="General:"/><ComboBox x:Name="RouteGeneralBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Analysis:"/><ComboBox x:Name="RouteAnalysisBox" Width="180" DisplayMemberPath="DisplayName"/><TextBlock Text="Code:"/><ComboBox x:Name="RouteCodeBox" Width="180" DisplayMemberPath="DisplayName"/></WrapPanel><Button Content="Save Routing Preferences" Click="SaveRouting_Click" HorizontalAlignment="Left"/><TextBlock Text="Keyword rules select Code, Analysis or General. Missing/oversized preferences fall back to a fitting model. The chat override uses your selected model. All inference remains local." TextWrapping="Wrap"/></StackPanel></GroupBox></StackPanel></ScrollViewer>
         </Grid>
       </TabItem>
       <TabItem Header="Workspaces &amp; Projects">
         <Grid Margin="12">
           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="130"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><TextBox x:Name="WorkspaceNameInput" MinWidth="270" ToolTip="New workspace name"/><Button Content="Create Workspace" Click="CreateWorkspace_Click"/><Button Content="Assign Selected Library Document" Click="AssignDocument_Click"/></StackPanel>
+          <StackPanel Grid.Row="0" Orientation="Horizontal"><TextBox x:Name="WorkspaceNameInput" MinWidth="270" ToolTip="New workspace name"/><Button Content="Create Workspace" Click="CreateWorkspace_Click"/><TextBlock Text="Share with:" VerticalAlignment="Center"/><ComboBox x:Name="AssignmentWorkspaceBox" Width="150" DisplayMemberPath="Name"/><Button Content="Share Selected Library Document" Click="AssignDocument_Click"/></StackPanel>
           <ListBox Grid.Row="1" x:Name="WorkspaceList" DisplayMemberPath="Name" SelectionChanged="WorkspaceChanged_Click"/>
-          <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
-          <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title"/>
+          <StackPanel Grid.Row="2" Orientation="Horizontal"><TextBox x:Name="TaskTitleInput" MinWidth="300" ToolTip="Task title"/><Button Content="Add Task" Click="AddTask_Click"/><Button Content="Save Selected Task" Click="SaveTask_Click"/><Button Content="Mark Completed" Click="CompleteTask_Click"/></StackPanel>
+          <ListBox Grid.Row="3" x:Name="TaskList" DisplayMemberPath="Title" SelectionChanged="TaskList_SelectionChanged"/>
           <TextBlock Grid.Row="4" Text="Task details / project decision (stored locally without encryption)"/>
           <TextBox Grid.Row="5" x:Name="TaskDetailsInput" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
         </Grid>
       </TabItem>
       <TabItem Header="Document Studio">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Use Current Conversation" Click="DraftFromChat_Click"/><Button Content="Export Word DOCX" Click="ExportDocx_Click"/></StackPanel>
+          <StackPanel Grid.Row="0" Orientation="Horizontal"><Button Content="Use Current Conversation" Click="DraftFromChat_Click"/><Button Content="Export Word DOCX" Click="ExportDocx_Click"/><Button Content="Export PDF" Click="ExportPdf_Click"/></StackPanel>
           <TextBox Grid.Row="1" x:Name="DocumentTitleInput" Text="Work Intelligence Report" Height="32"/>
           <TextBox Grid.Row="2" x:Name="DocumentDraftInput" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
         </Grid>
       </TabItem>
       <TabItem Header="Backup / Recovery">
-        <StackPanel Margin="20" MaxWidth="800">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20" MaxWidth="800">
           <TextBlock Text="Plaintext versioned backups" FontWeight="Bold" FontSize="19" Margin="0,0,0,10"/>
           <TextBlock Text="Backups are NOT encrypted. Use only a company-approved backup destination; Purview labels do not automatically secure this app's database or backups." TextWrapping="Wrap" Margin="0,0,0,12"/>
           <TextBlock Text="Repository folder" FontWeight="SemiBold"/><DockPanel><Button DockPanel.Dock="Right" Content="Browse" Click="BrowseBackup_Click"/><TextBox x:Name="BackupFolder"/></DockPanel>
@@ -113,10 +120,15 @@
           <Button Content="Sync + Byte-Verify Plaintext OneDrive Backup" Click="SyncOneDrive_Click" HorizontalAlignment="Left"/>
           <TextBlock Text="Optional local snapshot retention: leave blank to keep all. Enter 2 or more to preserve at least that many verified backups. Corrupt snapshots are never deleted automatically." TextWrapping="Wrap" Margin="0,12,0,3"/>
           <TextBox x:Name="BackupKeepCountInput" Width="90" HorizontalAlignment="Left" MaxLength="5" ToolTip="Optional number of newest verified snapshots to preserve; blank keeps all"/>
+          <CheckBox x:Name="CalendarRetentionEnabled" Content="Use calendar retention after successful backup verification" Margin="0,10,0,4"/>
+          <WrapPanel><TextBlock Text="Daily buckets:"/><TextBox x:Name="RetentionDailyInput" Width="45" Text="7"/><TextBlock Text="Monthly:"/><TextBox x:Name="RetentionMonthlyInput" Width="45" Text="12"/><TextBlock Text="Yearly:"/><TextBox x:Name="RetentionYearlyInput" Width="45" Text="3"/><TextBlock Text="Quota GiB (optional):"/><TextBox x:Name="RetentionQuotaInput" Width="70"/></WrapPanel>
+          <TextBlock Text="Retention always keeps at least two verified snapshots. Calendar rules keep the newest snapshot in each selected bucket. Exceeding a quota raises a warning; protected/corrupt recovery points are preserved. Remote snapshots are not automatically pruned." TextWrapping="Wrap"/>
+          <Button Content="Refresh Backup Health" Click="RefreshBackupHealth_Click" HorizontalAlignment="Left" Margin="0,8"/>
+          <TextBlock x:Name="BackupHealthText" TextWrapping="Wrap"/>
           <TextBlock Text="Optional daily backup (2 AM). Schedule and copied data contain no application-layer encryption." TextWrapping="Wrap" Margin="0,15,0,0"/>
           <StackPanel Orientation="Horizontal"><Button Content="Enable Daily Backup (2 AM)" Click="ScheduleBackup_Click"/><Button Content="Disable Daily Backup" Click="RemoveScheduledBackup_Click"/></StackPanel>
-          <TextBlock Text="Scheduled jobs run only while this Windows user is signed in. OneDrive access requires a separately configured authorized rclone remote; actual Windows/remote validation is pending." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
-        </StackPanel>
+          <TextBlock Text="Scheduled jobs run while this Windows user is signed in, catch missed starts and retry failures up to three times at 15-minute intervals. App catch-up uses bounded backoff. OneDrive requires an explicitly authorized remote; actual logout/reboot/account acceptance remains separate." Foreground="#9C4B19" TextWrapping="Wrap" Margin="0,15,0,0"/>
+        </StackPanel></ScrollViewer>
       </TabItem>
       <TabItem Header="Diagnostics">
         <Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -124,6 +136,27 @@
           <TextBox x:Name="DiagnosticsOutput" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"/>
         </Grid>
       </TabItem>
+      <TabItem Header="Project Records">
+        <Grid Margin="12">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="150"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <TextBlock Text="Records use the workspace selected under Workspaces &amp; Projects. Changes retain prior revisions and your reason." TextWrapping="Wrap"/>
+          <ListBox x:Name="WorkRecordList" Grid.Row="1" DisplayMemberPath="Title" SelectionChanged="WorkRecordList_SelectionChanged"/>
+          <WrapPanel Grid.Row="2"><TextBlock Text="Type:" VerticalAlignment="Center"/><ComboBox x:Name="WorkKindBox" Width="110"/><TextBlock Text="Status:" VerticalAlignment="Center"/><ComboBox x:Name="WorkStatusBox" Width="110"/><TextBlock Text="Owner:" VerticalAlignment="Center"/><TextBox x:Name="WorkOwnerInput" Width="180" MaxLength="200"/><TextBlock Text="Due:" VerticalAlignment="Center"/><DatePicker x:Name="WorkDueInput" Width="130"/></WrapPanel>
+          <TextBox x:Name="WorkTitleInput" Grid.Row="3" MaxLength="200" ToolTip="Record title"/>
+          <DockPanel Grid.Row="4"><TextBlock Text="Related project or prior case:" VerticalAlignment="Center"/><ComboBox x:Name="WorkRelatedBox" Width="300" DisplayMemberPath="Title"/><Button Content="Clear Link" Click="ClearWorkLink_Click"/></DockPanel>
+          <TextBox x:Name="WorkDetailsInput" Grid.Row="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxLength="20000"/>
+          <StackPanel Grid.Row="6"><TextBlock Text="Reason for this revision / decision rationale"/><TextBox x:Name="WorkReasonInput" MaxLength="2000"/><WrapPanel><Button Content="New Record" Click="NewWorkRecord_Click"/><Button Content="Save Record" Click="SaveWorkRecord_Click"/><Button Content="Revision History" Click="WorkHistory_Click"/></WrapPanel></StackPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="Policy Review"><Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="140"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <TextBlock Text="Review policy topics, source authority and effective dates in the selected workspace. Authority is assigned by you; it does not verify organizational approval. Conflicting date ranges require explicit review." TextWrapping="Wrap"/>
+        <ListBox x:Name="PolicyList" Grid.Row="1" DisplayMemberPath="DisplayName"/>
+        <WrapPanel Grid.Row="2"><TextBlock Text="Topic:"/><TextBox x:Name="PolicyTopicInput" Width="220" MaxLength="120"/><TextBlock Text="Authority:"/><ComboBox x:Name="PolicyAuthorityBox" Width="180"/></WrapPanel>
+        <WrapPanel Grid.Row="3"><TextBlock Text="Effective from:"/><DatePicker x:Name="PolicyFromInput" Width="140"/><TextBlock Text="Ends before (optional):"/><DatePicker x:Name="PolicyUntilInput" Width="140"/></WrapPanel>
+        <DockPanel Grid.Row="4"><TextBlock Text="Approved source reference:"/><TextBox x:Name="PolicySourceInput" MaxLength="500"/></DockPanel>
+        <TextBox x:Name="PolicyTextInput" Grid.Row="5" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MaxLength="8000"/>
+        <StackPanel Grid.Row="6"><TextBlock Text="Reason for approval or replacement:"/><TextBox x:Name="PolicyReasonInput" MaxLength="2000"/><WrapPanel><Button Content="Review and Approve Policy" Click="ApprovePolicy_Click"/><Button Content="View Policy History" Click="PolicyHistory_Click"/></WrapPanel></StackPanel>
+      </Grid></TabItem>
     </TabControl>
     <TextBlock x:Name="StatusText" Grid.Row="2" Text="Workspace closed" Margin="2,10,0,0" FontSize="12" Foreground="#52647A"/>
   </Grid>

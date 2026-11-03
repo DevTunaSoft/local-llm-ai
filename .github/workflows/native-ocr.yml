@@ -1,0 +1,88 @@
+name: Real Windows native OCR integration
+on:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  windows-native-ocr:
+    runs-on: windows-2025
+    timeout-minutes: 55
+    concurrency:
+      group: native-ocr-${{ github.repository }}-77da1ac
+      cancel-in-progress: false
+    env:
+      VCPKG_DISABLE_METRICS: '1'
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/../wi-native-cache
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Create native cache directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Path $env:VCPKG_DEFAULT_BINARY_CACHE -Force | Out-Null
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: tesseract-win-x64-vcpkg-77da1ac07d85b552d6026b8747e8b157f79fa92e
+      - name: Build Tesseract and dependency closure from pinned source ports
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $env:RUNNER_TEMP 'wi-vcpkg'
+          git init $source
+          git -C $source remote add origin https://github.com/microsoft/vcpkg.git
+          git -C $source fetch --depth 1 origin 77da1ac07d85b552d6026b8747e8b157f79fa92e
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned vcpkg fetch failed.' }
+          git -C $source checkout FETCH_HEAD
+          $env:VCPKG_ROOT = $source
+          & (Join-Path $source 'bootstrap-vcpkg.bat') -disableMetrics
+          if ($LASTEXITCODE -ne 0) { throw 'vcpkg bootstrap failed.' }
+          & (Join-Path $source 'vcpkg.exe') install tesseract:x64-windows --disable-metrics 2>&1 | ForEach-Object {
+            Write-Host $_
+            if ($_ -match '^Installing [0-9]+/|^Building |error:') {
+              $safe = ([string]$_) -replace 'https?://\S+', '[url]'
+              Write-Host "::notice::Native dependency build: $safe"
+            }
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned native OCR build failed.' }
+          $tool = Join-Path $source 'installed/x64-windows/tools/tesseract/tesseract.exe'
+          if (-not (Test-Path $tool)) { throw 'Source build produced no Tesseract tool.' }
+          "WI_TESSERACT_SOURCE=$tool" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Install pinned PDFium wrapper and fixture renderer
+        shell: pwsh
+        run: |
+          python -m pip download --only-binary=:all: --no-deps pypdfium2==5.14.0 -d "$env:RUNNER_TEMP/pdfium-wheel"
+          if ($LASTEXITCODE -ne 0) { throw 'PDFium wheel download failed.' }
+          $wheel = Get-ChildItem "$env:RUNNER_TEMP/pdfium-wheel" -Filter '*.whl' | Select-Object -First 1
+          if ((Get-FileHash $wheel.FullName -Algorithm SHA256).Hash -ine '149fd5c6397b8df8bf7911a93506eff0be874f877afe7ac936cf5d37d21a6a06') { throw 'Pinned PDFium wheel checksum mismatch.' }
+          python -m pip install $wheel.FullName Pillow==13.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned native fixture tools failed to install.' }
+      - name: Prepare hash-pinned English data and real native fixtures
+        shell: pwsh
+        run: |
+          $trained = Join-Path $env:RUNNER_TEMP 'eng.traineddata'
+          Invoke-WebRequest 'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata' -OutFile $trained
+          if ((Get-FileHash $trained -Algorithm SHA256).Hash -ine '7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2') { throw 'OCR data checksum mismatch.' }
+          $rcloneZip = Join-Path $env:RUNNER_TEMP 'rclone-win.zip'
+          Invoke-WebRequest 'https://github.com/rclone/rclone/releases/download/v1.75.2/rclone-v1.75.2-windows-amd64.zip' -OutFile $rcloneZip
+          if ((Get-FileHash $rcloneZip -Algorithm SHA256).Hash -ine '8a9db2bad1dc79a65b3348fd857069598e2aab7cf4d118b77b1df23055aff818') { throw 'Rclone archive checksum mismatch.' }
+          $rcloneRoot = Join-Path $env:RUNNER_TEMP 'wi-rclone'
+          Expand-Archive $rcloneZip -DestinationPath $rcloneRoot
+          $env:WI_RCLONE_SOURCE = (Get-ChildItem $rcloneRoot -Recurse -File -Filter 'rclone.exe' | Select-Object -First 1).FullName
+          $env:WI_TESSDATA_SOURCE = $trained
+          $env:WI_NATIVE_TEST_ROOT = Join-Path $env:RUNNER_TEMP 'wi-native-ocr'
+          python scripts/setup-native-ocr-tests.py
+          if ($LASTEXITCODE -ne 0) { throw 'Native OCR fixture preparation failed.' }
+          "WI_NATIVE_TEST_ROOT=$env:WI_NATIVE_TEST_ROOT" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Require real Windows image and mixed-PDF extraction
+        shell: pwsh
+        env:
+          WI_REQUIRE_NATIVE_OCR: '1'
+        run: |
+          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~NativeOcrTests|FullyQualifiedName~NativeBackupToolTests' --logger 'console;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw 'Real native Windows OCR acceptance failed.' }

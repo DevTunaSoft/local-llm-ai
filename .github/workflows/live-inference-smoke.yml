@@ -20,11 +20,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; 'User-Agent' = 'WorkIntelligence-CI'; Accept = 'application/vnd.github+json' }
-          $releases = @(Invoke-RestMethod -Uri 'https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=12' -Headers $headers)
-          $release = $releases | Where-Object { @($_.assets | Where-Object { $_.name -like '*bin-win-cpu-x64.zip' }).Count -gt 0 } | Select-Object -First 1
-          if (-not $release) { throw 'Recent llama.cpp releases have no Windows x64 CPU archive.' }
-          $asset = @($release.assets | Where-Object { $_.name -match 'bin-win-cpu-x64\.zip$' }) | Select-Object -First 1
-          if (-not $asset) { throw 'No native Windows x64 CPU llama.cpp release asset found.' }
+          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b12059' -Headers $headers
+          $asset = @($release.assets | Where-Object { $_.name -eq 'llama-b12059-bin-win-cpu-x64.zip' }) | Select-Object -First 1
+          if (-not $asset -or $asset.digest -ne 'sha256:25310083fad7da14ce7788a7f3c5d7536be19b82a099d2566a805e99864a6f91') {
+            throw 'Pinned llama.cpp b12059 CPU archive identity changed.'
+          }
           $zip = Join-Path $env:RUNNER_TEMP 'llama-cpu.zip'
           Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip -MaximumRedirection 8
           if ($asset.digest -notmatch '^sha256:[0-9a-fA-F]{64}$') { throw 'Release asset lacks a SHA-256 checksum.' }
@@ -35,8 +35,11 @@ jobs:
           $server = Get-ChildItem -LiteralPath $unpacked -Filter 'llama-server.exe' -Recurse -File | Select-Object -First 1
           if (-not $server) { throw 'Downloaded native runtime lacks llama-server.exe.' }
           $runtime = $server.DirectoryName
-          $digest = (Get-FileHash -LiteralPath $server.FullName -Algorithm SHA256).Hash
-          "$digest  llama-server.exe" | Set-Content -LiteralPath (Join-Path $runtime 'SHA256SUMS.txt') -Encoding ascii
+          $entries = @(Get-ChildItem -LiteralPath $runtime -File -Recurse | ForEach-Object {
+            $relative = [IO.Path]::GetRelativePath($runtime, $_.FullName).Replace('\','/')
+            "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $relative"
+          })
+          $entries | Set-Content -LiteralPath (Join-Path $runtime 'SHA256SUMS.txt') -Encoding ascii
           "WI_CI_RUNTIME_DIR=$runtime" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Native llama.cpp test source: $($release.tag_name)"
       - name: Download small real instruction-tuned GGUF
@@ -82,6 +85,13 @@ jobs:
           $env:WI_REQUIRE_LIVE_EMBEDDING = '1'
           dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~RealEmbeddingWorkerReturnsNormalizedDistinctVectors' --logger 'console;verbosity=normal'
           if ($LASTEXITCODE -ne 0) { throw 'Real local embedding integration test failed.' }
+      - name: Verify current publisher catalogs without downloading production weights
+        shell: pwsh
+        env:
+          WI_REQUIRE_LIVE_CATALOG: '1'
+        run: |
+          dotnet test tests/Core/WorkIntelligence.Core.Tests.csproj -c Release --filter 'FullyQualifiedName~PrimaryPublisherCatalogsProvideImmutableTrustedGgufArtifacts' --logger 'console;verbosity=normal'
+          if ($LASTEXITCODE -ne 0) { throw 'Primary publisher catalog verification failed.' }
       - name: Record what this test does not prove
         if: always()
         shell: pwsh
