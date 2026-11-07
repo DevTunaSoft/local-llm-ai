@@ -14,6 +14,50 @@ public sealed class CompletionStreamTests
         return answer.ToString();
     }
 
+    [Theory]
+    [InlineData("null")]
+    [InlineData("123")]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("{not-json}")]
+    [InlineData("{\"choices\":[null]}")]
+    [InlineData("{\"choices\":[42]}")]
+    [InlineData("{\"choices\":[{\"delta\":42}]}")]
+    public async Task MalformedStreamingFramesNeverBecomeSuccessfulAnswers(string frame)
+    {
+        var wrapped = "data: " + frame + "\n\ndata: [DONE]\n\n";
+        if (frame is "{}" or "{\"choices\":[{\"delta\":42}]}")
+            Assert.Equal("", await Read(wrapped));
+        else
+            await Assert.ThrowsAnyAsync<Exception>(async () =>
+            {
+                await Read(wrapped);
+            });
+    }
+
+    [Fact]
+    public async Task FuzzMalformedAndNestedJsonFramesRemainBounded()
+    {
+        var random = new Random(4029);
+        for (var i = 0; i < 48; i++)
+        {
+            var count = random.Next(1, 512);
+            var noise = new string(Enumerable.Range(0, count).Select(_ =>
+                (char)random.Next(32, 127)).ToArray());
+            try
+            {
+                await Read("data: " + noise + "\n\ndata: [DONE]\n\n");
+            }
+            catch (Exception ex)
+            {
+                Assert.True(ex is InvalidDataException or EndOfStreamException or System.Text.Json.JsonException,
+                    $"Unexpected streaming failure {ex.GetType().Name} on iteration {i}");
+            }
+        }
+        var deep = new string('[', 65) + new string(']', 65);
+        await Assert.ThrowsAsync<InvalidDataException>(() => Read("data: " + deep + "\n\n"));
+    }
+
     [Fact]
     public async Task UnicodeContentAndCommentsAreHandled()
     {
