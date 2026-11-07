@@ -50,6 +50,18 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task CorruptedLocalSnapshotCannotBeUploadedAsVerifiedOneDriveRecovery()
+    {
+        var snapshot = await SeedBackup("Synthetic upload integrity fixture");
+        File.AppendAllText(Path.Combine(snapshot, "knowledge.db"), "tampered");
+        await Assert.ThrowsAsync<InvalidDataException>(() =>
+            RemoteBackupService.SyncAndVerifyAsync(_repository, "workonedrive:WIBackups",
+                CancellationToken.None));
+        Assert.True(Directory.Exists(snapshot));
+        Assert.True(File.Exists(Path.Combine(snapshot, "manifest.json")));
+    }
+
+    [Fact]
     public async Task TamperedSnapshotDoesNotPromoteFiles()
     {
         var snapshot = await SeedBackup();
