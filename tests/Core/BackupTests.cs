@@ -190,6 +190,32 @@ public sealed class BackupTests : IDisposable
     }
 
     [Fact]
+    public async Task SimultaneousRestoresCannotOverwriteOrInterleaveVaultFiles()
+    {
+        await SeedBackup("Synthetic concurrency restore fixture");
+        Directory.Delete(LocalPaths.Root, true);
+        var attempts = Enumerable.Range(0, 8).Select(async _ =>
+        {
+            try
+            {
+                await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+                return "restored";
+            }
+            catch (InvalidOperationException)
+            {
+                return "already-restored";
+            }
+        });
+        var outcomes = await Task.WhenAll(attempts);
+        Assert.Equal(1, outcomes.Count(x => x == "restored"));
+        Assert.Equal(7, outcomes.Count(x => x == "already-restored"));
+        using var restored = new KnowledgeStore();
+        Assert.Equal("ok", restored.CheckDatabase());
+        Assert.Single(restored.Search("concurrency restore fixture"));
+        Assert.Single(restored.Memories());
+    }
+
+    [Fact]
     public async Task RestoreRefusesToOverwriteLiveData()
     {
         await SeedBackup();
