@@ -166,7 +166,8 @@ public sealed class BackupService
         foreach (var record in manifest.Files)
         {
             ct.ThrowIfCancellationRequested();
-            if (record is null || !IsSafeDataPath(record.Path) || !listed.Add(record.Path) || record.Length < 0 ||
+            if (record is null || string.IsNullOrEmpty(record.Path) ||
+                !IsSafeDataPath(record.Path) || !listed.Add(record.Path) || record.Length < 0 ||
                 record.Sha256 is null || record.Sha256.Length != 64 || !record.Sha256.All(Uri.IsHexDigit))
                 throw new InvalidDataException("Snapshot contains invalid or duplicate file records.");
             var file = Path.Combine(snapshot, record.Path.Replace('/', Path.DirectorySeparatorChar));
