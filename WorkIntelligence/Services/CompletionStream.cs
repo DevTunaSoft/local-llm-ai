@@ -34,14 +34,26 @@ internal static class CompletionStream
             data.Clear();
             if (content == "[DONE]") yield break;
             if (content.Length == 0) continue;
-            using var document = JsonDocument.Parse(content);
+            JsonDocument document;
+            try { document = JsonDocument.Parse(content, new JsonDocumentOptions { MaxDepth = 32 }); }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException("Malformed local AI streaming event.", ex);
+            }
+            using (document)
+            {
             var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new InvalidDataException("Local AI streaming event must be a JSON object.");
             if (root.TryGetProperty("error", out _))
                 throw new InvalidDataException("The local AI engine reported a response error. Any partial answer is incomplete.");
             if (!root.TryGetProperty("choices", out var choices) || choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0)
                 continue;
             var choice = choices[0];
+            if (choice.ValueKind != JsonValueKind.Object)
+                throw new InvalidDataException("Local AI event contains an invalid choice.");
             if (choice.TryGetProperty("delta", out var delta) &&
+                delta.ValueKind == JsonValueKind.Object &&
                 delta.TryGetProperty("content", out var deltaContent) && deltaContent.ValueKind == JsonValueKind.String &&
                 deltaContent.GetString() is { Length: > 0 } text)
                 yield return text;
@@ -50,6 +62,7 @@ internal static class CompletionStream
                 throw new InvalidDataException(finish == "length"
                     ? "The local AI response reached its token limit. The partial answer is incomplete."
                     : "The local AI response did not finish normally. The partial answer is incomplete.");
+            }
         }
     }
 }
