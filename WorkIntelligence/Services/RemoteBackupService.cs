@@ -11,8 +11,19 @@ public static class RemoteBackupService
     {
         ValidateRemote(remote);
         using var repositoryLock = await FileOperationLock.AcquireAsync(FileOperationLock.RepositoryKey(localRepository), ct);
-        if(!Directory.Exists(localRepository) || !Directory.EnumerateDirectories(localRepository, "snap-*").Any())
+        if (!Directory.Exists(localRepository))
+            throw new InvalidDataException("Approved plaintext snapshot repository does not exist.");
+        var snapshots = Directory.EnumerateDirectories(localRepository, "snap-*").ToArray();
+        if (snapshots.Length == 0)
             throw new InvalidDataException("No plaintext snapshots exist. Create a verified local backup first.");
+        // Byte equality between two corrupted copies is not backup integrity.
+        // Reject corrupt local manifests/payloads before any outbound transfer,
+        // rather than declaring a byte-identical damaged OneDrive copy verified.
+        foreach (var snapshot in snapshots)
+        {
+            ct.ThrowIfCancellationRequested();
+            BackupService.VerifySnapshot(snapshot, ct);
+        }
         var rclone=RuntimeBundle.Resolve("rclone.exe");
         await RequireOneDriveBackendAsync(rclone, remote, ct);
         await RunAsync(rclone,["copy",Path.GetFullPath(localRepository),remote,"--transfers","4","--checkers","8"],ct);
