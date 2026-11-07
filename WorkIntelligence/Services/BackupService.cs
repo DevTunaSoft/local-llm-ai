@@ -46,6 +46,10 @@ public sealed class BackupService
     {
         var location = ValidateRepository(repository);
         LocalPaths.Ensure();
+        // This lock is shared by all restore sources and all application processes.
+        // Checking for an empty vault before acquiring it permits two independent
+        // restore calls to race and promote files from different snapshots.
+        using var vaultRestoreLock = await FileOperationLock.AcquireAsync("vault:restore", ct);
         LegacyEncryptedDataGuard.AssertNoLegacyData();
         if (File.Exists(LocalPaths.Database) || Directory.EnumerateFileSystemEntries(LocalPaths.Blobs).Any())
             throw new InvalidOperationException("Restore requires an empty data directory. Existing data will never be overwritten.");
