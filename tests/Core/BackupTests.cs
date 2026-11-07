@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Nodes;
 using WorkIntelligence.Services;
 using Xunit;
 
@@ -136,6 +137,41 @@ public sealed class BackupTests : IDisposable
         Assert.Contains(corrupt, remaining);
         Assert.Contains(snapshots[0], remaining);
         Assert.Contains(snapshots[1], remaining);
+    }
+
+    [Theory]
+    [InlineData("null-path")]
+    [InlineData("null-hash")]
+    [InlineData("duplicate-file")]
+    [InlineData("traversal")]
+    [InlineData("incorrect-length")]
+    public async Task MalformedLatestSnapshotFallsBackWithoutWritingCorruptData(string attack)
+    {
+        var original = await SeedBackup("Synthetic intact fallback fixture");
+        using (var store = new KnowledgeStore())
+        {
+            store.AddMemory("Synthetic newer state should not restore", "fixture");
+            await new BackupService(store).BackupAsync(_repository, CancellationToken.None);
+        }
+        var newest = Directory.GetDirectories(_repository, "snap-*").Single(p => p != original);
+        var manifestPath = Path.Combine(newest, "manifest.json");
+        var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        var files = manifest["Files"]!.AsArray();
+        var entry = files.Single(x => x!["Path"]!.GetValue<string>() == "knowledge.db")!.AsObject();
+        switch (attack)
+        {
+            case "null-path": entry["Path"] = null; break;
+            case "null-hash": entry["Sha256"] = null; break;
+            case "duplicate-file": files.Add(entry.DeepClone()); break;
+            case "traversal": entry["Path"] = "../knowledge.db"; break;
+            case "incorrect-length": entry["Length"] = -1; break;
+        }
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        Directory.Delete(LocalPaths.Root, true);
+        await BackupService.RestoreToEmptyVaultAsync(_repository, CancellationToken.None);
+        using var restored = new KnowledgeStore();
+        Assert.Single(restored.Search("intact fallback fixture"));
+        Assert.DoesNotContain(restored.Memories(), m => m.Text.Contains("newer state"));
     }
 
     [Fact]
