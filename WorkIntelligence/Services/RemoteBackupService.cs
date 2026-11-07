@@ -89,10 +89,19 @@ public static class RemoteBackupService
             info.ArgumentList.Add(value);
         using var process = new Process { StartInfo = info };
         if (!process.Start()) throw new InvalidOperationException("Cannot verify OneDrive remote configuration.");
-        using var registration = ct.Register(() => ProcessTermination.RequestStop(process));
-        var outputTask = process.StandardOutput.ReadToEndAsync(ct);
-        var errorTask = process.StandardError.ReadToEndAsync(ct);
-        await ProcessTermination.WaitForExitAsync(process, ct);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(45));
+        using var registration = timeout.Token.Register(() => ProcessTermination.RequestStop(process));
+        var outputTask = BoundedProcessOutput.ReadAsync(process.StandardOutput, 32768, timeout);
+        var errorTask = BoundedProcessOutput.ReadAsync(process.StandardError, 32768, timeout);
+        try
+        {
+            await Task.WhenAll(ProcessTermination.WaitForExitAsync(process, timeout.Token), outputTask, errorTask);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new TimeoutException("OneDrive provider validation exceeded its safe time limit.");
+        }
         var redacted = await outputTask;
         _ = await errorTask; // Never reveal config, remotes, account names, tokens, or error output.
         if (process.ExitCode != 0 || !IsOneDriveConfig(remoteName, redacted))
@@ -105,9 +114,19 @@ public static class RemoteBackupService
         foreach(var arg in args)info.ArgumentList.Add(arg);
         using var proc=new Process{StartInfo=info};
         if(!proc.Start())throw new InvalidOperationException("Bundled OneDrive transfer utility did not start.");
-        using var registration=ct.Register(() => ProcessTermination.RequestStop(proc));
-        var outTask=proc.StandardOutput.ReadToEndAsync(ct);var errTask=proc.StandardError.ReadToEndAsync(ct);
-        await ProcessTermination.WaitForExitAsync(proc, ct);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromMinutes(30));
+        using var registration=timeout.Token.Register(() => ProcessTermination.RequestStop(proc));
+        var outTask=BoundedProcessOutput.ReadAsync(proc.StandardOutput, 262144, timeout);
+        var errTask=BoundedProcessOutput.ReadAsync(proc.StandardError, 262144, timeout);
+        try
+        {
+            await Task.WhenAll(ProcessTermination.WaitForExitAsync(proc, timeout.Token), outTask, errTask);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new TimeoutException("OneDrive copy or verification timed out; remote backup is unverified.");
+        }
         _=await outTask;_=await errTask; // Never log remote paths, account info or tokens.
         if(proc.ExitCode!=0)throw new InvalidOperationException($"OneDrive plaintext copy/check failed (code {proc.ExitCode}); backup is not remotely verified.");
     }
