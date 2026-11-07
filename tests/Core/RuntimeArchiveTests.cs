@@ -41,6 +41,23 @@ public sealed class RuntimeArchiveTests
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
 
+    [Theory]
+    [InlineData("../late-traversal.dll")]
+    [InlineData("C:/late-drive-escape.dll")]
+    [InlineData("valid.dll:alternate")]
+    [InlineData("./invalid.dll")]
+    public void InvalidLateEntryCannotPartiallyInstallEarlierNativeComponents(string maliciousEntry)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "wi-preflight-" + Guid.NewGuid().ToString("N"));
+        using var archive = Archive("safe/llama-server.exe", "safe/pdfium.dll", maliciousEntry);
+        try
+        {
+            Assert.Throws<InvalidDataException>(() => RuntimeBundle.ExtractArchive(archive, root));
+            Assert.Empty(Directory.GetFiles(root, "*", SearchOption.AllDirectories));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
     [Fact]
     public void DuplicateCaseInsensitiveArchivePathsAreRejected()
     {
