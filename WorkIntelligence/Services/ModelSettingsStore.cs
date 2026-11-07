@@ -41,6 +41,7 @@ public static class ModelSettingsStore
         options.Validate();
         lock (Gate)
         {
+            using var processLock = FileOperationLock.Acquire("settings:model-preferences");
             LocalPaths.Ensure();
             PathSafety.RejectReparsePoints(FileName);
             Dictionary<string, ModelRuntimeOptions> saved;
