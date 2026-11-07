@@ -54,7 +54,7 @@ public static class PdfPageOcr
                             if (stride != width * 4) throw new InvalidDataException("PDFium returned unsupported bitmap stride.");
                             var bytes = new byte[checked(stride * height)];
                             Marshal.Copy(FPDFBitmap_GetBuffer(bitmap), bytes, 0, bytes.Length);
-                            try { return OcrService.ExtractImage(ToBmp(bytes, width, height)); }
+                            try { return OcrService.ExtractRenderedBmp(ToBmp(bytes, width, height)); }
                             finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes); }
                         }
                         finally { FPDFBitmap_Destroy(bitmap); }
