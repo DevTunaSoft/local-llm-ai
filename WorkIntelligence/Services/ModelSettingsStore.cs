@@ -19,6 +19,7 @@ public static class ModelSettingsStore
         var key = Key(sha256);
         lock (Gate)
         {
+            using var processLock = FileOperationLock.Acquire("settings:model-preferences");
             LocalPaths.Ensure();
             PathSafety.RejectReparsePoints(FileName);
             if (!File.Exists(FileName)) return new ModelRuntimeOptions();
