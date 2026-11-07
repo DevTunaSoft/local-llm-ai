@@ -21,6 +21,25 @@ public sealed class ModelSettingsTests
     }
 
     [Fact]
+    public async Task ConcurrentModelUpdatesDoNotLoseOtherModels()
+    {
+        const int workers = 40;
+        var tasks = Enumerable.Range(1, workers).Select(i => Task.Run(() =>
+        {
+            var key = i.ToString("X64", System.Globalization.CultureInfo.InvariantCulture);
+            var options = new ModelRuntimeOptions(2048 + i * 16, 4, 256, 0.25);
+            ModelSettingsStore.Save(key, options);
+            Assert.Equal(options, ModelSettingsStore.Load(key));
+        }));
+        await Task.WhenAll(tasks);
+        foreach (var i in Enumerable.Range(1, workers))
+        {
+            var key = i.ToString("X64", System.Globalization.CultureInfo.InvariantCulture);
+            Assert.Equal(2048 + i * 16, ModelSettingsStore.Load(key).ContextSize);
+        }
+    }
+
+    [Fact]
     public void InvalidOptionsNeverOverwriteValidModelSettings()
     {
         const string key = "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC";
