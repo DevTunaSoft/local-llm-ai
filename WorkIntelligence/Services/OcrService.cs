@@ -17,6 +17,28 @@ public static class OcrService
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(payload); }
     }
 
+    /// <summary>
+    /// PDFium renders up to 16 million pixels as an uncompressed 32-bit BMP.
+    /// Such a BMP is up to 64 MiB plus its 54-byte header, although ordinary
+    /// imported images retain the stricter 25 MiB limit. This path is used only
+    /// by the application's own bounded in-memory PDF renderer.
+    /// </summary>
+    internal static string ExtractRenderedBmp(ReadOnlySpan<byte> bmp)
+    {
+        ValidateRenderedBmp(bmp);
+        var payload = bmp.ToArray();
+        try { return ExtractCoreAsync(payload, CancellationToken.None).GetAwaiter().GetResult(); }
+        finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(payload); }
+    }
+
+    internal static void ValidateRenderedBmp(ReadOnlySpan<byte> bmp)
+    {
+        const int maxBytes = 54 + 64 * 1024 * 1024;
+        if (bmp.Length is < 54 or > maxBytes || bmp[0] != 'B' || bmp[1] != 'M' ||
+            System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(bmp[2..6]) != bmp.Length)
+            throw new InvalidDataException("Rendered PDF OCR bitmap has an invalid header or exceeds its memory limit.");
+    }
+
     private static async Task<string> ExtractCoreAsync(byte[] image, CancellationToken cancellationToken)
     {
         var tesseract = RuntimeBundle.Resolve("tesseract.exe");
