@@ -64,6 +64,35 @@ public static class RuntimeBundle
         if (!File.Exists(output)) throw new FileNotFoundException("Required runtime component not present in signed runtime bundle: " + exeName);
         return output;
     }
+    private static void PreflightEntries(ZipArchive archive, string destination)
+    {
+        if (archive.Entries.Count > 150)
+            throw new InvalidDataException("Runtime archive contains too many entries.");
+        long total = 0;
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in archive.Entries)
+        {
+            if (entry.Length < 0 || entry.Length > 512L * 1024 * 1024 ||
+                entry.Length > 1024L * 1024 * 1024 - total)
+                throw new InvalidDataException("Runtime archive exceeds its maximum safe size.");
+            total += entry.Length;
+            var relative = entry.FullName.Replace('\\', '/');
+            if (relative.StartsWith('/') || relative.Contains(':') ||
+                relative.Split('/').Any(segment => segment is "." or ".."))
+                throw new InvalidDataException("Unsafe runtime archive entry path.");
+            if (((entry.ExternalAttributes >> 16) & 0xF000) == 0xA000)
+                throw new InvalidDataException("Runtime archive contains an unsupported symbolic link.");
+            if (string.IsNullOrEmpty(entry.Name)) continue;
+            if (!paths.Add(relative))
+                throw new InvalidDataException("Duplicate runtime archive entry path.");
+            var target = Path.GetFullPath(Path.Combine(destination, relative));
+            if (!target.StartsWith(destination + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Runtime archive entry escapes extraction directory.");
+            PathSafety.RejectReparsePoints(target);
+        }
+    }
+
     // The caller verifies the embedded archive hash before extraction.
     internal static void ExtractArchive(Stream archiveBytes, string destination)
     {
@@ -72,6 +101,10 @@ public static class RuntimeBundle
         Directory.CreateDirectory(destination);
         using (var archive = new ZipArchive(archiveBytes, ZipArchiveMode.Read, leaveOpen: true))
         {
+            // Validate every entry before extracting the first one. Otherwise
+            // a malicious trailing path/symlink can leave partially promoted
+            // native binaries on disk even though the archive was rejected.
+            PreflightEntries(archive, destination);
             if (archive.Entries.Count > 150) throw new InvalidDataException("Runtime archive contains too many entries.");
             if (archive.Entries.Sum(e => e.Length) > 1024L * 1024 * 1024)
                 throw new InvalidDataException("Runtime archive exceeds maximum uncompressed size.");
