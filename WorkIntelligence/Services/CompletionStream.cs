@@ -52,8 +52,9 @@ internal static class CompletionStream
             var choice = choices[0];
             if (choice.ValueKind != JsonValueKind.Object)
                 throw new InvalidDataException("Local AI event contains an invalid choice.");
-            if (choice.TryGetProperty("delta", out var delta) &&
-                delta.ValueKind == JsonValueKind.Object &&
+            if (choice.TryGetProperty("delta", out var delta) && delta.ValueKind != JsonValueKind.Object)
+                throw new InvalidDataException("Local AI stream returned an invalid delta.");
+            if (choice.TryGetProperty("delta", out delta) &&
                 delta.TryGetProperty("content", out var deltaContent) && deltaContent.ValueKind == JsonValueKind.String &&
                 deltaContent.GetString() is { Length: > 0 } text)
                 yield return text;
