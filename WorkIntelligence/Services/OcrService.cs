@@ -60,8 +60,8 @@ public static class OcrService
         timeout.CancelAfter(TimeSpan.FromMinutes(2));
         using var registration = timeout.Token.Register(() => ProcessTermination.RequestStop(process));
         // Start draining both output channels before writing stdin, avoiding pipe deadlock.
-        var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
-        var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
+        var stdout = BoundedProcessOutput.ReadAsync(process.StandardOutput, 12_000_000, timeout);
+        var stderr = BoundedProcessOutput.ReadAsync(process.StandardError, 262_144, timeout);
         try
         {
             await process.StandardInput.BaseStream.WriteAsync(image, timeout.Token);
