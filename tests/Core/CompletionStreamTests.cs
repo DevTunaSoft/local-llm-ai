@@ -26,13 +26,10 @@ public sealed class CompletionStreamTests
     public async Task MalformedStreamingFramesNeverBecomeSuccessfulAnswers(string frame)
     {
         var wrapped = "data: " + frame + "\n\ndata: [DONE]\n\n";
-        if (frame is "{}" or "{\"choices\":[{\"delta\":42}]}")
+        if (frame == "{}")
             Assert.Equal("", await Read(wrapped));
         else
-            await Assert.ThrowsAnyAsync<Exception>(async () =>
-            {
-                await Read(wrapped);
-            });
+            await Assert.ThrowsAsync<InvalidDataException>(() => Read(wrapped));
     }
 
     [Fact]
